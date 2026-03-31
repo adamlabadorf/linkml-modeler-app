@@ -1,13 +1,12 @@
 /**
  * SchemaCanvas — main ReactFlow canvas component for LinkML schema visualization.
  *
- * Responsibilities:
- * - Render ClassNode and EnumNode custom node types
- * - Render four custom edge types (range, is_a, mixin, union_of)
- * - Derive nodes/edges from the active schema in the Zustand store
- * - Trigger auto-layout on first load (no sidecar) or on demand
- * - Persist node drag positions back to the store (canvasLayout)
- * - Expose layout button in a control overlay
+ * M4 additions:
+ * - Node click → setActiveEntity (opens PropertiesPanel)
+ * - onConnect → create is_a edge (drag handle-to-handle)
+ * - Canvas context menu → Add Class / Add Enum
+ * - Node double-click → collapse/expand
+ * - Delete key → delete selected nodes with confirmation
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
@@ -17,11 +16,13 @@ import ReactFlow, {
   NodeTypes,
   OnNodesChange,
   OnEdgesChange,
+  OnConnect,
   applyNodeChanges,
   applyEdgeChanges,
   Node,
   useReactFlow,
   ReactFlowProvider,
+  XYPosition,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -32,6 +33,7 @@ import { deriveGraph } from './deriveGraph.js';
 import { runAutoLayout } from './autoLayout.js';
 import { useAppStore } from '../store/index.js';
 import type { CanvasLayout } from '../model/index.js';
+import { emptyClassDefinition, emptyEnumDefinition } from '../model/index.js';
 
 // ── Node type registry ────────────────────────────────────────────────────────
 const nodeTypes: NodeTypes = {
@@ -39,9 +41,170 @@ const nodeTypes: NodeTypes = {
   enumNode: EnumNode,
 };
 
-// ── Inner component (needs ReactFlowProvider context) ─────────────────────────
+// ── Context menu ──────────────────────────────────────────────────────────────
+interface ContextMenu {
+  x: number;
+  y: number;
+  canvasPos: XYPosition;
+  nodeId?: string;
+  nodeType?: string;
+}
+
+function CanvasContextMenu({
+  menu,
+  onClose,
+  onAddClass,
+  onAddEnum,
+  onDeleteNode,
+}: {
+  menu: ContextMenu;
+  onClose: () => void;
+  onAddClass: (pos: XYPosition) => void;
+  onAddEnum: (pos: XYPosition) => void;
+  onDeleteNode: (nodeId: string) => void;
+}) {
+  return (
+    <div
+      style={{
+        ...ctxStyles.menu,
+        left: menu.x,
+        top: menu.y,
+      }}
+      onMouseLeave={onClose}
+    >
+      {menu.nodeId ? (
+        <>
+          <div style={ctxStyles.item} onClick={() => { onDeleteNode(menu.nodeId!); onClose(); }}>
+            🗑 Delete {menu.nodeType === 'enumNode' ? 'enum' : 'class'}
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={ctxStyles.item} onClick={() => { onAddClass(menu.canvasPos); onClose(); }}>
+            ⬡ Add Class
+          </div>
+          <div style={ctxStyles.item} onClick={() => { onAddEnum(menu.canvasPos); onClose(); }}>
+            ◈ Add Enum
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const ctxStyles: Record<string, React.CSSProperties> = {
+  menu: {
+    position: 'fixed',
+    background: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: 6,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+    zIndex: 1000,
+    minWidth: 160,
+    overflow: 'hidden',
+  },
+  item: {
+    padding: '8px 14px',
+    fontSize: 13,
+    color: '#e2e8f0',
+    cursor: 'pointer',
+    fontFamily: 'monospace',
+    userSelect: 'none',
+  },
+};
+
+// ── Delete confirmation dialog ────────────────────────────────────────────────
+function DeleteConfirmDialog({
+  entityName,
+  entityType,
+  onConfirm,
+  onCancel,
+}: {
+  entityName: string;
+  entityType: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div style={dlgStyles.overlay}>
+      <div style={dlgStyles.dialog}>
+        <p style={dlgStyles.message}>
+          Delete {entityType} <strong style={{ color: '#f87171' }}>{entityName}</strong>?
+        </p>
+        <p style={dlgStyles.hint}>This action cannot be undone after the history limit.</p>
+        <div style={dlgStyles.actions}>
+          <button style={dlgStyles.cancel} onClick={onCancel}>
+            Cancel
+          </button>
+          <button style={dlgStyles.confirm} onClick={onConfirm}>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const dlgStyles: Record<string, React.CSSProperties> = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2000,
+  },
+  dialog: {
+    background: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: 8,
+    padding: '20px 24px',
+    width: 340,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+  },
+  message: {
+    margin: '0 0 8px',
+    fontSize: 14,
+    color: '#e2e8f0',
+    fontFamily: 'monospace',
+  },
+  hint: {
+    margin: '0 0 16px',
+    fontSize: 11,
+    color: '#64748b',
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  cancel: {
+    background: 'transparent',
+    border: '1px solid #334155',
+    color: '#94a3b8',
+    borderRadius: 4,
+    padding: '6px 14px',
+    cursor: 'pointer',
+    fontSize: 13,
+    fontFamily: 'monospace',
+  },
+  confirm: {
+    background: '#7f1d1d',
+    border: '1px solid #991b1b',
+    color: '#fca5a5',
+    borderRadius: 4,
+    padding: '6px 14px',
+    cursor: 'pointer',
+    fontSize: 13,
+    fontFamily: 'monospace',
+    fontWeight: 600,
+  },
+};
+
+// ── Inner canvas component ────────────────────────────────────────────────────
 function SchemaCanvasInner() {
-  const { fitView } = useReactFlow();
+  const { fitView, screenToFlowPosition } = useReactFlow();
 
   // Zustand store
   const activeProject = useAppStore((s) => s.activeProject);
@@ -55,33 +218,43 @@ function SchemaCanvasInner() {
   const storeEdges = useAppStore((s) => s.edges);
   const viewport = useAppStore((s) => s.viewport);
   const focusMode = useAppStore((s) => s.focusMode);
+  const setActiveEntity = useAppStore((s) => s.setActiveEntity);
+  const clearActiveEntity = useAppStore((s) => s.clearActiveEntity);
+  const activeEntity = useAppStore((s) => s.activeEntity);
 
-  // Local layout state for deferred initialization
+  // Schema mutations
+  const addClass = useAppStore((s) => s.addClass);
+  const deleteClass = useAppStore((s) => s.deleteClass);
+  const addEnum = useAppStore((s) => s.addEnum);
+  const deleteEnum = useAppStore((s) => s.deleteEnum);
+  const updateClass = useAppStore((s) => s.updateClass);
+
+  // Local state
   const [localLayout, setLocalLayout] = useState<CanvasLayout>({
     nodes: {},
     viewport: { x: 0, y: 0, zoom: 1 },
   });
   const layoutRanRef = useRef(false);
+  const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ name: string; type: 'class' | 'enum' } | null>(null);
 
-  // Active schema
   const activeSchemaFile = useMemo(
     () => activeProject?.schemas.find((s) => s.id === activeSchemaId),
     [activeProject, activeSchemaId]
   );
 
-  // Derive graph whenever schema or layout changes
+  // Derive graph
   const { nodes: derivedNodes, edges: derivedEdges } = useMemo(() => {
     if (!activeSchemaFile) return { nodes: [], edges: [] };
     return deriveGraph(activeSchemaFile.schema, localLayout);
   }, [activeSchemaFile, localLayout]);
 
-  // Sync derived nodes/edges into store
   useEffect(() => {
     setNodes(derivedNodes);
     setEdges(derivedEdges);
   }, [derivedNodes, derivedEdges, setNodes, setEdges]);
 
-  // Auto-layout on first load when no positions are stored
+  // Auto-layout on first load
   useEffect(() => {
     if (!activeSchemaFile || layoutRanRef.current) return;
     const hasLayoutData = Object.keys(activeSchemaFile.canvasLayout.nodes).length > 0;
@@ -97,12 +270,10 @@ function SchemaCanvasInner() {
     });
   }, [activeSchemaFile, fitView]);
 
-  // Reset layout flag when schema changes
   useEffect(() => {
     layoutRanRef.current = false;
   }, [activeSchemaId]);
 
-  // Manual re-layout handler
   const handleAutoLayout = useCallback(async () => {
     if (!activeSchemaFile) return;
     const layout = await runAutoLayout(activeSchemaFile.schema);
@@ -110,11 +281,11 @@ function SchemaCanvasInner() {
     setTimeout(() => fitView({ padding: 0.1, duration: 400 }), 100);
   }, [activeSchemaFile, fitView]);
 
-  // ── ReactFlow event handlers ────────────────────────────────────────────────
+  // ── ReactFlow event handlers ──────────────────────────────────────────────
+
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
       setNodes(applyNodeChanges(changes, storeNodes) as typeof storeNodes);
-      // Persist position changes back to layout
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
           setLocalLayout((prev) => ({
@@ -141,6 +312,7 @@ function SchemaCanvasInner() {
     [setViewport]
   );
 
+  // Double-click → collapse/expand
   const onNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       toggleNodeCollapsed(node.id);
@@ -148,11 +320,165 @@ function SchemaCanvasInner() {
     [toggleNodeCollapsed]
   );
 
-  // ── Focus mode dimming ──────────────────────────────────────────────────────
+  // Single click on node → select entity
+  const onNodeClick = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      const { entityType, entityId } = node.data as { entityType: string; entityId: string };
+      if (entityType === 'class') {
+        setActiveEntity({ type: 'class', className: entityId });
+      } else if (entityType === 'enum') {
+        setActiveEntity({ type: 'enum', enumName: entityId });
+      }
+    },
+    [setActiveEntity]
+  );
+
+  // Click on edge → select edge
+  const onEdgeClick = useCallback(
+    (_: React.MouseEvent, edge: { id: string }) => {
+      setActiveEntity({ type: 'edge', edgeId: edge.id });
+    },
+    [setActiveEntity]
+  );
+
+  // Click on pane → deselect
+  const onPaneClick = useCallback(() => {
+    clearActiveEntity();
+    setContextMenu(null);
+  }, [clearActiveEntity]);
+
+  // Connect (drag handle-to-handle) → create is_a relationship
+  const onConnect: OnConnect = useCallback(
+    (connection) => {
+      if (!activeSchemaId || !connection.source || !connection.target) return;
+      // Dragging from child to parent sets is_a
+      updateClass(activeSchemaId, connection.source, { isA: connection.target });
+    },
+    [activeSchemaId, updateClass]
+  );
+
+  // Context menu on canvas (right-click)
+  const onPaneContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      const canvasPos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      setContextMenu({ x: event.clientX, y: event.clientY, canvasPos });
+    },
+    [screenToFlowPosition]
+  );
+
+  // Context menu on node
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      const canvasPos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        canvasPos,
+        nodeId: node.id,
+        nodeType: node.type,
+      });
+    },
+    [screenToFlowPosition]
+  );
+
+  // Add class at position
+  const handleAddClass = useCallback(
+    (pos: XYPosition) => {
+      if (!activeSchemaId) return;
+      const schema = activeProject?.schemas.find((s) => s.id === activeSchemaId)?.schema;
+      if (!schema) return;
+
+      let name = 'NewClass';
+      let counter = 1;
+      while (schema.classes[name]) name = `NewClass${counter++}`;
+
+      addClass(activeSchemaId, emptyClassDefinition(name));
+      setLocalLayout((prev) => ({
+        ...prev,
+        nodes: { ...prev.nodes, [name]: { x: pos.x, y: pos.y } },
+      }));
+      setActiveEntity({ type: 'class', className: name });
+    },
+    [activeSchemaId, activeProject, addClass, setActiveEntity]
+  );
+
+  // Add enum at position
+  const handleAddEnum = useCallback(
+    (pos: XYPosition) => {
+      if (!activeSchemaId) return;
+      const schema = activeProject?.schemas.find((s) => s.id === activeSchemaId)?.schema;
+      if (!schema) return;
+
+      let name = 'NewEnum';
+      let counter = 1;
+      while (schema.enums[name]) name = `NewEnum${counter++}`;
+
+      addEnum(activeSchemaId, emptyEnumDefinition(name));
+      setLocalLayout((prev) => ({
+        ...prev,
+        nodes: { ...prev.nodes, [name]: { x: pos.x, y: pos.y } },
+      }));
+      setActiveEntity({ type: 'enum', enumName: name });
+    },
+    [activeSchemaId, activeProject, addEnum, setActiveEntity]
+  );
+
+  // Delete node from context menu
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      if (!activeSchemaId) return;
+      const schema = activeProject?.schemas.find((s) => s.id === activeSchemaId)?.schema;
+      if (!schema) return;
+      const type = nodeId in schema.classes ? 'class' : 'enum';
+      setDeleteTarget({ name: nodeId, type });
+    },
+    [activeSchemaId, activeProject]
+  );
+
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget || !activeSchemaId) return;
+    if (deleteTarget.type === 'class') {
+      deleteClass(activeSchemaId, deleteTarget.name);
+    } else {
+      deleteEnum(activeSchemaId, deleteTarget.name);
+    }
+    clearActiveEntity();
+    setDeleteTarget(null);
+  }, [deleteTarget, activeSchemaId, deleteClass, deleteEnum, clearActiveEntity]);
+
+  // Keyboard shortcuts (Delete key)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Undo/Redo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        (useAppStore as unknown as { temporal: { getState: () => { undo: () => void } } }).temporal.getState().undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        (useAppStore as unknown as { temporal: { getState: () => { redo: () => void } } }).temporal.getState().redo();
+      }
+      // Delete selected entity
+      if ((e.key === 'Delete' || e.key === 'Backspace') && activeEntity) {
+        const target = e.target as HTMLElement | null;
+        if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') return;
+        if (activeEntity.type === 'class') {
+          setDeleteTarget({ name: activeEntity.className, type: 'class' });
+        } else if (activeEntity.type === 'enum') {
+          setDeleteTarget({ name: activeEntity.enumName, type: 'enum' });
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeEntity]);
+
+  // Focus mode dimming
   const visibleNodeIds = useMemo<Set<string> | null>(() => {
     if (!focusMode) return null;
     if (focusMode.type === 'selection') return new Set(focusMode.nodeIds);
-    // Subset mode — filter by subset membership
     if (focusMode.type === 'subset' && activeSchemaFile) {
       const ids = new Set<string>();
       for (const [name, cls] of Object.entries(activeSchemaFile.schema.classes)) {
@@ -163,7 +489,6 @@ function SchemaCanvasInner() {
     return null;
   }, [focusMode, activeSchemaFile]);
 
-  // Apply dim styling to nodes outside focus
   const displayNodes: Node[] = useMemo(() => {
     if (!visibleNodeIds) return storeNodes;
     return storeNodes.map((n) => ({
@@ -187,7 +512,7 @@ function SchemaCanvasInner() {
   }
 
   return (
-    <div style={styles.canvasWrapper}>
+    <div style={styles.canvasWrapper} onClick={() => contextMenu && setContextMenu(null)}>
       <EdgeMarkerDefs />
       <ReactFlow
         nodes={displayNodes}
@@ -198,12 +523,19 @@ function SchemaCanvasInner() {
         onEdgesChange={onEdgesChange}
         onMoveEnd={onMoveEnd}
         onNodeDoubleClick={onNodeDoubleClick}
+        onNodeClick={onNodeClick}
+        onEdgeClick={onEdgeClick}
+        onPaneClick={onPaneClick}
+        onConnect={onConnect}
+        onPaneContextMenu={onPaneContextMenu}
+        onNodeContextMenu={onNodeContextMenu}
         defaultViewport={viewport}
         minZoom={0.05}
         maxZoom={2}
         fitView
         fitViewOptions={{ padding: 0.1 }}
         proOptions={{ hideAttribution: false }}
+        connectOnClick={false}
       >
         <Background color="#334155" gap={20} size={1} />
         <Controls />
@@ -220,19 +552,35 @@ function SchemaCanvasInner() {
         />
       </ReactFlow>
 
-      {/* Auto-layout button */}
-      <button style={styles.layoutBtn} onClick={handleAutoLayout} title="Auto Layout (Ctrl+Shift+L)">
-        ⬡ Auto Layout
-      </button>
+      {/* Toolbar */}
+      <div style={styles.toolbar}>
+        <button
+          style={styles.toolbarBtn}
+          onClick={() => handleAddClass({ x: 100, y: 100 })}
+          title="Add Class"
+        >
+          ⬡ + Class
+        </button>
+        <button
+          style={styles.toolbarBtn}
+          onClick={() => handleAddEnum({ x: 400, y: 100 })}
+          title="Add Enum"
+        >
+          ◈ + Enum
+        </button>
+        <button style={styles.toolbarBtn} onClick={handleAutoLayout} title="Auto Layout (Ctrl+Shift+L)">
+          ⬡ Layout
+        </button>
+      </div>
 
       {/* Focus mode banner */}
       {focusMode && (
         <div style={styles.focusBanner}>
           <span>
-            Focus mode:{' '}
+            Focus:{' '}
             {focusMode.type === 'subset'
               ? `subset "${focusMode.subsetName}"`
-              : `${(focusMode as { nodeIds: string[] }).nodeIds.length} node(s) selected`}
+              : `${(focusMode as { nodeIds: string[] }).nodeIds.length} node(s)`}
           </span>
           <button
             style={styles.focusExitBtn}
@@ -242,11 +590,32 @@ function SchemaCanvasInner() {
           </button>
         </div>
       )}
+
+      {/* Context menu */}
+      {contextMenu && (
+        <CanvasContextMenu
+          menu={contextMenu}
+          onClose={() => setContextMenu(null)}
+          onAddClass={handleAddClass}
+          onAddEnum={handleAddEnum}
+          onDeleteNode={handleDeleteNode}
+        />
+      )}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <DeleteConfirmDialog
+          entityName={deleteTarget.name}
+          entityType={deleteTarget.type}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }
 
-// ── Public component (wraps provider) ─────────────────────────────────────────
+// ── Public component ──────────────────────────────────────────────────────────
 export function SchemaCanvas() {
   return (
     <ReactFlowProvider>
@@ -285,10 +654,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     margin: 0,
   },
-  layoutBtn: {
+  toolbar: {
     position: 'absolute',
     top: 12,
     right: 12,
+    display: 'flex',
+    gap: 6,
+    zIndex: 10,
+  },
+  toolbarBtn: {
     background: '#1e293b',
     border: '1px solid #334155',
     color: '#94a3b8',
@@ -297,7 +671,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     fontFamily: 'monospace',
     cursor: 'pointer',
-    zIndex: 10,
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
   },
   focusBanner: {
