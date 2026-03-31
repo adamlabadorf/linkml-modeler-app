@@ -5,3 +5,4 @@ export * from './platform/PlatformContext.js';
 export { StubWebPlatform } from './platform/StubWebPlatform.js';
 export { parseYaml, serializeYaml, validateSchema } from './io/yaml.js';
 export type { ValidationError } from './io/yaml.js';
+export * from './canvas/index.js';
