@@ -461,32 +461,60 @@ function SchemaCanvasInner() {
     setDeleteTarget(null);
   }, [deleteTarget, activeSchemaId, deleteClass, deleteEnum, clearActiveEntity]);
 
-  // Keyboard shortcuts (Delete key)
+  // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const isEditing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA';
+
       // Undo/Redo
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         (useAppStore as unknown as { temporal: { getState: () => { undo: () => void } } }).temporal.getState().undo();
+        return;
       }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault();
         (useAppStore as unknown as { temporal: { getState: () => { redo: () => void } } }).temporal.getState().redo();
+        return;
       }
+
+      if (isEditing) return;
+
       // Delete selected entity
-      if ((e.key === 'Delete' || e.key === 'Backspace') && activeEntity) {
-        const target = e.target as HTMLElement | null;
-        if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') return;
-        if (activeEntity.type === 'class') {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (activeEntity?.type === 'class') {
           setDeleteTarget({ name: activeEntity.className, type: 'class' });
-        } else if (activeEntity.type === 'enum') {
+        } else if (activeEntity?.type === 'enum') {
           setDeleteTarget({ name: activeEntity.enumName, type: 'enum' });
         }
+        return;
+      }
+
+      // Escape → deselect / exit focus mode
+      if (e.key === 'Escape') {
+        clearActiveEntity();
+        useAppStore.getState().setFocusMode(null);
+        return;
+      }
+
+      // F → fit view
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        fitView({ padding: 0.1, duration: 400 });
+        return;
+      }
+
+      // Ctrl+A → select all nodes
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        setSelection(storeNodes.map((n) => n.id), []);
+        return;
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeEntity]);
+  }, [activeEntity, clearActiveEntity, fitView, storeNodes, setSelection]);
 
   // Focus mode dimming
   const visibleNodeIds = useMemo<Set<string> | null>(() => {

@@ -1,5 +1,32 @@
-import React from 'react';
+import React, { Component, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
+
+// ── Error Boundary ────────────────────────────────────────────────────────────
+interface ErrorBoundaryState { error: Error | null }
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[LinkML Editor] Uncaught error:', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#fca5a5', fontFamily: 'monospace', gap: 16 }}>
+          <div style={{ fontSize: 24 }}>⚠ Unexpected Error</div>
+          <div style={{ fontSize: 13, color: '#94a3b8', maxWidth: 600, textAlign: 'center' }}>{this.state.error.message}</div>
+          <button onClick={() => this.setState({ error: null })} style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', borderRadius: 5, padding: '6px 14px', cursor: 'pointer', fontFamily: 'monospace' }}>
+            Try to recover
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import {
   PlatformContext,
   useAppStore,
@@ -273,6 +300,7 @@ function App() {
   const setValidationPanelOpen = useAppStore((s) => s.setValidationPanelOpen);
   const gitPanelOpen = useAppStore((s) => s.gitPanelOpen);
   const validationPanelOpen = useAppStore((s) => s.validationPanelOpen);
+  const validationIssues = useAppStore((s) => s.validationIssues);
 
   React.useEffect(() => {
     if (!activeProject) {
@@ -344,9 +372,23 @@ function App() {
           {schema
             ? `${schema.filePath} · ${Object.keys(schema.schema.classes).length} class(es) · ${Object.keys(schema.schema.enums).length} enum(s)`
             : 'No schema loaded'}
+          {validationIssues.length > 0 && (
+            <>
+              {' · '}
+              <span style={{ color: validationIssues.some(i => i.severity === 'error') ? '#fca5a5' : '#fde68a' }}>
+                {validationIssues.filter(i => i.severity === 'error').length > 0
+                  ? `${validationIssues.filter(i => i.severity === 'error').length} err`
+                  : ''}
+                {validationIssues.filter(i => i.severity === 'error').length > 0 && validationIssues.filter(i => i.severity === 'warning').length > 0 ? ', ' : ''}
+                {validationIssues.filter(i => i.severity === 'warning').length > 0
+                  ? `${validationIssues.filter(i => i.severity === 'warning').length} warn`
+                  : ''}
+              </span>
+            </>
+          )}
         </span>
         <span>
-          Click node to edit · Right-click canvas to add · Drag handle-to-handle for is_a · Del to delete · Ctrl+Z/Y undo/redo
+          Click node to edit · Right-click canvas to add · Drag handle-to-handle for is_a · Del to delete · Ctrl+Z/Y undo/redo · F fit view
         </span>
       </footer>
 
@@ -452,9 +494,11 @@ async function bootstrap() {
 
   root.render(
     <React.StrictMode>
-      <PlatformContext.Provider value={platform}>
-        <App />
-      </PlatformContext.Provider>
+      <ErrorBoundary>
+        <PlatformContext.Provider value={platform}>
+          <App />
+        </PlatformContext.Provider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }
