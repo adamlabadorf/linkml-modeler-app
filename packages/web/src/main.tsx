@@ -11,12 +11,14 @@ import {
   serializeYaml,
   PropertiesPanel,
   SchemaSettingsDialog,
+  ProjectPanel,
 } from '@linkml-editor/core';
 import { SchemaCanvas } from '@linkml-editor/core';
 import type { Project } from '@linkml-editor/core';
 
 // ── Seed demo project ─────────────────────────────────────────────────────────
 function makeDemoProject(): Project {
+  // ── Core/base schema (shared types) ─────────────────────────────────────────
   const namedThingClass = {
     ...emptyClassDefinition('NamedThing'),
     description: 'Anything with a name',
@@ -35,6 +37,18 @@ function makeDemoProject(): Project {
     },
   };
 
+  const baseSchema = {
+    ...emptySchema('base', 'https://example.org/base', 'base'),
+    title: 'Base Types Schema',
+    description: 'Shared base types imported by other schemas',
+    classes: {
+      NamedThing: namedThingClass,
+      HasAliases: hasAliasesMixin,
+    },
+    enums: {},
+  };
+
+  // ── Main schema (imports base) ───────────────────────────────────────────────
   const personClass = {
     ...emptyClassDefinition('Person'),
     description: 'A human being',
@@ -65,13 +79,12 @@ function makeDemoProject(): Project {
     },
   };
 
-  const schema = {
+  const mainSchema = {
     ...emptySchema('personinfo', 'https://example.org/personinfo', 'personinfo'),
     title: 'Person Info Schema',
     description: 'A demo schema for interactive editing',
+    imports: ['linkml:types', './base'],
     classes: {
-      NamedThing: namedThingClass,
-      HasAliases: hasAliasesMixin,
       Person: personClass,
       Organization: organizationClass,
     },
@@ -88,9 +101,17 @@ function makeDemoProject(): Project {
       {
         id: 'demo-schema',
         filePath: 'personinfo.yaml',
-        schema,
+        schema: mainSchema,
         isDirty: false,
         canvasLayout: emptyCanvasLayout(),
+      },
+      {
+        id: 'demo-base',
+        filePath: 'base.yaml',
+        schema: baseSchema,
+        isDirty: false,
+        canvasLayout: emptyCanvasLayout(),
+        isReadOnly: false, // editable in this demo; would be true for external imports
       },
     ],
     createdAt: new Date().toISOString(),
@@ -246,7 +267,7 @@ function App() {
       <header style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.logo}>⬡ LinkML Visual Schema Editor</span>
-          <span style={styles.subtitle}>M4 — Interactive Editing</span>
+          <span style={styles.subtitle}>M5 — Multi-Schema Projects</span>
         </div>
         <div style={styles.headerRight}>
           {isDirty && <span style={styles.dirtyBadge}>● unsaved changes</span>}
@@ -262,6 +283,9 @@ function App() {
 
       {/* Main layout */}
       <div style={styles.main}>
+        {/* Project panel (left) */}
+        <ProjectPanel />
+
         {/* Canvas (center) */}
         <div style={styles.canvasArea}>
           <SchemaCanvas />
@@ -278,7 +302,7 @@ function App() {
       <footer style={styles.footer}>
         <span>
           {schema
-            ? `${Object.keys(schema.schema.classes).length} class(es) · ${Object.keys(schema.schema.enums).length} enum(s)`
+            ? `${schema.filePath} · ${Object.keys(schema.schema.classes).length} class(es) · ${Object.keys(schema.schema.enums).length} enum(s)`
             : 'No schema loaded'}
         </span>
         <span>

@@ -7,6 +7,7 @@ export interface ClassNodeData extends CanvasNodeData {
   entityType: 'class';
   classDef: ClassDefinition;
   collapsed: boolean;
+  ghost?: boolean; // True for read-only imported classes
 }
 
 const SLOT_LIMIT_EXPANDED = 20;
@@ -39,18 +40,20 @@ function SlotRow({ slot }: { slot: SlotDefinition }) {
 }
 
 function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
-  const { classDef, collapsed } = data;
+  const { classDef, collapsed, ghost } = data;
 
   const isAbstract = classDef.abstract === true;
   const isMixin = classDef.mixin === true;
 
-  const headerBg = isMixin
+  const headerBg = ghost
+    ? '#1e3a2e'
+    : isMixin
     ? '#7c3aed'
     : isAbstract
     ? '#0369a1'
     : '#1d4ed8';
 
-  const typeLabel = isMixin ? 'mixin' : isAbstract ? 'abstract' : null;
+  const typeLabel = ghost ? 'imported' : isMixin ? 'mixin' : isAbstract ? 'abstract' : null;
 
   const slots = Object.values(classDef.attributes);
   const visibleSlots = collapsed ? [] : slots.slice(0, SLOT_LIMIT_EXPANDED);
@@ -60,7 +63,8 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
     <div
       style={{
         ...styles.wrapper,
-        outline: selected ? '2px solid #60a5fa' : '1px solid #334155',
+        ...(ghost ? styles.ghostWrapper : {}),
+        outline: selected ? '2px solid #60a5fa' : ghost ? '1px dashed #374f3a' : '1px solid #334155',
       }}
     >
       {/* Target handle (top) — for edges pointing into this node */}
@@ -123,6 +127,10 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     color: '#e2e8f0',
     overflow: 'hidden',
+  },
+  ghostWrapper: {
+    background: '#111c14',
+    opacity: 0.72,
   },
   handle: {
     background: '#60a5fa',

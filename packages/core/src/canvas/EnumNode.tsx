@@ -7,12 +7,13 @@ export interface EnumNodeData extends CanvasNodeData {
   entityType: 'enum';
   enumDef: EnumDefinition;
   collapsed: boolean;
+  ghost?: boolean; // True for read-only imported enums
 }
 
 const VALUE_LIMIT = 12;
 
 function EnumNode({ data, selected }: NodeProps<EnumNodeData>) {
-  const { enumDef, collapsed } = data;
+  const { enumDef, collapsed, ghost } = data;
   const values = Object.values(enumDef.permissibleValues);
   const visibleValues = collapsed ? [] : values.slice(0, VALUE_LIMIT);
   const hiddenCount = collapsed ? 0 : Math.max(0, values.length - VALUE_LIMIT);
@@ -21,14 +22,15 @@ function EnumNode({ data, selected }: NodeProps<EnumNodeData>) {
     <div
       style={{
         ...styles.wrapper,
-        outline: selected ? '2px solid #60a5fa' : '1px solid #334155',
+        ...(ghost ? styles.ghostWrapper : {}),
+        outline: selected ? '2px solid #60a5fa' : ghost ? '1px dashed #4a3a1e' : '1px solid #334155',
       }}
     >
       {/* Enum nodes only receive edges (range targets) */}
       <Handle type="target" position={Position.Top} style={styles.handle} />
 
       {/* Header */}
-      <div style={styles.header}>
+      <div style={{ ...styles.header, ...(ghost ? styles.ghostHeader : {}) }}>
         <span style={styles.nodeIcon}>◈</span>
         <span style={styles.headerTitle}>{enumDef.name}</span>
       </div>
@@ -71,6 +73,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     color: '#e2e8f0',
     overflow: 'hidden',
+  },
+  ghostWrapper: {
+    background: '#1a1710',
+    opacity: 0.72,
+  },
+  ghostHeader: {
+    background: '#4a3a1e',
   },
   handle: {
     background: '#60a5fa',

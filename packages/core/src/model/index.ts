@@ -19,6 +19,21 @@ export interface SchemaFile {
   schema: LinkMLSchema; // Parsed in-memory representation
   isDirty: boolean; // Unsaved local changes
   canvasLayout: CanvasLayout; // Node positions (stored alongside .yaml)
+  isReadOnly?: boolean; // True for imported (dependency) schemas
+}
+
+// ─── 4.1b Editor Manifest (.linkml-editor.yaml) ───────────────────────────────
+
+export interface EditorManifest {
+  schemaOrder?: string[]; // Relative file paths, controls panel order
+  defaultOpenSchema?: string; // Relative file path of default schema to open
+  preferences?: EditorPreferences;
+}
+
+export interface EditorPreferences {
+  autoManageImports?: boolean; // Auto-add/remove imports when ranges change (default: true)
+  showGhostNodes?: boolean; // Show imported classes as ghost nodes (default: true)
+  defaultLayout?: 'TB' | 'BT' | 'LR' | 'RL'; // Default ELK layout direction
 }
 
 export interface GitConfig {

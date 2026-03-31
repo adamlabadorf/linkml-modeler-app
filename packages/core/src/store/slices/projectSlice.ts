@@ -1,5 +1,6 @@
 import type { StateCreator } from 'zustand';
 import type { Project, SchemaFile, LinkMLSchema, ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue } from '../../model/index.js';
+import { findMissingImport, resolveImportPath } from '../../io/importResolver.js';
 
 export interface ProjectSlice {
   // State
@@ -39,6 +40,18 @@ export interface ProjectSlice {
   addPermissibleValue(schemaId: string, enumName: string, value: PermissibleValue): void;
   updatePermissibleValue(schemaId: string, enumName: string, valueText: string, partial: Partial<PermissibleValue>): void;
   deletePermissibleValue(schemaId: string, enumName: string, valueText: string): void;
+
+  // ── Import management ────────────────────────────────────────────────────────
+  /** Add a local import path to the schema's imports list if not already present. */
+  addImport(schemaId: string, importPath: string): void;
+  /** Remove a local import path if no slot ranges in the schema still reference it. */
+  removeImportIfUnused(schemaId: string, importPath: string): boolean;
+  /**
+   * After adding/updating an attribute range, check if the range lives in
+   * another loaded schema and auto-add the import when autoManageImports is on.
+   * Returns the import path that was added, or null.
+   */
+  autoAddImportForRange(schemaId: string, rangeName: string): string | null;
 }
 
 // ── Helper: produce updated schema immutably ────────────────────────────────
@@ -422,5 +435,102 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
         }),
       };
     });
+  },
+
+  // ── Import management ────────────────────────────────────────────────────────
+
+  addImport(schemaId, importPath) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          if (s.imports.includes(importPath)) return s;
+          return { ...s, imports: [...s.imports, importPath] };
+        }),
+      };
+    });
+  },
+
+  removeImportIfUnused(schemaId, importPath) {
+    const { activeProject } = get();
+    if (!activeProject) return false;
+
+    const sf = activeProject.schemas.find((s) => s.id === schemaId);
+    if (!sf) return false;
+
+    // Resolve the import to a file path
+    const resolvedPath = resolveImportPath(importPath, sf.filePath, '');
+
+    // Find all schema files reachable via this import
+    const importedSchema = activeProject.schemas.find((s) => s.filePath === resolvedPath);
+    if (!importedSchema) {
+      // Just remove the import string — we can't verify usage
+      set((state) => {
+        if (!state.activeProject) return state;
+        return {
+          activeProject: patchSchema(state.activeProject, schemaId, (s) => ({
+            ...s,
+            imports: s.imports.filter((imp) => imp !== importPath),
+          })),
+        };
+      });
+      return true;
+    }
+
+    const importedNames = new Set([
+      ...Object.keys(importedSchema.schema.classes),
+      ...Object.keys(importedSchema.schema.enums),
+    ]);
+
+    // Check if any attribute range in the active schema references an imported entity
+    const schema = sf.schema;
+    let stillUsed = false;
+    for (const cls of Object.values(schema.classes)) {
+      for (const slot of Object.values(cls.attributes)) {
+        if (slot.range && importedNames.has(slot.range)) {
+          stillUsed = true;
+          break;
+        }
+      }
+      if (stillUsed) break;
+    }
+
+    if (!stillUsed) {
+      set((state) => {
+        if (!state.activeProject) return state;
+        return {
+          activeProject: patchSchema(state.activeProject, schemaId, (s) => ({
+            ...s,
+            imports: s.imports.filter((imp) => imp !== importPath),
+          })),
+        };
+      });
+      return true;
+    }
+    return false;
+  },
+
+  autoAddImportForRange(schemaId, rangeName) {
+    const { activeProject } = get();
+    if (!activeProject) return null;
+
+    const sf = activeProject.schemas.find((s) => s.id === schemaId);
+    if (!sf) return null;
+
+    const missingImport = findMissingImport(rangeName, sf, activeProject.schemas);
+    if (!missingImport) return null;
+
+    // Add the import
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          if (s.imports.includes(missingImport)) return s;
+          return { ...s, imports: [...s.imports, missingImport] };
+        }),
+      };
+    });
+
+    return missingImport;
   },
 });

@@ -10,6 +10,7 @@ import type { CanvasNodeData } from '../store/slices/canvasSlice.js';
 import type { ClassNodeData } from './ClassNode.js';
 import type { EnumNodeData } from './EnumNode.js';
 import type { LinkMLEdgeType } from './edges.js';
+import type { ImportedEntity } from '../io/importResolver.js';
 
 // Default node dimensions used before layout runs.
 const CLASS_NODE_WIDTH = 240;
@@ -36,7 +37,8 @@ export interface DerivedGraph {
 export function deriveGraph(
   schema: LinkMLSchema,
   layout: CanvasLayout,
-  collapsed: Record<string, boolean> = {}
+  collapsed: Record<string, boolean> = {},
+  ghostEntities: ImportedEntity[] = []
 ): DerivedGraph {
   const nodes: Node<CanvasNodeData>[] = [];
   const edges: Edge[] = [];
@@ -140,6 +142,76 @@ export function deriveGraph(
       width: ENUM_NODE_WIDTH,
       height: ENUM_NODE_HEIGHT,
     });
+  }
+
+  // ── Ghost nodes (imported read-only entities) ────────────────────────────────
+  // Track existing node IDs to avoid duplicates with local entities
+  const existingIds = new Set(nodes.map((n) => n.id));
+
+  for (const entity of ghostEntities) {
+    if (existingIds.has(entity.name)) continue; // local definition takes priority
+
+    const ghostId = `ghost__${entity.name}`;
+    if (existingIds.has(ghostId)) continue;
+    existingIds.add(ghostId);
+
+    const pos = layout.nodes[`ghost__${entity.name}`] ?? gridPosition(gridIndex++);
+
+    if (entity.type === 'class') {
+      const nodeData: ClassNodeData = {
+        entityId: entity.name,
+        entityType: 'class',
+        classDef: entity.schema.classes[entity.name],
+        collapsed: false,
+        ghost: true,
+      };
+      nodes.push({
+        id: ghostId,
+        type: 'classNode',
+        position: { x: pos.x, y: pos.y },
+        data: nodeData as unknown as CanvasNodeData,
+        width: CLASS_NODE_WIDTH,
+        height: CLASS_NODE_HEIGHT,
+        draggable: false,
+      });
+    } else {
+      const nodeData: EnumNodeData = {
+        entityId: entity.name,
+        entityType: 'enum',
+        enumDef: entity.schema.enums[entity.name],
+        collapsed: false,
+        ghost: true,
+      };
+      nodes.push({
+        id: ghostId,
+        type: 'enumNode',
+        position: { x: pos.x, y: pos.y },
+        data: nodeData as unknown as CanvasNodeData,
+        width: ENUM_NODE_WIDTH,
+        height: ENUM_NODE_HEIGHT,
+        draggable: false,
+      });
+    }
+  }
+
+  // ── Range edges to ghost nodes ───────────────────────────────────────────────
+  // Add range edges from local classes to ghost targets
+  for (const [className, classDef] of Object.entries(schema.classes)) {
+    for (const [slotName, slot] of Object.entries(classDef.attributes)) {
+      if (!slot.range) continue;
+      // Check if range targets a ghost node
+      const ghostId = `ghost__${slot.range}`;
+      if (existingIds.has(ghostId) && !edges.find((e) => e.id === `range__${className}__${slotName}__${slot.range}`)) {
+        edges.push({
+          id: `range__${className}__${slotName}__${slot.range}`,
+          type: 'range' as LinkMLEdgeType,
+          source: className,
+          target: ghostId,
+          label: slotName,
+          animated: false,
+        });
+      }
+    }
   }
 
   return { nodes, edges };

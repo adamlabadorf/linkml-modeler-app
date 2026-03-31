@@ -1,0 +1,257 @@
+/**
+ * ProjectPanel — tree view of schema files in the active project.
+ *
+ * Shows each schema file with:
+ * - File name (basename of filePath)
+ * - Class count / enum count
+ * - Dirty indicator (●)
+ * - Read-only badge for imported schemas
+ * - Click to switch active schema
+ */
+import React from 'react';
+import { useAppStore } from '../store/index.js';
+
+function basename(filePath: string): string {
+  return filePath.split('/').pop() ?? filePath;
+}
+
+export function ProjectPanel() {
+  const activeProject = useAppStore((s) => s.activeProject);
+  const activeSchemaId = useAppStore((s) => s.activeSchemaId);
+  const setActiveSchema = useAppStore((s) => s.setActiveSchema);
+
+  if (!activeProject) {
+    return (
+      <div style={styles.panel}>
+        <div style={styles.header}>
+          <span style={styles.title}>Project</span>
+        </div>
+        <div style={styles.empty}>No project open</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.panel}>
+      {/* Panel header */}
+      <div style={styles.header}>
+        <span style={styles.title}>⬡ {activeProject.name}</span>
+      </div>
+
+      {/* Schema file list */}
+      <div style={styles.fileList}>
+        {activeProject.schemas.map((sf) => {
+          const isActive = sf.id === activeSchemaId;
+          const classCount = Object.keys(sf.schema.classes).length;
+          const enumCount = Object.keys(sf.schema.enums).length;
+          const name = basename(sf.filePath);
+
+          return (
+            <div
+              key={sf.id}
+              style={{
+                ...styles.fileRow,
+                ...(isActive ? styles.fileRowActive : {}),
+                ...(sf.isReadOnly ? styles.fileRowReadOnly : {}),
+              }}
+              onClick={() => !sf.isReadOnly && setActiveSchema(sf.id)}
+              title={sf.filePath}
+            >
+              {/* File icon + name */}
+              <div style={styles.fileNameRow}>
+                <span style={styles.fileIcon}>{sf.isReadOnly ? '◻' : '◼'}</span>
+                <span
+                  style={{
+                    ...styles.fileName,
+                    ...(sf.isReadOnly ? styles.fileNameReadOnly : {}),
+                  }}
+                >
+                  {name}
+                </span>
+                {sf.isDirty && <span style={styles.dirtyDot} title="Unsaved changes">●</span>}
+                {sf.isReadOnly && <span style={styles.readOnlyBadge}>imported</span>}
+              </div>
+
+              {/* Stats */}
+              <div style={styles.statsRow}>
+                <span style={styles.stat} title={`${classCount} class(es)`}>
+                  ⬡ {classCount}
+                </span>
+                <span style={styles.stat} title={`${enumCount} enum(s)`}>
+                  ◈ {enumCount}
+                </span>
+                {sf.schema.name && (
+                  <span style={styles.statNamespace} title={sf.schema.id}>
+                    {sf.schema.name}
+                  </span>
+                )}
+              </div>
+
+              {/* Import paths */}
+              {sf.schema.imports.length > 0 && (
+                <div style={styles.importsRow}>
+                  <span style={styles.importsLabel}>imports:</span>
+                  <span style={styles.importsValue}>
+                    {sf.schema.imports.slice(0, 3).join(', ')}
+                    {sf.schema.imports.length > 3 && ` +${sf.schema.imports.length - 3}`}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer: total counts */}
+      <div style={styles.footer}>
+        <span style={styles.footerText}>
+          {activeProject.schemas.filter((s) => !s.isReadOnly).length} schema(s)
+          {activeProject.schemas.some((s) => s.isReadOnly) &&
+            ` · ${activeProject.schemas.filter((s) => s.isReadOnly).length} imported`}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: 220,
+    borderRight: '1px solid #1e293b',
+    background: '#080f1a',
+    flexShrink: 0,
+    overflow: 'hidden',
+  },
+  header: {
+    padding: '8px 10px',
+    borderBottom: '1px solid #1e293b',
+    flexShrink: 0,
+  },
+  title: {
+    fontWeight: 700,
+    fontSize: 11,
+    color: '#60a5fa',
+    fontFamily: 'monospace',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  empty: {
+    padding: 12,
+    fontSize: 12,
+    color: '#475569',
+    fontFamily: 'monospace',
+    fontStyle: 'italic',
+  },
+  fileList: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '4px 0',
+  },
+  fileRow: {
+    padding: '6px 10px',
+    cursor: 'pointer',
+    borderBottom: '1px solid #0d1627',
+    transition: 'background 0.1s',
+    userSelect: 'none',
+  },
+  fileRowActive: {
+    background: '#172033',
+    borderLeft: '2px solid #60a5fa',
+    paddingLeft: 8,
+  },
+  fileRowReadOnly: {
+    cursor: 'default',
+    opacity: 0.6,
+  },
+  fileNameRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 3,
+  },
+  fileIcon: {
+    fontSize: 10,
+    color: '#475569',
+    flexShrink: 0,
+  },
+  fileName: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: '#e2e8f0',
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontWeight: 600,
+  },
+  fileNameReadOnly: {
+    color: '#64748b',
+    fontWeight: 400,
+    fontStyle: 'italic',
+  },
+  dirtyDot: {
+    color: '#f59e0b',
+    fontSize: 10,
+    flexShrink: 0,
+  },
+  readOnlyBadge: {
+    fontSize: 9,
+    background: '#1e293b',
+    borderRadius: 3,
+    padding: '1px 4px',
+    color: '#64748b',
+    flexShrink: 0,
+  },
+  statsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stat: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    color: '#475569',
+  },
+  statNamespace: {
+    fontSize: 9,
+    fontFamily: 'monospace',
+    color: '#334155',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    flex: 1,
+    marginLeft: 4,
+  },
+  importsRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 4,
+    marginTop: 3,
+  },
+  importsLabel: {
+    fontSize: 9,
+    fontFamily: 'monospace',
+    color: '#334155',
+    flexShrink: 0,
+  },
+  importsValue: {
+    fontSize: 9,
+    fontFamily: 'monospace',
+    color: '#3b4f6b',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  footer: {
+    padding: '6px 10px',
+    borderTop: '1px solid #1e293b',
+    flexShrink: 0,
+  },
+  footerText: {
+    fontSize: 10,
+    color: '#334155',
+    fontFamily: 'monospace',
+  },
+};
