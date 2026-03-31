@@ -2,7 +2,6 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   PlatformContext,
-  StubWebPlatform,
   useAppStore,
   emptySchema,
   emptyClassDefinition,
@@ -12,9 +11,25 @@ import {
   PropertiesPanel,
   SchemaSettingsDialog,
   ProjectPanel,
+  ValidationPanel,
+  FocusModeToolbar,
 } from '@linkml-editor/core';
 import { SchemaCanvas } from '@linkml-editor/core';
 import type { Project } from '@linkml-editor/core';
+import { WebPlatform } from './platform/WebPlatform.js';
+import { GitPanel } from './editor/GitPanel.js';
+
+// ── Detect Electron ───────────────────────────────────────────────────────────
+const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
+
+// ── Platform selection ────────────────────────────────────────────────────────
+async function createPlatform() {
+  if (IS_ELECTRON) {
+    const { ElectronPlatform } = await import('./platform/ElectronPlatform.js');
+    return new ElectronPlatform();
+  }
+  return new WebPlatform();
+}
 
 // ── Seed demo project ─────────────────────────────────────────────────────────
 function makeDemoProject(): Project {
@@ -111,7 +126,7 @@ function makeDemoProject(): Project {
         schema: baseSchema,
         isDirty: false,
         canvasLayout: emptyCanvasLayout(),
-        isReadOnly: false, // editable in this demo; would be true for external imports
+        isReadOnly: false,
       },
     ],
     createdAt: new Date().toISOString(),
@@ -254,6 +269,10 @@ function App() {
   const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
   const schema = useAppStore((s) => s.getActiveSchema());
   const isDirty = useAppStore((s) => s.getIsDirty());
+  const setGitPanelOpen = useAppStore((s) => s.setGitPanelOpen);
+  const setValidationPanelOpen = useAppStore((s) => s.setValidationPanelOpen);
+  const gitPanelOpen = useAppStore((s) => s.gitPanelOpen);
+  const validationPanelOpen = useAppStore((s) => s.validationPanelOpen);
 
   React.useEffect(() => {
     if (!activeProject) {
@@ -267,10 +286,24 @@ function App() {
       <header style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.logo}>⬡ LinkML Visual Schema Editor</span>
-          <span style={styles.subtitle}>M5 — Multi-Schema Projects</span>
+          <span style={styles.subtitle}>M7 — Git Integration</span>
         </div>
         <div style={styles.headerRight}>
           {isDirty && <span style={styles.dirtyBadge}>● unsaved changes</span>}
+          <button
+            style={styles.headerBtn}
+            onClick={() => setValidationPanelOpen(!validationPanelOpen)}
+            title="Toggle Validation Panel"
+          >
+            ✓ Validate
+          </button>
+          <button
+            style={styles.headerBtn}
+            onClick={() => setGitPanelOpen(!gitPanelOpen)}
+            title="Toggle Git Panel"
+          >
+            ⎇ Git
+          </button>
           <button
             style={styles.headerBtn}
             onClick={() => setSchemaSettingsOpen(true)}
@@ -286,9 +319,12 @@ function App() {
         {/* Project panel (left) */}
         <ProjectPanel />
 
-        {/* Canvas (center) */}
-        <div style={styles.canvasArea}>
-          <SchemaCanvas />
+        {/* Canvas + focus toolbar (center) */}
+        <div style={styles.canvasColumn}>
+          <FocusModeToolbar />
+          <div style={styles.canvasArea}>
+            <SchemaCanvas />
+          </div>
         </div>
 
         {/* Properties panel (right) */}
@@ -298,6 +334,10 @@ function App() {
         <YamlPreview />
       </div>
 
+      {/* Bottom panels */}
+      <ValidationPanel />
+      <GitPanel />
+
       {/* Status bar */}
       <footer style={styles.footer}>
         <span>
@@ -306,7 +346,7 @@ function App() {
             : 'No schema loaded'}
         </span>
         <span>
-          Click node to edit · Right-click canvas to add · Drag handle-to-handle for is_a · Del to delete · Ctrl+Z / Ctrl+Y to undo/redo
+          Click node to edit · Right-click canvas to add · Drag handle-to-handle for is_a · Del to delete · Ctrl+Z/Y undo/redo
         </span>
       </footer>
 
@@ -377,11 +417,20 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     display: 'flex',
     overflow: 'hidden',
+    minHeight: 0,
+  },
+  canvasColumn: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    minWidth: 0,
   },
   canvasArea: {
     flex: 1,
     overflow: 'hidden',
     position: 'relative',
+    minHeight: 0,
   },
   footer: {
     display: 'flex',
@@ -396,14 +445,18 @@ const styles: Record<string, React.CSSProperties> = {
 };
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
-const platform = new StubWebPlatform();
-const container = document.getElementById('root')!;
-const root = createRoot(container);
+async function bootstrap() {
+  const platform = await createPlatform();
+  const container = document.getElementById('root')!;
+  const root = createRoot(container);
 
-root.render(
-  <React.StrictMode>
-    <PlatformContext.Provider value={platform}>
-      <App />
-    </PlatformContext.Provider>
-  </React.StrictMode>
-);
+  root.render(
+    <React.StrictMode>
+      <PlatformContext.Provider value={platform}>
+        <App />
+      </PlatformContext.Provider>
+    </React.StrictMode>
+  );
+}
+
+bootstrap();

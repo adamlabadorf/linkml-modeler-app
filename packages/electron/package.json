@@ -9,10 +9,14 @@
     "test": "echo 'No electron tests yet' && exit 0"
   },
   "dependencies": {
-    "@linkml-editor/core": "workspace:*"
+    "@linkml-editor/core": "workspace:*",
+    "isomorphic-git": "^1.27.0"
   },
   "devDependencies": {
     "electron": "^30.0.0",
     "typescript": "^5.4.0"
+  },
+  "optionalDependencies": {
+    "keytar": "^7.9.0"
   }
 }
