@@ -17,6 +17,7 @@ import ReactFlow, {
   OnNodesChange,
   OnEdgesChange,
   OnConnect,
+  OnSelectionChangeParams,
   applyNodeChanges,
   applyEdgeChanges,
   Node,
@@ -218,6 +219,7 @@ function SchemaCanvasInner() {
   const storeEdges = useAppStore((s) => s.edges);
   const viewport = useAppStore((s) => s.viewport);
   const focusMode = useAppStore((s) => s.focusMode);
+  const setSelection = useAppStore((s) => s.setSelection);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
   const clearActiveEntity = useAppStore((s) => s.clearActiveEntity);
   const activeEntity = useAppStore((s) => s.activeEntity);
@@ -339,6 +341,17 @@ function SchemaCanvasInner() {
       setActiveEntity({ type: 'edge', edgeId: edge.id });
     },
     [setActiveEntity]
+  );
+
+  // Rubber-band / multi-selection → update store selectedNodeIds
+  const onSelectionChange = useCallback(
+    ({ nodes, edges: selEdges }: OnSelectionChangeParams) => {
+      setSelection(
+        nodes.map((n) => n.id),
+        selEdges.map((e) => e.id)
+      );
+    },
+    [setSelection]
   );
 
   // Click on pane → deselect
@@ -527,6 +540,8 @@ function SchemaCanvasInner() {
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         onConnect={onConnect}
+        onSelectionChange={onSelectionChange}
+        selectionOnDrag={true}
         onPaneContextMenu={onPaneContextMenu}
         onNodeContextMenu={onNodeContextMenu}
         defaultViewport={viewport}

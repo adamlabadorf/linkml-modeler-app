@@ -17,3 +17,4 @@ export {
 export type { SchemaDependency, ImportedEntity } from './io/importResolver.js';
 export * from './canvas/index.js';
 export * from './editor/index.js';
+export * from './validation/index.js';
