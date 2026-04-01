@@ -26,20 +26,53 @@ function FieldRow({
 function TextInput({
   value,
   onChange,
+  onCommit,
   placeholder,
   monospace,
 }: {
   value: string;
   onChange: (v: string) => void;
+  onCommit?: (v: string) => void;
   placeholder?: string;
   monospace?: boolean;
 }) {
+  const [localValue, setLocalValue] = React.useState<string | null>(null);
+  const committed = localValue === null;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onCommit) {
+      setLocalValue(e.target.value);
+    } else {
+      onChange(e.target.value);
+    }
+  };
+
+  const handleBlur = () => {
+    if (onCommit && localValue !== null) {
+      onCommit(localValue);
+      setLocalValue(null);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (onCommit && e.key === 'Enter' && localValue !== null) {
+      onCommit(localValue);
+      setLocalValue(null);
+      (e.target as HTMLInputElement).blur();
+    } else if (onCommit && e.key === 'Escape') {
+      setLocalValue(null);
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
   return (
     <input
       style={{ ...styles.input, ...(monospace ? styles.inputMono : {}) }}
-      value={value ?? ''}
+      value={committed ? (value ?? '') : localValue!}
       placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
     />
   );
 }
@@ -140,6 +173,7 @@ function DeleteButton({ label, onConfirm }: { label: string; onConfirm: () => vo
 function ClassPanel({ schemaId, className }: { schemaId: string; className: string }) {
   const schema = useAppStore((s) => s.getActiveSchema())?.schema;
   const updateClass = useAppStore((s) => s.updateClass);
+  const renameClass = useAppStore((s) => s.renameClass);
   const addAttribute = useAppStore((s) => s.addAttribute);
   const updateAttribute = useAppStore((s) => s.updateAttribute);
   const deleteAttribute = useAppStore((s) => s.deleteAttribute);
@@ -171,7 +205,19 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
       <SectionHeader title="Class Properties" />
 
       <FieldRow label="Name">
-        <TextInput value={classDef.name} onChange={() => {}} placeholder="class name" monospace />
+        <TextInput
+          value={classDef.name}
+          onChange={() => {}}
+          onCommit={(v) => {
+            const newName = v.trim();
+            if (newName && newName !== className && !schema?.classes[newName]) {
+              renameClass(schemaId, className, newName);
+              setActiveEntity({ type: 'class', className: newName });
+            }
+          }}
+          placeholder="class name"
+          monospace
+        />
       </FieldRow>
 
       <FieldRow label="Description">
@@ -333,6 +379,7 @@ function SlotInlineEditor({
 function EnumPanel({ schemaId, enumName }: { schemaId: string; enumName: string }) {
   const schema = useAppStore((s) => s.getActiveSchema())?.schema;
   const updateEnum = useAppStore((s) => s.updateEnum);
+  const renameEnum = useAppStore((s) => s.renameEnum);
   const addPermissibleValue = useAppStore((s) => s.addPermissibleValue);
   const updatePermissibleValue = useAppStore((s) => s.updatePermissibleValue);
   const deletePermissibleValue = useAppStore((s) => s.deletePermissibleValue);
@@ -359,7 +406,18 @@ function EnumPanel({ schemaId, enumName }: { schemaId: string; enumName: string 
       <SectionHeader title="Enum Properties" />
 
       <FieldRow label="Name">
-        <TextInput value={enumDef.name} onChange={() => {}} monospace />
+        <TextInput
+          value={enumDef.name}
+          onChange={() => {}}
+          onCommit={(v) => {
+            const newName = v.trim();
+            if (newName && newName !== enumName && !schema?.enums[newName]) {
+              renameEnum(schemaId, enumName, newName);
+              setActiveEntity({ type: 'enum', enumName: newName });
+            }
+          }}
+          monospace
+        />
       </FieldRow>
 
       <FieldRow label="Description">
