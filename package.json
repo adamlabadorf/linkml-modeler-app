@@ -8,7 +8,9 @@
     "dev": "pnpm --filter @linkml-editor/web dev",
     "test": "pnpm -r test",
     "lint": "eslint packages/*/src --ext .ts,.tsx",
-    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\""
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "docs:dev": "pnpm --filter @linkml-editor/docs dev",
+    "docs:build": "pnpm --filter @linkml-editor/docs build"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.0.0",
