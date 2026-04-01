@@ -29,7 +29,7 @@ export default defineConfig({
       },
     ],
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/linkml/linkml-modeler-app' },
+      { icon: 'github', link: 'https://github.com/adamlabadorf/linkml-modeler-app' },
     ],
   },
 })
