@@ -15,7 +15,6 @@ export function FocusModeToolbar() {
   const focusMode = useAppStore((s) => s.focusMode);
   const setFocusMode = useAppStore((s) => s.setFocusMode);
   const selectedNodeIds = useAppStore((s) => s.selectedNodeIds);
-  const edges = useAppStore((s) => s.edges);
 
   // Collect subsets from the active schema
   const subsets = useMemo(() => {
@@ -35,16 +34,12 @@ export function FocusModeToolbar() {
     [setFocusMode]
   );
 
-  // Enter selection focus — includes selected nodes + their direct neighbors
+  // Enter selection focus — show only the selected nodes, grey out all others
   const handleSelectionFocus = useCallback(() => {
-    if (selectedNodeIds.length === 0) return;
-    const neighborIds = new Set(selectedNodeIds);
-    for (const edge of edges) {
-      if (selectedNodeIds.includes(edge.source)) neighborIds.add(edge.target);
-      if (selectedNodeIds.includes(edge.target)) neighborIds.add(edge.source);
-    }
-    setFocusMode({ type: 'selection', nodeIds: Array.from(neighborIds) });
-  }, [selectedNodeIds, edges, setFocusMode]);
+    const ids = useAppStore.getState().selectedNodeIds;
+    if (ids.length === 0) return;
+    setFocusMode({ type: 'selection', nodeIds: ids });
+  }, [setFocusMode]);
 
   const handleExit = useCallback(() => setFocusMode(null), [setFocusMode]);
 
@@ -87,7 +82,7 @@ export function FocusModeToolbar() {
         title={
           selectedNodeIds.length === 0
             ? 'Select nodes on the canvas first (rubber-band or click)'
-            : `Focus ${selectedNodeIds.length} selected node(s) + neighbors`
+            : `Focus ${selectedNodeIds.length} selected node(s)`
         }
       >
         ⬡ Focus Selection
