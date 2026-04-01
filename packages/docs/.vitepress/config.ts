@@ -4,6 +4,7 @@ export default defineConfig({
   title: 'LinkML Modeler App',
   description: 'Visual editor for LinkML schemas',
   base: '/linkml-modeler-app/',
+  ignoreDeadLinks: [/^http:\/\/localhost/],
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
