@@ -9,6 +9,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'User Guide', link: '/user-guide' },
       { text: 'Development', link: '/development' },
+      { text: 'Design Spec', link: '/design-spec' },
     ],
     sidebar: [
       {
