@@ -61,7 +61,8 @@ pnpm build
 packages/
 ├── core/       # Shared React app (renderer) — canvas, editor, store, IO, model, UI
 ├── web/        # Vite web build harness + platform adapter
-└── electron/   # Electron main process + IPC handlers
+├── electron/   # Electron main process + IPC handlers
+└── docs/       # VitePress documentation site (deployed to GitHub Pages)
 docs/
 ├── design-spec.md    # High-level design specification (v1.0-draft)
 ├── user-guide.md     # End-user guide
@@ -74,11 +75,13 @@ React 18 + TypeScript · ReactFlow · Zustand · js-yaml · shadcn/ui · Vite ·
 
 ## Documentation
 
+**[View the full documentation site](https://adamlabadorf.github.io/linkml-modeler-app/)**
+
 | Document | Description |
 |---|---|
-| [docs/user-guide.md](docs/user-guide.md) | How to use the editor |
-| [docs/development.md](docs/development.md) | Developer setup, architecture, and contribution guide |
-| [docs/design-spec.md](docs/design-spec.md) | Full design specification |
+| [User Guide](https://adamlabadorf.github.io/linkml-modeler-app/user-guide) | How to use the editor |
+| [Developer Guide](https://adamlabadorf.github.io/linkml-modeler-app/development) | Developer setup, architecture, and contribution guide |
+| [Design Spec](https://adamlabadorf.github.io/linkml-modeler-app/design-spec) | Full design specification |
 
 ## Scripts
 
