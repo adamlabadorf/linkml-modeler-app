@@ -61,7 +61,16 @@ function nextId() {
   return `vi-${++_issueCounter}`;
 }
 
-export function validateSchemaFull(schema: LinkMLSchema): ValidationIssue[] {
+/** Names from schemas imported into the active schema (used to avoid false-positive existence errors). */
+export interface ExternalNames {
+  classes: Set<string>;
+  enums: Set<string>;
+}
+
+export function validateSchemaFull(
+  schema: LinkMLSchema,
+  externalNames: ExternalNames = { classes: new Set(), enums: new Set() }
+): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
   // ── Schema-level metadata ────────────────────────────────────────────────
@@ -107,7 +116,9 @@ export function validateSchemaFull(schema: LinkMLSchema): ValidationIssue[] {
       BUILTIN_TYPES.has(range) ||
       allClassNames.has(range) ||
       allEnumNames.has(range) ||
-      allTypeNames.has(range)
+      allTypeNames.has(range) ||
+      externalNames.classes.has(range) ||
+      externalNames.enums.has(range)
     );
   }
 
@@ -134,7 +145,7 @@ export function validateSchemaFull(schema: LinkMLSchema): ValidationIssue[] {
     }
 
     // is_a existence
-    if (cls.isA && !allClassNames.has(cls.isA)) {
+    if (cls.isA && !allClassNames.has(cls.isA) && !externalNames.classes.has(cls.isA)) {
       issues.push({
         id: nextId(), severity: 'error', category: 'existence',
         path: `classes.${className}.is_a`,
@@ -145,7 +156,7 @@ export function validateSchemaFull(schema: LinkMLSchema): ValidationIssue[] {
 
     // mixin existence
     for (const mixin of cls.mixins) {
-      if (!allClassNames.has(mixin)) {
+      if (!allClassNames.has(mixin) && !externalNames.classes.has(mixin)) {
         issues.push({
           id: nextId(), severity: 'error', category: 'existence',
           path: `classes.${className}.mixins`,

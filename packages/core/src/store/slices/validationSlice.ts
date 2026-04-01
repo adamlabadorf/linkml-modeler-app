@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
 import type { LinkMLSchema } from '../../model/index.js';
-import { validateSchemaFull, type ValidationIssue, type JumpTarget } from '../../validation/index.js';
+import { validateSchemaFull, type ValidationIssue, type JumpTarget, type ExternalNames } from '../../validation/index.js';
 
 export interface ValidationSlice {
   // State
@@ -8,7 +8,7 @@ export interface ValidationSlice {
   lastValidatedAt: number | null; // timestamp
 
   // Actions
-  runValidation(schema: LinkMLSchema): void;
+  runValidation(schema: LinkMLSchema, externalNames?: ExternalNames): void;
   clearValidation(): void;
   /**
    * Returns a JumpTarget for a given issue (passthrough helper for UI).
@@ -21,8 +21,8 @@ export const createValidationSlice: StateCreator<ValidationSlice, [], [], Valida
   validationIssues: [],
   lastValidatedAt: null,
 
-  runValidation(schema) {
-    const issues = validateSchemaFull(schema);
+  runValidation(schema, externalNames = { classes: new Set(), enums: new Set() }) {
+    const issues = validateSchemaFull(schema, externalNames);
     set({ validationIssues: issues, lastValidatedAt: Date.now() });
   },
 

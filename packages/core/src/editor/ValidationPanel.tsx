@@ -7,6 +7,7 @@
  */
 import React, { useCallback, useMemo, useState } from 'react';
 import { useAppStore } from '../store/index.js';
+import { collectImportedEntities } from '../io/importResolver.js';
 import type { ValidationIssue, IssueSeverity } from '../validation/index.js';
 
 // ── Severity config ───────────────────────────────────────────────────────────
@@ -180,14 +181,21 @@ export function ValidationPanel() {
   const runValidation = useAppStore((s) => s.runValidation);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
   const activeSchema = useAppStore((s) => s.getActiveSchema());
+  const activeProject = useAppStore((s) => s.activeProject);
 
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all');
 
   const handleRun = useCallback(() => {
-    if (activeSchema) {
-      runValidation(activeSchema.schema);
-    }
-  }, [activeSchema, runValidation]);
+    if (!activeSchema) return;
+    const imported = activeProject
+      ? collectImportedEntities(activeSchema, activeProject.schemas)
+      : [];
+    const externalNames = {
+      classes: new Set(imported.filter((e) => e.type === 'class').map((e) => e.name)),
+      enums: new Set(imported.filter((e) => e.type === 'enum').map((e) => e.name)),
+    };
+    runValidation(activeSchema.schema, externalNames);
+  }, [activeSchema, activeProject, runValidation]);
 
   const handleJump = useCallback(
     (issue: ValidationIssue) => {

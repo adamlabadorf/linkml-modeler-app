@@ -33,6 +33,7 @@ import { edgeTypes, EdgeMarkerDefs } from './edges.js';
 import { deriveGraph } from './deriveGraph.js';
 import { runAutoLayout } from './autoLayout.js';
 import { useAppStore } from '../store/index.js';
+import { collectImportedEntities } from '../io/importResolver.js';
 import type { CanvasLayout } from '../model/index.js';
 import { emptyClassDefinition, emptyEnumDefinition } from '../model/index.js';
 
@@ -245,11 +246,14 @@ function SchemaCanvasInner() {
     [activeProject, activeSchemaId]
   );
 
-  // Derive graph
+  // Derive graph (with ghost nodes for imported entities)
   const { nodes: derivedNodes, edges: derivedEdges } = useMemo(() => {
     if (!activeSchemaFile) return { nodes: [], edges: [] };
-    return deriveGraph(activeSchemaFile.schema, localLayout);
-  }, [activeSchemaFile, localLayout]);
+    const ghostEntities = activeProject
+      ? collectImportedEntities(activeSchemaFile, activeProject.schemas)
+      : [];
+    return deriveGraph(activeSchemaFile.schema, localLayout, {}, ghostEntities);
+  }, [activeSchemaFile, activeProject, localLayout]);
 
   useEffect(() => {
     setNodes(derivedNodes);
