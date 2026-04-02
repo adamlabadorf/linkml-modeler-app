@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-04-02
+
+### Fixed
+
+- **Electron**: Serve web assets via custom `app://` protocol instead of `file://`. ES module scripts are blocked by Chromium's CORS policy when loaded from `file://` URLs, which caused the blank page on all platforms. The custom protocol is registered as privileged with full CORS and fetch API support.
+
 ## [0.1.1] - 2026-04-02
 
 ### Fixed
