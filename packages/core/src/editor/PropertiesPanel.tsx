@@ -521,7 +521,7 @@ function PermissibleValueEditor({
 }
 
 /** Parse a range edge ID: `range__{className}__{slotName}__{target}` */
-function parseRangeEdgeId(edgeId: string): { className: string; slotName: string; target: string } | null {
+export function parseRangeEdgeId(edgeId: string): { className: string; slotName: string; target: string } | null {
   if (!edgeId.startsWith('range__')) return null;
   const parts = edgeId.split('__');
   if (parts.length < 4) return null;
