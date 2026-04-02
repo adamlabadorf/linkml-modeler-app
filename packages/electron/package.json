@@ -6,7 +6,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "test": "echo 'No electron tests yet' && exit 0"
+    "test": "echo 'No electron tests yet' && exit 0",
+    "package": "pnpm run build && electron-builder --publish never",
+    "package:linux": "pnpm run build && electron-builder --linux --publish never",
+    "package:mac": "pnpm run build && electron-builder --mac --publish never",
+    "package:win": "pnpm run build && electron-builder --win --publish never"
   },
   "dependencies": {
     "@linkml-editor/core": "workspace:*",
@@ -14,9 +18,52 @@
   },
   "devDependencies": {
     "electron": "^30.0.0",
+    "electron-builder": "^25.1.8",
     "typescript": "^5.4.0"
   },
   "optionalDependencies": {
     "keytar": "^7.9.0"
+  },
+  "build": {
+    "appId": "io.linkml.modeler",
+    "productName": "LinkML Modeler",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web",
+        "filter": ["**/*"]
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Science",
+      "icon": "build/icons"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icons/icon.icns"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

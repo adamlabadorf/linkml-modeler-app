@@ -30,7 +30,11 @@ async function createWindow(): Promise<void> {
     await win.loadURL('http://localhost:5173');
     win.webContents.openDevTools();
   } else {
-    await win.loadFile(path.join(__dirname, '../../web/dist/index.html'));
+    // In packaged builds, web assets are in extraResources/web
+    const webDistPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'web', 'index.html')
+      : path.join(__dirname, '../../web/dist/index.html');
+    await win.loadFile(webDistPath);
   }
 
   win.webContents.setWindowOpenHandler(({ url }) => {
