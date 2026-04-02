@@ -59,8 +59,10 @@ jobs:
       - name: Build core package
         run: pnpm --filter @linkml-editor/core run build
 
-      - name: Build web package
+      - name: Build web package (Electron)
         run: pnpm --filter @linkml-editor/web run build
+        env:
+          VITE_ELECTRON: '1'
 
       - name: Package Electron app
         run: pnpm --filter @linkml-editor/electron run package:${{ matrix.platform }}
