@@ -1,6 +1,16 @@
 {
   "name": "@linkml-editor/electron",
   "version": "0.1.0",
+  "description": "LinkML Modeler desktop application",
+  "author": {
+    "name": "Adam Labadorf",
+    "email": "adam@linkml.io"
+  },
+  "homepage": "https://github.com/adamlabadorf/linkml-modeler-app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adamlabadorf/linkml-modeler-app.git"
+  },
   "type": "commonjs",
   "main": "./dist/main.js",
   "scripts": {
