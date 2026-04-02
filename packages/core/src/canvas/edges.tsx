@@ -8,7 +8,7 @@
  * | mixin     | Dashed line, hollow triangle  |
  * | union_of  | Dotted line, no arrowhead     |
  */
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import {
   EdgeProps,
   getSmoothStepPath,
@@ -66,18 +66,141 @@ function EdgeLabel({
   );
 }
 
+// ── Range edge data interface ──────────────────────────────────────────────────
+export interface RangeEdgeData {
+  slotName: string;
+  range: string;
+  required: boolean;
+  multivalued: boolean;
+  identifier: boolean;
+}
+
 // ── range edge ─────────────────────────────────────────────────────────────────
-// Solid arrow, labeled with slot name.
+// Solid arrow, labeled with slot name + property badges.
 export const RangeEdge = memo(function RangeEdge(props: EdgeProps) {
   const { path, labelX, labelY } = edgePath(props);
+  const [hovered, setHovered] = useState(false);
+  const data = props.data as RangeEdgeData | undefined;
+
+  const badges: string[] = [];
+  if (data?.required) badges.push('R');
+  if (data?.multivalued) badges.push('M');
+  if (data?.identifier) badges.push('id');
+
   return (
     <>
+      {/* Invisible wider hit area for hover detection */}
+      <path
+        d={path}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={12}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ pointerEvents: 'stroke' }}
+      />
       <BaseEdge
         path={path}
         markerEnd={props.markerEnd ?? 'url(#arrow-filled)'}
-        style={{ stroke: '#4ade80', strokeWidth: 1.5 }}
+        style={{
+          stroke: '#4ade80',
+          strokeWidth: hovered ? 2.5 : 1.5,
+          filter: hovered ? 'drop-shadow(0 0 4px rgba(74, 222, 128, 0.5))' : undefined,
+          transition: 'stroke-width 0.15s, filter 0.15s',
+        }}
       />
-      <EdgeLabel x={labelX} y={labelY} label={props.label as string | undefined} />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+            pointerEvents: 'all',
+            cursor: 'default',
+          }}
+          className="nodrag nopan"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          {/* Slot name label */}
+          {props.label && (
+            <span
+              style={{
+                background: '#1e293b',
+                border: '1px solid #334155',
+                borderRadius: 3,
+                padding: '1px 5px',
+                fontSize: 10,
+                fontFamily: 'monospace',
+                color: '#94a3b8',
+              }}
+            >
+              {props.label as string}
+            </span>
+          )}
+          {/* Property badges */}
+          {badges.length > 0 && (
+            <span style={{ display: 'flex', gap: 2 }}>
+              {badges.map((b) => (
+                <span
+                  key={b}
+                  style={{
+                    fontSize: 9,
+                    background: b === 'R' ? '#7f1d1d' : '#334155',
+                    border: b === 'R' ? '1px solid #991b1b' : '1px solid #475569',
+                    borderRadius: 3,
+                    padding: '0 3px',
+                    color: b === 'R' ? '#fca5a5' : '#94a3b8',
+                    fontFamily: 'monospace',
+                    fontWeight: 600,
+                  }}
+                >
+                  {b}
+                </span>
+              ))}
+            </span>
+          )}
+          {/* Tooltip on hover */}
+          {hovered && data && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                marginTop: 6,
+                background: '#1e293b',
+                border: '1px solid #475569',
+                borderRadius: 4,
+                padding: '6px 10px',
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: '#e2e8f0',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                zIndex: 100,
+              }}
+            >
+              <div style={{ marginBottom: 2 }}>
+                <span style={{ color: '#94a3b8' }}>slot: </span>
+                <span>{data.slotName}</span>
+              </div>
+              <div style={{ marginBottom: 2 }}>
+                <span style={{ color: '#94a3b8' }}>range: </span>
+                <span style={{ color: '#86efac' }}>{data.range}</span>
+              </div>
+              {badges.length > 0 && (
+                <div>
+                  <span style={{ color: '#94a3b8' }}>flags: </span>
+                  <span style={{ color: '#fbbf24' }}>{badges.join(', ')}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 });

@@ -116,6 +116,13 @@ export function deriveGraph(
           source: className,
           target: slot.range,
           label: slotName,
+          data: {
+            slotName,
+            range: slot.range,
+            required: slot.required ?? false,
+            multivalued: slot.multivalued ?? false,
+            identifier: slot.identifier ?? false,
+          },
           animated: false,
         });
       }
@@ -208,6 +215,13 @@ export function deriveGraph(
           source: className,
           target: ghostId,
           label: slotName,
+          data: {
+            slotName,
+            range: slot.range,
+            required: slot.required ?? false,
+            multivalued: slot.multivalued ?? false,
+            identifier: slot.identifier ?? false,
+          },
           animated: false,
         });
       }
