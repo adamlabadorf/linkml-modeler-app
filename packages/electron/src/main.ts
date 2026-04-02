@@ -7,9 +7,25 @@
  * - Credential storage via keytar (falls back to in-memory cache)
  */
 import path from 'path';
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { pathToFileURL } from 'url';
+import { app, BrowserWindow, dialog, ipcMain, net, protocol, shell } from 'electron';
 
 const isDev = process.env.NODE_ENV !== 'production';
+
+// Register custom protocol as privileged before app is ready.
+// This allows ES module scripts and fetch to work correctly,
+// avoiding CORS issues that occur with file:// protocol.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+    },
+  },
+]);
 
 // ── Window ────────────────────────────────────────────────────────────────────
 
@@ -30,11 +46,27 @@ async function createWindow(): Promise<void> {
     await win.loadURL('http://localhost:5173');
     win.webContents.openDevTools();
   } else {
-    // In packaged builds, web assets are in extraResources/web
-    const webDistPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'web', 'index.html')
-      : path.join(__dirname, '../../web/dist/index.html');
-    await win.loadFile(webDistPath);
+    // Serve web assets via the custom app:// protocol so that
+    // ES module scripts and CORS work correctly (file:// blocks these).
+    const webDistDir = app.isPackaged
+      ? path.join(process.resourcesPath, 'web')
+      : path.join(__dirname, '../../web/dist');
+
+    protocol.handle('app', (request) => {
+      let urlPath = new URL(request.url).pathname;
+      // Normalize: strip leading slash on Windows (e.g. /C:/... → C:/...)
+      if (process.platform === 'win32' && urlPath.startsWith('/')) {
+        urlPath = urlPath.slice(1);
+      }
+      // Default to index.html for root requests
+      if (urlPath === '' || urlPath === '/' || urlPath === '.') {
+        urlPath = 'index.html';
+      }
+      const filePath = path.join(webDistDir, urlPath);
+      return net.fetch(pathToFileURL(filePath).href);
+    });
+
+    await win.loadURL('app://./index.html');
   }
 
   win.webContents.setWindowOpenHandler(({ url }) => {
