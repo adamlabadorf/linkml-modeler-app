@@ -37,6 +37,7 @@
   "build": {
     "appId": "io.linkml.modeler",
     "productName": "LinkML Modeler",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "release"
     },
