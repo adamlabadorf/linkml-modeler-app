@@ -520,30 +520,89 @@ function PermissibleValueEditor({
   );
 }
 
+/** Parse a range edge ID: `range__{className}__{slotName}__{target}` */
+function parseRangeEdgeId(edgeId: string): { className: string; slotName: string; target: string } | null {
+  if (!edgeId.startsWith('range__')) return null;
+  const parts = edgeId.split('__');
+  if (parts.length < 4) return null;
+  return { className: parts[1], slotName: parts[2], target: parts.slice(3).join('__') };
+}
+
+const EDGE_TYPE_DESCRIPTIONS: Record<string, string> = {
+  is_a: 'Inheritance — this class extends the target class.',
+  mixin: 'Mixin — this class incorporates attributes from the target.',
+  union_of: 'Union — the target is one of the constituent types.',
+};
+
 function EdgePanel({ edgeId }: { edgeId: string }) {
   const edges = useAppStore((s) => s.edges);
   const edge = edges.find((e) => e.id === edgeId);
+  const schema = useAppStore((s) => s.getActiveSchema());
+  const updateAttribute = useAppStore((s) => s.updateAttribute);
 
   if (!edge) return <EmptyPanel message="Edge not found" />;
 
-  const source = edge.source;
-  const target = edge.target;
+  const rangeInfo = parseRangeEdgeId(edgeId);
+  const schemaId = schema?.id ?? '';
+  const schemaData = schema?.schema;
+
+  // For range edges, resolve the slot and render an inline editor
+  if (rangeInfo && schemaData) {
+    const classDef = schemaData.classes[rangeInfo.className];
+    const slot = classDef?.attributes[rangeInfo.slotName];
+
+    if (slot) {
+      const allClassNames = Object.keys(schemaData.classes);
+      const allEnumNames = Object.keys(schemaData.enums ?? {});
+      const builtinTypes = ['string', 'integer', 'float', 'boolean', 'date', 'datetime', 'uri', 'uriorcurie'];
+      const rangeOptions = [...builtinTypes, ...allClassNames, ...allEnumNames];
+
+      return (
+        <div>
+          <SectionHeader title="Range Edge (editable)" />
+          <div style={styles.editableBadge}>editable</div>
+          <FieldRow label="Source">
+            <span style={styles.readOnlyValue}>{rangeInfo.className}</span>
+          </FieldRow>
+          <FieldRow label="Target">
+            <span style={styles.readOnlyValue}>{rangeInfo.target}</span>
+          </FieldRow>
+          <SectionHeader title="Slot Properties" />
+          <SlotInlineEditor
+            slot={slot}
+            rangeOptions={rangeOptions}
+            onUpdate={(partial) => updateAttribute(schemaId, rangeInfo.className, rangeInfo.slotName, partial)}
+            onDelete={() => {}}
+          />
+        </div>
+      );
+    }
+  }
+
+  // Non-range edges: read-only display with relationship description
+  const edgeType = edge.type ?? edgeId.split('__')[0] ?? 'unknown';
+  const description = EDGE_TYPE_DESCRIPTIONS[edgeType];
 
   return (
     <div>
       <SectionHeader title="Edge (read-only)" />
       <FieldRow label="Type">
-        <span style={styles.readOnlyValue}>{edge.type}</span>
+        <span style={styles.readOnlyValue}>{edgeType}</span>
       </FieldRow>
       <FieldRow label="Source">
-        <span style={styles.readOnlyValue}>{source}</span>
+        <span style={styles.readOnlyValue}>{edge.source}</span>
       </FieldRow>
       <FieldRow label="Target">
-        <span style={styles.readOnlyValue}>{target}</span>
+        <span style={styles.readOnlyValue}>{edge.target}</span>
       </FieldRow>
       {edge.label && (
         <FieldRow label="Label">
           <span style={styles.readOnlyValue}>{String(edge.label)}</span>
+        </FieldRow>
+      )}
+      {description && (
+        <FieldRow label="Description">
+          <span style={styles.edgeDescription}>{description}</span>
         </FieldRow>
       )}
     </div>
@@ -992,6 +1051,27 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#94a3b8',
     padding: '4px 0',
     display: 'block',
+  },
+  editableBadge: {
+    margin: '4px 12px',
+    display: 'inline-block',
+    fontSize: 10,
+    fontFamily: 'monospace',
+    fontWeight: 600,
+    color: '#86efac',
+    background: '#064e3b',
+    border: '1px solid #065f46',
+    borderRadius: 4,
+    padding: '1px 6px',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  edgeDescription: {
+    fontSize: 11,
+    color: '#64748b',
+    fontFamily: 'sans-serif',
+    fontStyle: 'italic',
+    lineHeight: 1.4,
   },
   emptyPanel: {
     padding: '24px 16px',
