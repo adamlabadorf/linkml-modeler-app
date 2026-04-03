@@ -25,7 +25,7 @@ function timeAgo(timestamp: number): string {
 
 // ── GitPanel ──────────────────────────────────────────────────────────────────
 
-export function GitPanel() {
+export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Promise<boolean> }) {
   const platform = usePlatform();
   const gitPanelOpen = useAppStore((s) => s.gitPanelOpen);
   const setGitPanelOpen = useAppStore((s) => s.setGitPanelOpen);
@@ -76,6 +76,18 @@ export function GitPanel() {
     setIsCommitting(true);
     setLastGitError(null);
     try {
+      // Save dirty schemas to disk before committing
+      if (onSaveBeforeCommit) {
+        const saved = await onSaveBeforeCommit();
+        if (!saved) {
+          pushToast({ message: 'Save failed — commit aborted', severity: 'warning' });
+          setIsCommitting(false);
+          return;
+        }
+        // Refresh status after save to pick up file changes
+        await refreshStatus();
+      }
+
       await platform.gitStage(repoPath, Array.from(stagedPaths));
       const oid = await platform.gitCommit(repoPath, commitMessage);
       if (oid) {
@@ -92,7 +104,7 @@ export function GitPanel() {
       setIsCommitting(false);
     }
   }, [
-    commitMessage, stagedPaths, repoPath, platform,
+    commitMessage, stagedPaths, repoPath, platform, onSaveBeforeCommit,
     setIsCommitting, setLastGitError, setCommitMessage, clearStaged,
     pushToast, refreshStatus,
   ]);
@@ -131,6 +143,11 @@ export function GitPanel() {
               {gitStatus.stagedFiles.length + gitStatus.unstagedFiles.length + gitStatus.untrackedFiles.length}
             </span>
           )}
+        {commitLog.length > 0 && (
+          <span style={styles.lastCommitHint}>
+            {commitLog[0].oid.slice(0, 7)} {commitLog[0].message.split('\n')[0].slice(0, 40)}
+          </span>
+        )}
       </div>
     );
   }
@@ -375,6 +392,15 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#fde68a',
     fontFamily: 'monospace',
     fontWeight: 700,
+  },
+  lastCommitHint: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    color: '#334155',
+    marginLeft: 4,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   panelHeader: {
     display: 'flex',

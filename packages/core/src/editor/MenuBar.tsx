@@ -24,6 +24,8 @@ interface MenuBarProps {
   onSave?: () => void;
   onSaveAs?: () => void;
   onCloseProject?: () => void;
+  onCommit?: () => void;
+  onPush?: () => void;
 }
 
 // ── DropdownMenu ─────────────────────────────────────────────────────────────
@@ -162,6 +164,8 @@ export function MenuBar({
   onSave,
   onSaveAs,
   onCloseProject,
+  onCommit,
+  onPush,
 }: MenuBarProps) {
   const [openMenu, setOpenMenu] = React.useState<string | null>(null);
   const anyOpen = openMenu !== null;
@@ -216,6 +220,13 @@ export function MenuBar({
     { label: 'YAML Preview', checked: yamlPreviewOpen, action: () => setYamlPreviewOpen(!yamlPreviewOpen) },
   ];
 
+  const gitItems: MenuEntry[] = [
+    { label: 'Commit\u2026', action: onCommit, disabled: !onCommit },
+    { label: 'Push', action: onPush, disabled: !onPush },
+    { separator: true },
+    { label: 'Toggle Git Panel', checked: gitPanelOpen, action: () => setGitPanelOpen(!gitPanelOpen) },
+  ];
+
   const helpItems: MenuEntry[] = [
     { label: 'Keyboard Shortcuts', action: () => setShortcutsOpen(true) },
     { label: 'Documentation', action: () => window.open('https://linkml.io/linkml/', '_blank') },
@@ -229,6 +240,7 @@ export function MenuBar({
         <DropdownMenu label="File" items={fileItems} isOpen={openMenu === 'file'} onToggle={() => toggle('file')} onClose={close} onHover={() => hover('file')} />
         <DropdownMenu label="Edit" items={editItems} isOpen={openMenu === 'edit'} onToggle={() => toggle('edit')} onClose={close} onHover={() => hover('edit')} />
         <DropdownMenu label="View" items={viewItems} isOpen={openMenu === 'view'} onToggle={() => toggle('view')} onClose={close} onHover={() => hover('view')} />
+        <DropdownMenu label="Git" items={gitItems} isOpen={openMenu === 'git'} onToggle={() => toggle('git')} onClose={close} onHover={() => hover('git')} />
         <DropdownMenu label="Help" items={helpItems} isOpen={openMenu === 'help'} onToggle={() => toggle('help')} onClose={close} onHover={() => hover('help')} />
       </nav>
 

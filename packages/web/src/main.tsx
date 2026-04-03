@@ -198,14 +198,14 @@ function App() {
   const [isSaving, setIsSaving] = React.useState(false);
 
   // ── Save project to disk ───────────────────────────────────────────────────
-  const saveProject = React.useCallback(async () => {
+  const saveProject = React.useCallback(async (): Promise<boolean> => {
     const project = useAppStore.getState().activeProject;
-    if (!project) return;
+    if (!project) return false;
 
     const dirtySchemas = project.schemas.filter((s) => s.isDirty && !s.isReadOnly);
     if (dirtySchemas.length === 0) {
       pushToast({ message: 'Nothing to save', severity: 'info' });
-      return;
+      return true;
     }
 
     let rootPath = project.rootPath;
@@ -213,7 +213,7 @@ function App() {
     // If no rootPath (new unsaved project), prompt user to pick a location
     if (!rootPath || rootPath === '/') {
       const picked = await platform.openDirectory();
-      if (!picked) return; // user cancelled
+      if (!picked) return false; // user cancelled
       rootPath = picked;
       // Update project rootPath in store
       useAppStore.setState((state) => ({
@@ -249,14 +249,36 @@ function App() {
         message: `Save failed for ${errors.length} file(s): ${errors[0]}`,
         severity: 'error',
       });
+      return false;
     } else {
       pushToast({
         message: `Saved ${savedCount} file${savedCount > 1 ? 's' : ''}`,
         severity: 'success',
         durationMs: 2000,
       });
+      return true;
     }
   }, [platform, pushToast, markSchemaDirty]);
+
+  // ── Git helpers (for MenuBar) ─────────────────────────────────────────────
+  const handleMenuCommit = React.useCallback(() => {
+    // Open git panel to the changes tab for committing
+    useAppStore.getState().setGitPanelOpen(true);
+  }, []);
+
+  const handleMenuPush = React.useCallback(async () => {
+    const repoPath = useAppStore.getState().activeProject?.rootPath ?? '/';
+    try {
+      const result = await platform.gitPush(repoPath);
+      if (result?.ok) {
+        pushToast({ message: 'Pushed to remote', severity: 'success' });
+      } else {
+        pushToast({ message: result?.error ?? 'Push failed', severity: 'error' });
+      }
+    } catch (e: unknown) {
+      pushToast({ message: e instanceof Error ? e.message : String(e), severity: 'error' });
+    }
+  }, [platform, pushToast]);
 
   // ── Ctrl+S / Cmd+S keyboard shortcut ───────────────────────────────────────
   React.useEffect(() => {
@@ -289,6 +311,8 @@ function App() {
           <MenuBar
             onSave={saveProject}
             onSaveAs={saveProject}
+            onCommit={handleMenuCommit}
+            onPush={handleMenuPush}
           />
         </div>
         <div style={styles.headerRight}>
@@ -319,7 +343,7 @@ function App() {
 
       {/* Bottom panels */}
       <ValidationPanel />
-      <GitPanel />
+      <GitPanel onSaveBeforeCommit={saveProject} />
 
       {/* Status bar */}
       <footer style={styles.footer}>
