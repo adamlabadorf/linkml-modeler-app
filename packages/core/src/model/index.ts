@@ -22,6 +22,16 @@ export interface SchemaFile {
   isReadOnly?: boolean; // True for imported (dependency) schemas
 }
 
+// ─── 4.1a Recent Projects ────────────────────────────────────────────────────
+
+export interface RecentProject {
+  id: string; // UUID
+  name: string;
+  rootPath: string; // Absolute path (Electron) or OPFS path (web)
+  lastOpened: string; // ISO 8601
+  source: 'local' | 'git';
+}
+
 // ─── 4.1b Editor Manifest (.linkml-editor.yaml) ───────────────────────────────
 
 export interface EditorManifest {

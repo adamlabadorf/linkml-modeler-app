@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { Project, SchemaFile, LinkMLSchema, ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue } from '../../model/index.js';
 import { findMissingImport, resolveImportPath } from '../../io/importResolver.js';
+import { addRecentProject } from '../../project/recentProjects.js';
 
 export interface ProjectSlice {
   // State
@@ -13,7 +14,8 @@ export interface ProjectSlice {
 
   // Actions
   setProject(project: Project): void;
-  closeProject(): void;
+  /** Close the active project. Returns true if the project had unsaved changes (caller should prompt save). */
+  closeProject(): boolean;
   setActiveSchema(schemaId: string): void;
   updateSchema(schemaId: string, partial: Partial<LinkMLSchema>): void;
   markSchemaDirty(schemaId: string, dirty: boolean): void;
@@ -88,10 +90,21 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
   setProject(project) {
     const firstSchemaId = project.schemas[0]?.id ?? null;
     set({ activeProject: project, activeSchemaId: firstSchemaId });
+
+    // Track in recent projects list
+    addRecentProject({
+      id: project.id,
+      name: project.name,
+      rootPath: project.rootPath,
+      lastOpened: new Date().toISOString(),
+      source: project.gitConfig?.enabled ? 'git' : 'local',
+    });
   },
 
   closeProject() {
+    const wasDirty = get().getIsDirty();
     set({ activeProject: null, activeSchemaId: null });
+    return wasDirty;
   },
 
   setActiveSchema(schemaId) {

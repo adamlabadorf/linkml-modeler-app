@@ -19,3 +19,5 @@ export type { SchemaDependency, ImportedEntity } from './io/importResolver.js';
 export * from './canvas/index.js';
 export * from './editor/index.js';
 export * from './validation/index.js';
+export { getRecentProjects, addRecentProject, removeRecentProject, clearRecentProjects } from './project/recentProjects.js';
+export { openProjectFromDirectory, createNewProject } from './project/projectLoader.js';
