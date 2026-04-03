@@ -40,6 +40,18 @@ export interface GitPushResult {
   error?: string;
 }
 
+export interface GitCloneOptions {
+  branch?: string;
+  credentials?: GitCredentials;
+  onProgress?: (phase: string, loaded: number, total: number) => void;
+}
+
+export interface GitCloneResult {
+  ok: boolean;
+  destPath: string;
+  error?: string;
+}
+
 export interface GitCommit {
   oid: string;
   message: string;
@@ -68,6 +80,7 @@ export interface PlatformAPI {
   gitCommit(repoPath: string, message: string): Promise<string | null>;
   gitPush(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
+  gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult>;
 
   // Environment
   platform: 'web' | 'electron';

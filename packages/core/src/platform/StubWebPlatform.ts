@@ -14,6 +14,8 @@ import type {
   GitStatus,
   GitPushResult,
   GitCommit,
+  GitCloneOptions,
+  GitCloneResult,
 } from './PlatformContext.js';
 
 export class StubWebPlatform implements PlatformAPI {
@@ -62,5 +64,9 @@ export class StubWebPlatform implements PlatformAPI {
 
   async gitLog(_repoPath: string, _limit: number): Promise<GitCommit[]> {
     return [];
+  }
+
+  async gitClone(_url: string, destPath: string, _options?: GitCloneOptions): Promise<GitCloneResult> {
+    return { ok: false, destPath, error: 'StubWebPlatform: gitClone not implemented' };
   }
 }

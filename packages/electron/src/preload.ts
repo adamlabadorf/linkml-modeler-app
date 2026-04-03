@@ -42,6 +42,9 @@ const electronAPI = {
 
   gitLog: (repoPath: string, limit: number) =>
     ipcRenderer.invoke('platform:gitLog', repoPath, limit),
+
+  gitClone: (url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }) =>
+    ipcRenderer.invoke('platform:gitClone', url, destPath, options),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

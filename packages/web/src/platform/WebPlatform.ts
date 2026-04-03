@@ -19,6 +19,8 @@ import type {
   GitPushResult,
   GitCommit,
   GitCredentials,
+  GitCloneOptions,
+  GitCloneResult,
 } from '@linkml-editor/core';
 
 // ── LightningFS singleton (OPFS-backed) ───────────────────────────────────────
@@ -314,6 +316,48 @@ export class WebPlatform implements PlatformAPI {
       }));
     } catch {
       return [];
+    }
+  }
+
+  async gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult> {
+    try {
+      // Ensure destination directory exists
+      await (pfs as unknown as { mkdir: (p: string, opts: { recursive: boolean }) => Promise<void> })
+        .mkdir(destPath, { recursive: true }).catch(() => {});
+
+      const onAuth = options?.credentials
+        ? (() => {
+            const creds = options.credentials!;
+            this._credentials.set(url, creds);
+            return () => creds;
+          })()
+        : undefined;
+
+      const onProgress = options?.onProgress
+        ? (evt: { phase: string; loaded: number; total: number }) => {
+            options.onProgress!(evt.phase, evt.loaded, evt.total);
+          }
+        : undefined;
+
+      await git.clone({
+        fs,
+        http,
+        dir: destPath,
+        url,
+        singleBranch: true,
+        depth: 1,
+        ref: options?.branch || undefined,
+        onAuth,
+        onProgress,
+      });
+
+      // Mark git as available now that we have a repo
+      this.gitAvailable = true;
+
+      return { ok: true, destPath };
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { ok: false, destPath, error: msg };
     }
   }
 }

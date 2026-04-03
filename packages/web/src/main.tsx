@@ -40,6 +40,7 @@ import {
   MenuBar,
   SplashPage,
   SchemaCanvas,
+  CloneDialog,
 } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
 import { GitPanel } from './editor/GitPanel.js';
@@ -197,6 +198,8 @@ function App() {
   const markSchemaDirty = useAppStore((s) => s.markSchemaDirty);
   const yamlPreviewOpen = useAppStore((s) => s.yamlPreviewOpen);
   const validationIssues = useAppStore((s) => s.validationIssues);
+  const cloneDialogOpen = useAppStore((s) => s.cloneDialogOpen);
+  const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
   const [isSaving, setIsSaving] = React.useState(false);
 
   // ── Save project to disk ───────────────────────────────────────────────────
@@ -301,6 +304,9 @@ function App() {
     return (
       <div style={styles.app}>
         <SplashPage />
+        {cloneDialogOpen && (
+          <CloneDialog onClose={() => setCloneDialogOpen(false)} />
+        )}
         <ToastList />
       </div>
     );
@@ -315,6 +321,7 @@ function App() {
           <MenuBar
             onSave={saveProject}
             onSaveAs={saveProject}
+            onOpenFromUrl={() => setCloneDialogOpen(true)}
             onCommit={handleMenuCommit}
             onPush={handleMenuPush}
           />
@@ -386,6 +393,11 @@ function App() {
       {/* Schema settings dialog */}
       {schemaSettingsOpen && (
         <SchemaSettingsDialog onClose={() => setSchemaSettingsOpen(false)} />
+      )}
+
+      {/* Clone from URL dialog */}
+      {cloneDialogOpen && (
+        <CloneDialog onClose={() => setCloneDialogOpen(false)} />
       )}
 
       {/* Toast notifications */}

@@ -11,6 +11,7 @@ export function SplashPage() {
   const platform = usePlatform();
   const setProject = useAppStore((s) => s.setProject);
   const pushToast = useAppStore((s) => s.pushToast);
+  const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
 
   const [recentProjects, setRecentProjects] = React.useState<RecentProject[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -125,10 +126,10 @@ export function SplashPage() {
             <span style={s.actionHint}>Scan directory for LinkML schemas</span>
           </button>
 
-          <button style={{ ...s.actionBtn, opacity: 0.5, cursor: 'not-allowed' }} disabled>
+          <button style={s.actionBtn} onClick={() => setCloneDialogOpen(true)}>
             <span style={s.actionIcon}>🔗</span>
             <span style={s.actionLabel}>Clone from URL</span>
-            <span style={s.actionHint}>Coming soon</span>
+            <span style={s.actionHint}>Clone a git repository</span>
           </button>
         </div>
 

@@ -354,6 +354,46 @@ function registerIpcHandlers(): void {
       return [];
     }
   });
+
+  ipcMain.handle('platform:gitClone', async (_event, url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }) => {
+    try {
+      const fs = await getFs();
+      const git = await getGit();
+      const httpModule = await getHttp();
+      const { mkdir } = await import('fs/promises');
+
+      await mkdir(destPath, { recursive: true });
+
+      const g = git as unknown as {
+        clone: (opts: object) => Promise<void>;
+      };
+
+      const cloneOpts: Record<string, unknown> = {
+        fs: { promises: fs },
+        http: httpModule,
+        dir: destPath,
+        url,
+        singleBranch: true,
+        depth: 1,
+      };
+
+      if (options?.branch) {
+        cloneOpts.ref = options.branch;
+      }
+
+      if (options?.credentials) {
+        const creds = options.credentials;
+        credentialCache.set(url, creds);
+        cloneOpts.onAuth = () => creds;
+      }
+
+      await g.clone(cloneOpts);
+
+      return { ok: true, destPath };
+    } catch (e: unknown) {
+      return { ok: false, destPath, error: e instanceof Error ? e.message : String(e) };
+    }
+  });
 }
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────

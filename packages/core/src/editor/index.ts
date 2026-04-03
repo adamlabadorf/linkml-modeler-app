@@ -5,3 +5,4 @@ export { ValidationPanel } from './ValidationPanel.js';
 export { FocusModeToolbar } from './FocusModeToolbar.js';
 export { MenuBar } from './MenuBar.js';
 export { SplashPage } from './SplashPage.js';
+export { CloneDialog } from './CloneDialog.js';

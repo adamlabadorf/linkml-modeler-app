@@ -13,6 +13,8 @@ import type {
   GitStatus,
   GitPushResult,
   GitCommit,
+  GitCloneOptions,
+  GitCloneResult,
 } from '@linkml-editor/core';
 
 type ElectronBridge = {
@@ -28,6 +30,7 @@ type ElectronBridge = {
   gitCommit(repoPath: string, message: string): Promise<string | null>;
   gitPush(repoPath: string): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
+  gitClone(url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }): Promise<GitCloneResult>;
 };
 
 function bridge(): ElectronBridge {
@@ -86,5 +89,12 @@ export class ElectronPlatform implements PlatformAPI {
 
   async gitLog(repoPath: string, limit: number): Promise<GitCommit[]> {
     return bridge().gitLog(repoPath, limit);
+  }
+
+  async gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult> {
+    return bridge().gitClone(url, destPath, {
+      branch: options?.branch,
+      credentials: options?.credentials,
+    });
   }
 }
