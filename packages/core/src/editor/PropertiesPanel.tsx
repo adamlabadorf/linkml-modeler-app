@@ -2,9 +2,10 @@
  * PropertiesPanel — context-sensitive side panel.
  * Shows fields based on the currently selected entity (class/slot/enum/edge/schema).
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useAppStore } from '../store/index.js';
 import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue } from '../model/index.js';
+import { collectImportedEntities } from '../io/importResolver.js';
 
 // ── Shared field components ───────────────────────────────────────────────────
 
@@ -142,6 +143,40 @@ function Select({
   );
 }
 
+interface OptionGroup {
+  label: string;
+  options: string[];
+}
+
+function GroupedSelect({
+  value,
+  onChange,
+  groups,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  groups: OptionGroup[];
+  placeholder?: string;
+}) {
+  return (
+    <select style={styles.select} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+      {placeholder && <option value="">{placeholder}</option>}
+      {groups.map((group) =>
+        group.options.length > 0 ? (
+          <optgroup key={group.label} label={group.label}>
+            {group.options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </optgroup>
+        ) : null
+      )}
+    </select>
+  );
+}
+
 function SectionHeader({ title }: { title: string }) {
   return <div style={styles.sectionHeader}>{title}</div>;
 }
@@ -170,6 +205,56 @@ function DeleteButton({ label, onConfirm }: { label: string; onConfirm: () => vo
 
 // ── Panel sections ────────────────────────────────────────────────────────────
 
+/** Build grouped range option lists from local + imported entities. */
+function useRangeOptionGroups(_schemaId: string, excludeClassName?: string) {
+  const activeSchemaFile = useAppStore((s) => s.getActiveSchema());
+  const allSchemas = useAppStore((s) => s.activeProject?.schemas ?? []);
+  const schema = activeSchemaFile?.schema;
+
+  return useMemo(() => {
+    const builtinTypes = ['string', 'integer', 'float', 'boolean', 'date', 'datetime', 'uri', 'uriorcurie'];
+    const allClassNames = Object.keys(schema?.classes ?? {}).filter((n) => n !== excludeClassName);
+    const allEnumNames = Object.keys(schema?.enums ?? {});
+
+    const groups: OptionGroup[] = [
+      { label: 'Built-in types', options: builtinTypes },
+    ];
+
+    if (allClassNames.length > 0) {
+      groups.push({ label: 'Classes (this schema)', options: allClassNames });
+    }
+    if (allEnumNames.length > 0) {
+      groups.push({ label: 'Enums (this schema)', options: allEnumNames });
+    }
+
+    // Collect entities from imported schemas
+    if (activeSchemaFile) {
+      const imported = collectImportedEntities(activeSchemaFile, allSchemas);
+      // Group by source file path
+      const bySource = new Map<string, { classes: string[]; enums: string[] }>();
+      for (const entity of imported) {
+        let entry = bySource.get(entity.sourceFilePath);
+        if (!entry) {
+          entry = { classes: [], enums: [] };
+          bySource.set(entity.sourceFilePath, entry);
+        }
+        if (entity.type === 'class') entry.classes.push(entity.name);
+        else entry.enums.push(entity.name);
+      }
+
+      for (const [filePath, entry] of bySource) {
+        const label = filePath.replace(/\.ya?ml$/, '').split('/').pop() ?? filePath;
+        const combined = [...entry.classes, ...entry.enums];
+        if (combined.length > 0) {
+          groups.push({ label: `Imported: ${label}`, options: combined });
+        }
+      }
+    }
+
+    return groups;
+  }, [schema, activeSchemaFile, allSchemas, excludeClassName]);
+}
+
 function ClassPanel({ schemaId, className }: { schemaId: string; className: string }) {
   const schema = useAppStore((s) => s.getActiveSchema())?.schema;
   const updateClass = useAppStore((s) => s.updateClass);
@@ -179,15 +264,15 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
   const deleteAttribute = useAppStore((s) => s.deleteAttribute);
   const deleteClass = useAppStore((s) => s.deleteClass);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
+  const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
 
   const classDef = schema?.classes[className] as ClassDefinition | undefined;
   if (!classDef) return <EmptyPanel message="Class not found" />;
   const cls = classDef;
 
+  const rangeOptionGroups = useRangeOptionGroups(schemaId, className);
+
   const allClassNames = Object.keys(schema?.classes ?? {}).filter((n) => n !== className);
-  const allEnumNames = Object.keys(schema?.enums ?? {});
-  const builtinTypes = ['string', 'integer', 'float', 'boolean', 'date', 'datetime', 'uri', 'uriorcurie'];
-  const rangeOptions = [...builtinTypes, ...allClassNames, ...allEnumNames];
 
   const update = (partial: Partial<ClassDefinition>) => updateClass(schemaId, className, partial);
 
@@ -260,8 +345,13 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
         <SlotInlineEditor
           key={slot.name}
           slot={slot}
-          rangeOptions={rangeOptions}
-          onUpdate={(partial) => updateAttribute(schemaId, className, slot.name, partial)}
+          rangeOptionGroups={rangeOptionGroups}
+          onUpdate={(partial) => {
+            if (partial.range) {
+              autoAddImportForRange(schemaId, partial.range);
+            }
+            updateAttribute(schemaId, className, slot.name, partial);
+          }}
           onDelete={() => {
             deleteAttribute(schemaId, className, slot.name);
           }}
@@ -297,12 +387,12 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
 
 function SlotInlineEditor({
   slot,
-  rangeOptions,
+  rangeOptionGroups,
   onUpdate,
   onDelete,
 }: {
   slot: SlotDefinition;
-  rangeOptions: string[];
+  rangeOptionGroups: OptionGroup[];
   onUpdate: (partial: Partial<SlotDefinition>) => void;
   onDelete: () => void;
 }) {
@@ -331,10 +421,10 @@ function SlotInlineEditor({
             />
           </FieldRow>
           <FieldRow label="Range">
-            <Select
+            <GroupedSelect
               value={slot.range ?? ''}
               onChange={(v) => onUpdate({ range: v || undefined })}
-              options={rangeOptions}
+              groups={rangeOptionGroups}
               placeholder="(none)"
             />
           </FieldRow>
@@ -539,12 +629,15 @@ function EdgePanel({ edgeId }: { edgeId: string }) {
   const edge = edges.find((e) => e.id === edgeId);
   const schema = useAppStore((s) => s.getActiveSchema());
   const updateAttribute = useAppStore((s) => s.updateAttribute);
-
-  if (!edge) return <EmptyPanel message="Edge not found" />;
+  const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
 
   const rangeInfo = parseRangeEdgeId(edgeId);
   const schemaId = schema?.id ?? '';
   const schemaData = schema?.schema;
+
+  const rangeOptionGroups = useRangeOptionGroups(schemaId);
+
+  if (!edge) return <EmptyPanel message="Edge not found" />;
 
   // For range edges, resolve the slot and render an inline editor
   if (rangeInfo && schemaData) {
@@ -552,11 +645,6 @@ function EdgePanel({ edgeId }: { edgeId: string }) {
     const slot = classDef?.attributes[rangeInfo.slotName];
 
     if (slot) {
-      const allClassNames = Object.keys(schemaData.classes);
-      const allEnumNames = Object.keys(schemaData.enums ?? {});
-      const builtinTypes = ['string', 'integer', 'float', 'boolean', 'date', 'datetime', 'uri', 'uriorcurie'];
-      const rangeOptions = [...builtinTypes, ...allClassNames, ...allEnumNames];
-
       return (
         <div>
           <SectionHeader title="Range Edge (editable)" />
@@ -570,8 +658,13 @@ function EdgePanel({ edgeId }: { edgeId: string }) {
           <SectionHeader title="Slot Properties" />
           <SlotInlineEditor
             slot={slot}
-            rangeOptions={rangeOptions}
-            onUpdate={(partial) => updateAttribute(schemaId, rangeInfo.className, rangeInfo.slotName, partial)}
+            rangeOptionGroups={rangeOptionGroups}
+            onUpdate={(partial) => {
+              if (partial.range) {
+                autoAddImportForRange(schemaId, partial.range);
+              }
+              updateAttribute(schemaId, rangeInfo.className, rangeInfo.slotName, partial);
+            }}
             onDelete={() => {}}
           />
         </div>
