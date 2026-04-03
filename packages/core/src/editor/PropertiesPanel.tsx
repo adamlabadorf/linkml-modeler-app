@@ -266,17 +266,16 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
   const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
 
+  const rangeOptionGroups = useRangeOptionGroups(schemaId, className);
+  const [newSlotName, setNewSlotName] = useState('');
+
   const classDef = schema?.classes[className] as ClassDefinition | undefined;
   if (!classDef) return <EmptyPanel message="Class not found" />;
   const cls = classDef;
 
-  const rangeOptionGroups = useRangeOptionGroups(schemaId, className);
-
   const allClassNames = Object.keys(schema?.classes ?? {}).filter((n) => n !== className);
 
   const update = (partial: Partial<ClassDefinition>) => updateClass(schemaId, className, partial);
-
-  const [newSlotName, setNewSlotName] = useState('');
 
   function handleAddSlot() {
     const name = newSlotName.trim();
@@ -476,13 +475,13 @@ function EnumPanel({ schemaId, enumName }: { schemaId: string; enumName: string 
   const deleteEnum = useAppStore((s) => s.deleteEnum);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
 
+  const [newValue, setNewValue] = useState('');
+
   const enumDef = schema?.enums[enumName] as EnumDefinition | undefined;
   if (!enumDef) return <EmptyPanel message="Enum not found" />;
   const enm = enumDef;
 
   const update = (partial: Partial<EnumDefinition>) => updateEnum(schemaId, enumName, partial);
-
-  const [newValue, setNewValue] = useState('');
 
   function handleAddValue() {
     const text = newValue.trim();
