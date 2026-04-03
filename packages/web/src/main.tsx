@@ -41,6 +41,7 @@ import {
   ProjectPanel,
   ValidationPanel,
   FocusModeToolbar,
+  MenuBar,
 } from '@linkml-editor/core';
 import { SchemaCanvas } from '@linkml-editor/core';
 import type { Project } from '@linkml-editor/core';
@@ -300,10 +301,7 @@ function App() {
   const isDirty = useAppStore((s) => s.getIsDirty());
   const pushToast = useAppStore((s) => s.pushToast);
   const markSchemaDirty = useAppStore((s) => s.markSchemaDirty);
-  const setGitPanelOpen = useAppStore((s) => s.setGitPanelOpen);
-  const setValidationPanelOpen = useAppStore((s) => s.setValidationPanelOpen);
-  const gitPanelOpen = useAppStore((s) => s.gitPanelOpen);
-  const validationPanelOpen = useAppStore((s) => s.validationPanelOpen);
+  const yamlPreviewOpen = useAppStore((s) => s.yamlPreviewOpen);
   const validationIssues = useAppStore((s) => s.validationIssues);
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -392,39 +390,14 @@ function App() {
       <header style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.logo}>⬡ LinkML Visual Schema Editor</span>
-          <span style={styles.subtitle}>M7 — Git Integration</span>
+          <MenuBar
+            onSave={saveProject}
+            onSaveAs={saveProject}
+          />
         </div>
         <div style={styles.headerRight}>
           {isDirty && <span style={styles.dirtyBadge}>● unsaved changes</span>}
-          <button
-            style={isDirty ? { ...styles.headerBtn, ...styles.saveBtn } : styles.headerBtn}
-            onClick={saveProject}
-            disabled={isSaving || !isDirty}
-            title="Save Project (Ctrl+S)"
-          >
-            {isSaving ? '⏳ Saving…' : '💾 Save'}
-          </button>
-          <button
-            style={styles.headerBtn}
-            onClick={() => setValidationPanelOpen(!validationPanelOpen)}
-            title="Toggle Validation Panel"
-          >
-            ✓ Validate
-          </button>
-          <button
-            style={styles.headerBtn}
-            onClick={() => setGitPanelOpen(!gitPanelOpen)}
-            title="Toggle Git Panel"
-          >
-            ⎇ Git
-          </button>
-          <button
-            style={styles.headerBtn}
-            onClick={() => setSchemaSettingsOpen(true)}
-            title="Schema Settings"
-          >
-            ⚙ Schema Settings
-          </button>
+          {isSaving && <span style={styles.savingBadge}>saving…</span>}
         </div>
       </header>
 
@@ -445,7 +418,7 @@ function App() {
         <PropertiesPanel />
 
         {/* YAML preview (far right) */}
-        <YamlPreview />
+        {yamlPreviewOpen && <YamlPreview />}
       </div>
 
       {/* Bottom panels */}
@@ -523,28 +496,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 15,
     color: '#60a5fa',
   },
-  subtitle: {
-    fontSize: 12,
-    color: '#475569',
-  },
   dirtyBadge: {
     fontSize: 11,
     color: '#f59e0b',
   },
-  headerBtn: {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    color: '#94a3b8',
-    borderRadius: 5,
-    padding: '5px 10px',
-    fontSize: 12,
-    cursor: 'pointer',
+  savingBadge: {
+    fontSize: 11,
+    color: '#60a5fa',
     fontFamily: 'monospace',
-  },
-  saveBtn: {
-    background: '#1e3a5f',
-    border: '1px solid #2563eb',
-    color: '#93c5fd',
   },
   main: {
     flex: 1,

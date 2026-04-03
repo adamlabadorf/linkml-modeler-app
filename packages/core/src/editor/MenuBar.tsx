@@ -1,0 +1,430 @@
+import React from 'react';
+import { useAppStore, useTemporalStore } from '../store/index.js';
+
+// ── Types ────────────────────────────────────────────────────────────────────
+interface MenuItem {
+  label: string;
+  shortcut?: string;
+  action?: () => void;
+  checked?: boolean;
+  separator?: false;
+  disabled?: boolean;
+}
+
+interface MenuSeparator {
+  separator: true;
+}
+
+type MenuEntry = MenuItem | MenuSeparator;
+
+interface MenuBarProps {
+  onNewProject?: () => void;
+  onOpenProject?: () => void;
+  onOpenFromUrl?: () => void;
+  onSave?: () => void;
+  onSaveAs?: () => void;
+  onCloseProject?: () => void;
+}
+
+// ── DropdownMenu ─────────────────────────────────────────────────────────────
+function DropdownMenu({
+  label,
+  items,
+  isOpen,
+  onToggle,
+  onClose,
+  onHover,
+}: {
+  label: string;
+  items: MenuEntry[];
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onHover: () => void;
+}) {
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  const [hoveredIndex, setHoveredIndex] = React.useState(-1);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setHoveredIndex(-1);
+      return;
+    }
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
+
+  // Keyboard navigation
+  React.useEffect(() => {
+    if (!isOpen) return;
+    function handleKey(e: KeyboardEvent) {
+      const actionItems = items.reduce<number[]>((acc, item, i) => {
+        if (!('separator' in item && item.separator)) acc.push(i);
+        return acc;
+      }, []);
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHoveredIndex((prev) => {
+          const currentActionIdx = actionItems.indexOf(prev);
+          const nextIdx = currentActionIdx < actionItems.length - 1 ? currentActionIdx + 1 : 0;
+          return actionItems[nextIdx];
+        });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHoveredIndex((prev) => {
+          const currentActionIdx = actionItems.indexOf(prev);
+          const nextIdx = currentActionIdx > 0 ? currentActionIdx - 1 : actionItems.length - 1;
+          return actionItems[nextIdx];
+        });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const item = items[hoveredIndex];
+        if (item && !('separator' in item && item.separator) && !item.disabled && item.action) {
+          item.action();
+          onClose();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isOpen, items, hoveredIndex, onClose]);
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative' }}>
+      <button
+        style={{
+          ...menuStyles.trigger,
+          ...(isOpen ? menuStyles.triggerActive : {}),
+        }}
+        onClick={onToggle}
+        onMouseEnter={onHover}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+      >
+        {label}
+      </button>
+      {isOpen && (
+        <div style={menuStyles.dropdown} role="menu">
+          {items.map((item, i) => {
+            if ('separator' in item && item.separator) {
+              return <div key={i} style={menuStyles.separator} role="separator" />;
+            }
+            const mi = item as MenuItem;
+            return (
+              <button
+                key={i}
+                role="menuitem"
+                style={{
+                  ...menuStyles.item,
+                  ...(hoveredIndex === i ? menuStyles.itemHover : {}),
+                  ...(mi.disabled ? menuStyles.itemDisabled : {}),
+                }}
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex(-1)}
+                onClick={() => {
+                  if (!mi.disabled && mi.action) {
+                    mi.action();
+                    onClose();
+                  }
+                }}
+                disabled={mi.disabled}
+              >
+                <span style={menuStyles.itemLabel}>
+                  {mi.checked !== undefined && (
+                    <span style={menuStyles.check}>{mi.checked ? '\u2713' : '\u00A0'}</span>
+                  )}
+                  {mi.label}
+                </span>
+                {mi.shortcut && <span style={menuStyles.shortcut}>{mi.shortcut}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MenuBar ──────────────────────────────────────────────────────────────────
+export function MenuBar({
+  onNewProject,
+  onOpenProject,
+  onOpenFromUrl,
+  onSave,
+  onSaveAs,
+  onCloseProject,
+}: MenuBarProps) {
+  const [openMenu, setOpenMenu] = React.useState<string | null>(null);
+  const anyOpen = openMenu !== null;
+
+  const isDirty = useAppStore((s) => s.getIsDirty());
+  const activeProject = useAppStore((s) => s.activeProject);
+  const projectPanelOpen = useAppStore((s) => s.projectPanelOpen);
+  const propertiesPanelOpen = useAppStore((s) => s.propertiesPanelOpen);
+  const validationPanelOpen = useAppStore((s) => s.validationPanelOpen);
+  const gitPanelOpen = useAppStore((s) => s.gitPanelOpen);
+  const yamlPreviewOpen = useAppStore((s) => s.yamlPreviewOpen);
+  const setProjectPanelOpen = useAppStore((s) => s.setProjectPanelOpen);
+  const setPropertiesPanelOpen = useAppStore((s) => s.setPropertiesPanelOpen);
+  const setValidationPanelOpen = useAppStore((s) => s.setValidationPanelOpen);
+  const setGitPanelOpen = useAppStore((s) => s.setGitPanelOpen);
+  const setYamlPreviewOpen = useAppStore((s) => s.setYamlPreviewOpen);
+  const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
+
+  const [aboutOpen, setAboutOpen] = React.useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+
+  const toggle = (menu: string) => setOpenMenu((prev) => (prev === menu ? null : menu));
+  const close = () => setOpenMenu(null);
+  const hover = (menu: string) => {
+    if (anyOpen) setOpenMenu(menu);
+  };
+
+  const fileItems: MenuEntry[] = [
+    { label: 'New Project', action: onNewProject, disabled: !onNewProject },
+    { label: 'Open Project\u2026', shortcut: 'Ctrl+O', action: onOpenProject, disabled: !onOpenProject },
+    { label: 'Open from URL\u2026', action: onOpenFromUrl, disabled: !onOpenFromUrl },
+    { separator: true },
+    { label: 'Save', shortcut: 'Ctrl+S', action: onSave, disabled: !isDirty || !onSave },
+    { label: 'Save As\u2026', action: onSaveAs, disabled: !activeProject || !onSaveAs },
+    { separator: true },
+    { label: 'Schema Settings\u2026', action: () => setSchemaSettingsOpen(true) },
+    { separator: true },
+    { label: 'Close Project', action: onCloseProject, disabled: !activeProject || !onCloseProject },
+  ];
+
+  const temporal = useTemporalStore();
+  const editItems: MenuEntry[] = [
+    { label: 'Undo', shortcut: 'Ctrl+Z', action: () => temporal.undo(), disabled: temporal.pastStates.length === 0 },
+    { label: 'Redo', shortcut: 'Ctrl+Shift+Z', action: () => temporal.redo(), disabled: temporal.futureStates.length === 0 },
+  ];
+
+  const viewItems: MenuEntry[] = [
+    { label: 'Project Panel', checked: projectPanelOpen, action: () => setProjectPanelOpen(!projectPanelOpen) },
+    { label: 'Properties Panel', checked: propertiesPanelOpen, action: () => setPropertiesPanelOpen(!propertiesPanelOpen) },
+    { label: 'Validation Panel', checked: validationPanelOpen, action: () => setValidationPanelOpen(!validationPanelOpen) },
+    { label: 'Git Panel', checked: gitPanelOpen, action: () => setGitPanelOpen(!gitPanelOpen) },
+    { label: 'YAML Preview', checked: yamlPreviewOpen, action: () => setYamlPreviewOpen(!yamlPreviewOpen) },
+  ];
+
+  const helpItems: MenuEntry[] = [
+    { label: 'Keyboard Shortcuts', action: () => setShortcutsOpen(true) },
+    { label: 'Documentation', action: () => window.open('https://linkml.io/linkml/', '_blank') },
+    { separator: true },
+    { label: 'About', action: () => setAboutOpen(true) },
+  ];
+
+  return (
+    <>
+      <nav style={menuStyles.bar} role="menubar">
+        <DropdownMenu label="File" items={fileItems} isOpen={openMenu === 'file'} onToggle={() => toggle('file')} onClose={close} onHover={() => hover('file')} />
+        <DropdownMenu label="Edit" items={editItems} isOpen={openMenu === 'edit'} onToggle={() => toggle('edit')} onClose={close} onHover={() => hover('edit')} />
+        <DropdownMenu label="View" items={viewItems} isOpen={openMenu === 'view'} onToggle={() => toggle('view')} onClose={close} onHover={() => hover('view')} />
+        <DropdownMenu label="Help" items={helpItems} isOpen={openMenu === 'help'} onToggle={() => toggle('help')} onClose={close} onHover={() => hover('help')} />
+      </nav>
+
+      {/* About dialog */}
+      {aboutOpen && (
+        <div style={dialogStyles.overlay} onClick={() => setAboutOpen(false)}>
+          <div style={dialogStyles.dialog} onClick={(e) => e.stopPropagation()}>
+            <h2 style={dialogStyles.title}>LinkML Visual Schema Editor</h2>
+            <p style={dialogStyles.text}>
+              A cross-platform graphical tool for authoring LinkML schemas on an ERD-style canvas.
+            </p>
+            <p style={dialogStyles.text}>
+              Built with React, ReactFlow, and Zustand.
+            </p>
+            <button style={dialogStyles.closeBtn} onClick={() => setAboutOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Keyboard shortcuts dialog */}
+      {shortcutsOpen && (
+        <div style={dialogStyles.overlay} onClick={() => setShortcutsOpen(false)}>
+          <div style={{ ...dialogStyles.dialog, maxWidth: 440 }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={dialogStyles.title}>Keyboard Shortcuts</h2>
+            <table style={dialogStyles.table}>
+              <tbody>
+                {[
+                  ['Ctrl+S', 'Save project'],
+                  ['Ctrl+Z', 'Undo'],
+                  ['Ctrl+Shift+Z', 'Redo'],
+                  ['Delete', 'Delete selected'],
+                  ['F', 'Fit view'],
+                  ['Shift+Click', 'Multi-select'],
+                  ['Right-click canvas', 'Add class/enum'],
+                ].map(([key, desc]) => (
+                  <tr key={key}>
+                    <td style={dialogStyles.keyCell}><kbd style={dialogStyles.kbd}>{key}</kbd></td>
+                    <td style={dialogStyles.descCell}>{desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button style={dialogStyles.closeBtn} onClick={() => setShortcutsOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Menu styles ──────────────────────────────────────────────────────────────
+const menuStyles: Record<string, React.CSSProperties> = {
+  bar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0,
+  },
+  trigger: {
+    background: 'transparent',
+    border: 'none',
+    color: '#94a3b8',
+    padding: '4px 10px',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    cursor: 'pointer',
+    borderRadius: 3,
+  },
+  triggerActive: {
+    background: '#1e293b',
+    color: '#e2e8f0',
+  },
+  dropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    zIndex: 2000,
+    minWidth: 220,
+    background: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: 6,
+    padding: '4px 0',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+    marginTop: 2,
+  },
+  separator: {
+    height: 1,
+    background: '#334155',
+    margin: '4px 0',
+  },
+  item: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    background: 'transparent',
+    border: 'none',
+    color: '#e2e8f0',
+    padding: '6px 12px',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    cursor: 'pointer',
+    textAlign: 'left',
+  },
+  itemHover: {
+    background: '#334155',
+  },
+  itemDisabled: {
+    color: '#475569',
+    cursor: 'default',
+  },
+  itemLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  check: {
+    fontSize: 11,
+    width: 14,
+    display: 'inline-block',
+    color: '#60a5fa',
+  },
+  shortcut: {
+    fontSize: 10,
+    color: '#64748b',
+    marginLeft: 16,
+  },
+};
+
+// ── Dialog styles ────────────────────────────────────────────────────────────
+const dialogStyles: Record<string, React.CSSProperties> = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3000,
+  },
+  dialog: {
+    background: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: 8,
+    padding: '24px',
+    maxWidth: 360,
+    width: '90%',
+    color: '#e2e8f0',
+    fontFamily: 'monospace',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 700,
+    marginTop: 0,
+    marginBottom: 12,
+    color: '#60a5fa',
+  },
+  text: {
+    fontSize: 12,
+    lineHeight: 1.6,
+    color: '#94a3b8',
+    margin: '0 0 8px',
+  },
+  closeBtn: {
+    marginTop: 16,
+    background: '#334155',
+    border: '1px solid #475569',
+    color: '#e2e8f0',
+    borderRadius: 5,
+    padding: '6px 16px',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    cursor: 'pointer',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    marginBottom: 4,
+  },
+  keyCell: {
+    padding: '4px 8px 4px 0',
+    verticalAlign: 'middle',
+    width: 160,
+  },
+  descCell: {
+    padding: '4px 0',
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  kbd: {
+    display: 'inline-block',
+    background: '#0f172a',
+    border: '1px solid #334155',
+    borderRadius: 3,
+    padding: '2px 6px',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    color: '#e2e8f0',
+  },
+};

@@ -15,6 +15,7 @@ export interface EditorSlice {
   gitPanelOpen: boolean;
   schemaSettingsOpen: boolean;
   validationPanelOpen: boolean;
+  yamlPreviewOpen: boolean;
 
   // Actions
   setActiveEntity(entity: ActiveEntity): void;
@@ -24,6 +25,7 @@ export interface EditorSlice {
   setGitPanelOpen(open: boolean): void;
   setSchemaSettingsOpen(open: boolean): void;
   setValidationPanelOpen(open: boolean): void;
+  setYamlPreviewOpen(open: boolean): void;
 }
 
 export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> = (set) => ({
@@ -33,6 +35,7 @@ export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> =
   gitPanelOpen: false,
   schemaSettingsOpen: false,
   validationPanelOpen: false,
+  yamlPreviewOpen: true,
 
   setActiveEntity(entity) {
     set({ activeEntity: entity });
@@ -60,5 +63,9 @@ export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> =
 
   setValidationPanelOpen(open) {
     set({ validationPanelOpen: open });
+  },
+
+  setYamlPreviewOpen(open) {
+    set({ yamlPreviewOpen: open });
   },
 });
