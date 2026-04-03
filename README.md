@@ -39,12 +39,12 @@ pnpm dev
 In a second terminal, build the Electron main process and launch it:
 
 ```bash
-pnpm --filter @linkml-editor/core build
-pnpm --filter @linkml-editor/electron build
-NODE_ENV=development npx electron packages/electron/dist/main.js
+pnpm --filter @linkml-editor/electron build && npx electron packages/electron/dist/main.js
 ```
 
-The Electron window will load from the local dev server.
+The Electron window will connect to the Vite dev server at `localhost:5173`, so any code changes you make will be reflected immediately via hot module replacement — just like in the browser. DevTools open automatically in this mode.
+
+This works because the Electron main process uses `app.isPackaged` (not `NODE_ENV`) to detect dev mode. When launched via `npx electron`, `app.isPackaged` is `false`, so it loads from the dev server. No environment variables are needed, which avoids cross-platform shell compatibility issues.
 
 ### Build for production
 

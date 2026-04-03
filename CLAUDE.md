@@ -22,7 +22,7 @@ pnpm --filter @linkml-editor/core test:watch  # Watch mode for core tests
 
 # Electron development (requires two terminals)
 # Terminal 1: pnpm dev
-# Terminal 2: pnpm --filter @linkml-editor/electron build && NODE_ENV=development npx electron packages/electron/dist/main.js
+# Terminal 2: pnpm --filter @linkml-editor/electron build && npx electron packages/electron/dist/main.js
 
 # Electron packaging
 pnpm --filter @linkml-editor/electron package          # All platforms
