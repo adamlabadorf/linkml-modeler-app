@@ -52,6 +52,12 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
   const pushToast = useAppStore((s) => s.pushToast);
 
   const [tab, setTab] = useState<Tab>('changes');
+  const [credentialPrompt, setCredentialPrompt] = useState<{
+    url: string;
+    resolve: (creds: { username: string; password: string } | null) => void;
+  } | null>(null);
+  const [credUsername, setCredUsername] = useState('');
+  const [credPassword, setCredPassword] = useState('');
   const repoPath = activeProject?.rootPath ?? '/';
 
   // Refresh git status
@@ -70,6 +76,25 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
       refreshStatus();
     }
   }, [gitPanelOpen, gitAvailable, refreshStatus]);
+
+  // Auto-populate commit message template when panel opens with changes
+  useEffect(() => {
+    if (!gitPanelOpen || !gitStatus || commitMessage.trim()) return;
+    const allFiles = [
+      ...gitStatus.stagedFiles,
+      ...gitStatus.unstagedFiles,
+      ...gitStatus.untrackedFiles,
+    ];
+    if (allFiles.length === 0) return;
+
+    // Derive template from changed file extensions/paths
+    const yamlFiles = allFiles.filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'));
+    if (yamlFiles.length > 0) {
+      const names = yamlFiles.map((f) => f.split('/').pop()).slice(0, 3);
+      const suffix = yamlFiles.length > 3 ? ` and ${yamlFiles.length - 3} more` : '';
+      setCommitMessage(`update schema: ${names.join(', ')}${suffix}`);
+    }
+  }, [gitPanelOpen, gitStatus, commitMessage, setCommitMessage]);
 
   const handleCommit = useCallback(async () => {
     if (!commitMessage.trim() || stagedPaths.size === 0) return;
@@ -109,12 +134,20 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     pushToast, refreshStatus,
   ]);
 
+  const requestCredentials = useCallback((url: string): Promise<{ username: string; password: string } | null> => {
+    return new Promise((resolve) => {
+      setCredUsername('');
+      setCredPassword('');
+      setCredentialPrompt({ url, resolve });
+    });
+  }, []);
+
   const handlePush = useCallback(async () => {
     if (!gitAvailable) return;
     setIsPushing(true);
     setLastGitError(null);
     try {
-      const result = await platform.gitPush(repoPath);
+      const result = await platform.gitPush(repoPath, requestCredentials);
       if (result?.ok) {
         pushToast({ message: 'Pushed to remote', severity: 'success' });
         await refreshStatus();
@@ -126,7 +159,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     } finally {
       setIsPushing(false);
     }
-  }, [gitAvailable, repoPath, platform, setIsPushing, setLastGitError, pushToast, refreshStatus]);
+  }, [gitAvailable, repoPath, platform, requestCredentials, setIsPushing, setLastGitError, pushToast, refreshStatus]);
 
   if (!gitPanelOpen) {
     return (
@@ -314,6 +347,61 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Credentials dialog */}
+      {credentialPrompt && (
+        <div style={styles.credOverlay}>
+          <div style={styles.credDialog}>
+            <div style={styles.credTitle}>Git Credentials</div>
+            <div style={styles.credUrl}>{credentialPrompt.url}</div>
+            <input
+              style={styles.credInput}
+              type="text"
+              placeholder="Username"
+              value={credUsername}
+              onChange={(e) => setCredUsername(e.target.value)}
+              autoFocus
+            />
+            <input
+              style={styles.credInput}
+              type="password"
+              placeholder="Password or token"
+              value={credPassword}
+              onChange={(e) => setCredPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && credUsername && credPassword) {
+                  credentialPrompt.resolve({ username: credUsername, password: credPassword });
+                  setCredentialPrompt(null);
+                }
+              }}
+            />
+            <div style={styles.credActions}>
+              <button
+                style={styles.credCancelBtn}
+                onClick={() => {
+                  credentialPrompt.resolve(null);
+                  setCredentialPrompt(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                style={{
+                  ...styles.credSubmitBtn,
+                  ...(!credUsername || !credPassword ? styles.commitBtnDisabled : {}),
+                }}
+                disabled={!credUsername || !credPassword}
+                onClick={() => {
+                  credentialPrompt.resolve({ username: credUsername, password: credPassword });
+                  setCredentialPrompt(null);
+                }}
+              >
+                Authenticate
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -635,5 +723,77 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     fontFamily: 'monospace',
     color: '#475569',
+  },
+  credOverlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(0,0,0,0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  credDialog: {
+    background: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: 8,
+    padding: 16,
+    width: 280,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  },
+  credTitle: {
+    fontWeight: 700,
+    fontSize: 13,
+    color: '#60a5fa',
+    fontFamily: 'monospace',
+  },
+  credUrl: {
+    fontSize: 10,
+    color: '#64748b',
+    fontFamily: 'monospace',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  credInput: {
+    background: '#0f172a',
+    border: '1px solid #334155',
+    borderRadius: 4,
+    color: '#e2e8f0',
+    fontSize: 12,
+    padding: '6px 8px',
+    fontFamily: 'monospace',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  credActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 6,
+    marginTop: 4,
+  },
+  credCancelBtn: {
+    background: 'transparent',
+    border: '1px solid #334155',
+    color: '#94a3b8',
+    borderRadius: 4,
+    padding: '4px 12px',
+    fontSize: 11,
+    cursor: 'pointer',
+    fontFamily: 'monospace',
+  },
+  credSubmitBtn: {
+    background: '#1d4ed8',
+    border: '1px solid #2563eb',
+    color: '#fff',
+    borderRadius: 4,
+    padding: '4px 12px',
+    fontSize: 11,
+    cursor: 'pointer',
+    fontFamily: 'monospace',
+    fontWeight: 600,
   },
 };

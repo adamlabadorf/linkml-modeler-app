@@ -191,6 +191,8 @@ function App() {
   const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
   const schema = useAppStore((s) => s.getActiveSchema());
   const isDirty = useAppStore((s) => s.getIsDirty());
+  const commitLog = useAppStore((s) => s.commitLog);
+  const gitAvailable = useAppStore((s) => s.gitAvailable);
   const pushToast = useAppStore((s) => s.pushToast);
   const markSchemaDirty = useAppStore((s) => s.markSchemaDirty);
   const yamlPreviewOpen = useAppStore((s) => s.yamlPreviewOpen);
@@ -267,6 +269,8 @@ function App() {
   }, []);
 
   const handleMenuPush = React.useCallback(async () => {
+    // Open the git panel so the credentials dialog can appear there
+    useAppStore.getState().setGitPanelOpen(true);
     const repoPath = useAppStore.getState().activeProject?.rootPath ?? '/';
     try {
       const result = await platform.gitPush(repoPath);
@@ -362,6 +366,14 @@ function App() {
                 {validationIssues.filter(i => i.severity === 'warning').length > 0
                   ? `${validationIssues.filter(i => i.severity === 'warning').length} warn`
                   : ''}
+              </span>
+            </>
+          )}
+          {gitAvailable && commitLog.length > 0 && (
+            <>
+              {' · '}
+              <span style={{ color: '#475569' }}>
+                {commitLog[0].oid.slice(0, 7)} {commitLog[0].message.split('\n')[0].slice(0, 50)}
               </span>
             </>
           )}

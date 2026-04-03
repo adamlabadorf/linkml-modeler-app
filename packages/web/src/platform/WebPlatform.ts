@@ -18,6 +18,7 @@ import type {
   GitStatus,
   GitPushResult,
   GitCommit,
+  GitCredentials,
 } from '@linkml-editor/core';
 
 // ── LightningFS singleton (OPFS-backed) ───────────────────────────────────────
@@ -266,13 +267,19 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
-  async gitPush(repoPath: string): Promise<GitPushResult | null> {
+  async gitPush(repoPath: string, onAuthRequest?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null> {
     if (!this.gitAvailable) return null;
     try {
       const onAuth = async (url: string) => {
         const cached = this._credentials.get(url);
         if (cached) return cached;
-        // Prompt for credentials
+        // Use provided callback or fall back to browser prompt
+        if (onAuthRequest) {
+          const creds = await onAuthRequest(url);
+          if (!creds) return { cancel: true };
+          this._credentials.set(url, creds);
+          return creds;
+        }
         const username = prompt(`Git username for ${url}:`) ?? '';
         const password = prompt(`Git password/token for ${url}:`) ?? '';
         this._credentials.set(url, { username, password });

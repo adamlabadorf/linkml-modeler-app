@@ -79,7 +79,8 @@ export class ElectronPlatform implements PlatformAPI {
     return bridge().gitCommit(repoPath, message);
   }
 
-  async gitPush(repoPath: string): Promise<GitPushResult | null> {
+  async gitPush(repoPath: string, _onAuth?: (url: string) => Promise<{ username: string; password: string } | null>): Promise<GitPushResult | null> {
+    // Electron handles credentials via keytar in the main process
     return bridge().gitPush(repoPath);
   }
 

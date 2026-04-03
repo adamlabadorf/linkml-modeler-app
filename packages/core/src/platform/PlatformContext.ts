@@ -48,6 +48,11 @@ export interface GitCommit {
 
 // ─── Platform API ─────────────────────────────────────────────────────────────
 
+export interface GitCredentials {
+  username: string;
+  password: string;
+}
+
 export interface PlatformAPI {
   // File system
   openFile(options?: OpenFileOptions): Promise<FileResult | null>;
@@ -61,7 +66,7 @@ export interface PlatformAPI {
   gitStatus(repoPath: string): Promise<GitStatus | null>;
   gitStage(repoPath: string, paths: string[]): Promise<void>;
   gitCommit(repoPath: string, message: string): Promise<string | null>;
-  gitPush(repoPath: string): Promise<GitPushResult | null>;
+  gitPush(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
 
   // Environment
