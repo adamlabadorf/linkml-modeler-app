@@ -29,6 +29,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 }
 import {
   PlatformContext,
+  usePlatform,
   useAppStore,
   emptySchema,
   emptyClassDefinition,
@@ -290,23 +291,100 @@ const toastStyles: Record<string, React.CSSProperties> = {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 function App() {
+  const platform = usePlatform();
   const setProject = useAppStore((s) => s.setProject);
   const activeProject = useAppStore((s) => s.activeProject);
   const schemaSettingsOpen = useAppStore((s) => s.schemaSettingsOpen);
   const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
   const schema = useAppStore((s) => s.getActiveSchema());
   const isDirty = useAppStore((s) => s.getIsDirty());
+  const pushToast = useAppStore((s) => s.pushToast);
+  const markSchemaDirty = useAppStore((s) => s.markSchemaDirty);
   const setGitPanelOpen = useAppStore((s) => s.setGitPanelOpen);
   const setValidationPanelOpen = useAppStore((s) => s.setValidationPanelOpen);
   const gitPanelOpen = useAppStore((s) => s.gitPanelOpen);
   const validationPanelOpen = useAppStore((s) => s.validationPanelOpen);
   const validationIssues = useAppStore((s) => s.validationIssues);
+  const [isSaving, setIsSaving] = React.useState(false);
 
   React.useEffect(() => {
     if (!activeProject) {
       setProject(makeDemoProject());
     }
   }, [activeProject, setProject]);
+
+  // ── Save project to disk ───────────────────────────────────────────────────
+  const saveProject = React.useCallback(async () => {
+    const project = useAppStore.getState().activeProject;
+    if (!project) return;
+
+    const dirtySchemas = project.schemas.filter((s) => s.isDirty && !s.isReadOnly);
+    if (dirtySchemas.length === 0) {
+      pushToast({ message: 'Nothing to save', severity: 'info' });
+      return;
+    }
+
+    let rootPath = project.rootPath;
+
+    // If no rootPath (new unsaved project), prompt user to pick a location
+    if (!rootPath || rootPath === '/') {
+      const picked = await platform.openDirectory();
+      if (!picked) return; // user cancelled
+      rootPath = picked;
+      // Update project rootPath in store
+      useAppStore.setState((state) => ({
+        activeProject: state.activeProject
+          ? { ...state.activeProject, rootPath: picked }
+          : null,
+      }));
+    }
+
+    setIsSaving(true);
+    let savedCount = 0;
+    const errors: string[] = [];
+
+    for (const sf of dirtySchemas) {
+      try {
+        const yaml = serializeYaml(sf.schema);
+        const fullPath = rootPath.endsWith('/')
+          ? `${rootPath}${sf.filePath}`
+          : `${rootPath}/${sf.filePath}`;
+        await platform.writeFile(fullPath, yaml);
+        markSchemaDirty(sf.id, false);
+        savedCount++;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`${sf.filePath}: ${msg}`);
+      }
+    }
+
+    setIsSaving(false);
+
+    if (errors.length > 0) {
+      pushToast({
+        message: `Save failed for ${errors.length} file(s): ${errors[0]}`,
+        severity: 'error',
+      });
+    } else {
+      pushToast({
+        message: `Saved ${savedCount} file${savedCount > 1 ? 's' : ''}`,
+        severity: 'success',
+        durationMs: 2000,
+      });
+    }
+  }, [platform, pushToast, markSchemaDirty]);
+
+  // ── Ctrl+S / Cmd+S keyboard shortcut ───────────────────────────────────────
+  React.useEffect(() => {
+    function handleSaveShortcut(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveProject();
+      }
+    }
+    window.addEventListener('keydown', handleSaveShortcut);
+    return () => window.removeEventListener('keydown', handleSaveShortcut);
+  }, [saveProject]);
 
   return (
     <div style={styles.app}>
@@ -318,6 +396,14 @@ function App() {
         </div>
         <div style={styles.headerRight}>
           {isDirty && <span style={styles.dirtyBadge}>● unsaved changes</span>}
+          <button
+            style={isDirty ? { ...styles.headerBtn, ...styles.saveBtn } : styles.headerBtn}
+            onClick={saveProject}
+            disabled={isSaving || !isDirty}
+            title="Save Project (Ctrl+S)"
+          >
+            {isSaving ? '⏳ Saving…' : '💾 Save'}
+          </button>
           <button
             style={styles.headerBtn}
             onClick={() => setValidationPanelOpen(!validationPanelOpen)}
@@ -388,7 +474,7 @@ function App() {
           )}
         </span>
         <span>
-          Click node to edit · Right-click canvas to add · Drag handle-to-handle for is_a · Del to delete · Ctrl+Z/Y undo/redo · F fit view
+          Click node to edit · Right-click canvas to add · Drag handle-to-handle for is_a · Del to delete · Ctrl+S save · Ctrl+Z/Y undo/redo · F fit view
         </span>
       </footer>
 
@@ -454,6 +540,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     cursor: 'pointer',
     fontFamily: 'monospace',
+  },
+  saveBtn: {
+    background: '#1e3a5f',
+    border: '1px solid #2563eb',
+    color: '#93c5fd',
   },
   main: {
     flex: 1,
