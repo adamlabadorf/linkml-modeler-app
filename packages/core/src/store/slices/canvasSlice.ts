@@ -3,7 +3,7 @@ import type { Node, Edge, Viewport } from 'reactflow';
 
 export type CanvasNodeData = {
   entityId: string;
-  entityType: 'class' | 'enum';
+  entityType: 'class' | 'enum' | 'importGroup';
   collapsed?: boolean;
 };
 

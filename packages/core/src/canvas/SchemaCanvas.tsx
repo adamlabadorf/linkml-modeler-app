@@ -29,11 +29,12 @@ import 'reactflow/dist/style.css';
 
 import ClassNode from './ClassNode.js';
 import EnumNode from './EnumNode.js';
+import ImportGroupNode from './ImportGroupNode.js';
 import { edgeTypes, EdgeMarkerDefs } from './edges.js';
 import { deriveGraph } from './deriveGraph.js';
 import { runAutoLayout } from './autoLayout.js';
 import { useAppStore } from '../store/index.js';
-import { collectImportedEntities } from '../io/importResolver.js';
+import { collectReferencedImportedEntities } from '../io/importResolver.js';
 import type { CanvasLayout } from '../model/index.js';
 import { emptyClassDefinition, emptyEnumDefinition } from '../model/index.js';
 
@@ -41,6 +42,7 @@ import { emptyClassDefinition, emptyEnumDefinition } from '../model/index.js';
 const nodeTypes: NodeTypes = {
   classNode: ClassNode,
   enumNode: EnumNode,
+  importGroupNode: ImportGroupNode,
 };
 
 // ── Context menu ──────────────────────────────────────────────────────────────
@@ -240,20 +242,27 @@ function SchemaCanvasInner() {
   const layoutRanRef = useRef(false);
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ name: string; type: 'class' | 'enum' } | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   const activeSchemaFile = useMemo(
     () => activeProject?.schemas.find((s) => s.id === activeSchemaId),
     [activeProject, activeSchemaId]
   );
 
-  // Derive graph (with ghost nodes for imported entities)
+  // Collect only referenced imported entities (not all entities from imported schemas)
+  const ghostEntities = useMemo(
+    () =>
+      activeSchemaFile && activeProject
+        ? collectReferencedImportedEntities(activeSchemaFile, activeProject.schemas)
+        : [],
+    [activeSchemaFile, activeProject]
+  );
+
+  // Derive graph (with ghost nodes grouped by source schema)
   const { nodes: derivedNodes, edges: derivedEdges } = useMemo(() => {
     if (!activeSchemaFile) return { nodes: [], edges: [] };
-    const ghostEntities = activeProject
-      ? collectImportedEntities(activeSchemaFile, activeProject.schemas)
-      : [];
-    return deriveGraph(activeSchemaFile.schema, localLayout, {}, ghostEntities);
-  }, [activeSchemaFile, activeProject, localLayout]);
+    return deriveGraph(activeSchemaFile.schema, localLayout, {}, ghostEntities, collapsedGroups);
+  }, [activeSchemaFile, ghostEntities, localLayout, collapsedGroups]);
 
   useEffect(() => {
     setNodes(derivedNodes);
@@ -270,11 +279,11 @@ function SchemaCanvasInner() {
       return;
     }
     layoutRanRef.current = true;
-    runAutoLayout(activeSchemaFile.schema).then((layout) => {
+    runAutoLayout(activeSchemaFile.schema, {}, ghostEntities).then((layout) => {
       setLocalLayout(layout);
       setTimeout(() => fitView({ padding: 0.1, duration: 400 }), 100);
     });
-  }, [activeSchemaFile, fitView]);
+  }, [activeSchemaFile, ghostEntities, fitView]);
 
   useEffect(() => {
     layoutRanRef.current = false;
@@ -282,10 +291,10 @@ function SchemaCanvasInner() {
 
   const handleAutoLayout = useCallback(async () => {
     if (!activeSchemaFile) return;
-    const layout = await runAutoLayout(activeSchemaFile.schema);
+    const layout = await runAutoLayout(activeSchemaFile.schema, {}, ghostEntities);
     setLocalLayout(layout);
     setTimeout(() => fitView({ padding: 0.1, duration: 400 }), 100);
-  }, [activeSchemaFile, fitView]);
+  }, [activeSchemaFile, ghostEntities, fitView]);
 
   // ── ReactFlow event handlers ──────────────────────────────────────────────
 
@@ -318,10 +327,17 @@ function SchemaCanvasInner() {
     [setViewport]
   );
 
-  // Double-click → collapse/expand
+  // Double-click → collapse/expand (handles both entity nodes and import groups)
   const onNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
-      toggleNodeCollapsed(node.id);
+      if (node.type === 'importGroupNode') {
+        setCollapsedGroups((prev) => ({
+          ...prev,
+          [node.id]: !prev[node.id],
+        }));
+      } else {
+        toggleNodeCollapsed(node.id);
+      }
     },
     [toggleNodeCollapsed]
   );

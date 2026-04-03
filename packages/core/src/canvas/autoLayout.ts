@@ -5,12 +5,13 @@
  * algorithm over the schema's class/enum graph.
  *
  * Usage:
- *   const layout = await runAutoLayout(schema);
+ *   const layout = await runAutoLayout(schema, {}, ghostEntities);
  *   store.setNodes(deriveGraph(schema, layout).nodes);
  */
 import ELK from 'elkjs/lib/elk.bundled.js';
 import type { ElkNode, ElkExtendedEdge } from 'elkjs/lib/elk-api.js';
 import type { LinkMLSchema, CanvasLayout } from '../model/index.js';
+import type { ImportedEntity } from '../io/importResolver.js';
 
 // Node dimensions used for layout calculations
 const CLASS_W = 240;
@@ -40,7 +41,8 @@ const DEFAULT_OPTIONS: Required<AutoLayoutOptions> = {
 
 export async function runAutoLayout(
   schema: LinkMLSchema,
-  opts: AutoLayoutOptions = {}
+  opts: AutoLayoutOptions = {},
+  ghostEntities: ImportedEntity[] = []
 ): Promise<CanvasLayout> {
   const options = { ...DEFAULT_OPTIONS, ...opts };
 
@@ -66,43 +68,98 @@ export async function runAutoLayout(
     });
   }
 
-  const allIds = new Set([
+  const localIds = new Set([
     ...Object.keys(schema.classes),
     ...Object.keys(schema.enums),
   ]);
 
+  // ── Add ghost entities as compound (group) nodes ──────────────────────────
+  const ghostGroups = new Map<string, ImportedEntity[]>();
+  for (const entity of ghostEntities) {
+    if (localIds.has(entity.name)) continue; // skip if local definition exists
+    const group = ghostGroups.get(entity.sourceFilePath) ?? [];
+    group.push(entity);
+    ghostGroups.set(entity.sourceFilePath, group);
+  }
+
+  const allGhostIds = new Set<string>();
+
+  for (const [sourceFile, entities] of ghostGroups) {
+    const groupId = `importGroup__${sourceFile}`;
+    const children: ElkNode[] = [];
+
+    for (const entity of entities) {
+      const ghostId = `ghost__${entity.name}`;
+      allGhostIds.add(ghostId);
+      children.push({
+        id: ghostId,
+        width: entity.type === 'class' ? CLASS_W : ENUM_W,
+        height: entity.type === 'class' ? CLASS_H : ENUM_H,
+      });
+    }
+
+    elkNodes.push({
+      id: groupId,
+      children,
+      layoutOptions: {
+        'elk.algorithm': 'layered',
+        'elk.direction': options.direction,
+        'elk.spacing.nodeNode': '20',
+        'elk.padding': '[top=52,left=16,bottom=16,right=16]',
+      },
+    });
+  }
+
+  // All known IDs for edge validation
+  const allIds = new Set([...localIds, ...allGhostIds]);
+
   // ── Add edges from class relationships ────────────────────────────────────
   for (const [className, classDef] of Object.entries(schema.classes)) {
     // is_a
-    if (classDef.isA && allIds.has(classDef.isA)) {
-      addEdge(elkEdges, edgeSeen, `isa__${className}__${classDef.isA}`, className, classDef.isA);
+    if (classDef.isA) {
+      const targetId = allIds.has(classDef.isA)
+        ? classDef.isA
+        : allGhostIds.has(`ghost__${classDef.isA}`)
+        ? `ghost__${classDef.isA}`
+        : null;
+      if (targetId) {
+        addEdge(elkEdges, edgeSeen, `isa__${className}__${classDef.isA}`, className, targetId);
+      }
     }
 
     // mixins
     for (const m of classDef.mixins) {
-      if (allIds.has(m)) {
-        addEdge(elkEdges, edgeSeen, `mixin__${className}__${m}`, className, m);
+      const targetId = allIds.has(m) ? m : allGhostIds.has(`ghost__${m}`) ? `ghost__${m}` : null;
+      if (targetId) {
+        addEdge(elkEdges, edgeSeen, `mixin__${className}__${m}`, className, targetId);
       }
     }
 
     // union_of
     if (classDef.unionOf) {
       for (const u of classDef.unionOf) {
-        if (allIds.has(u)) {
-          addEdge(elkEdges, edgeSeen, `union__${className}__${u}`, className, u);
+        const targetId = allIds.has(u) ? u : allGhostIds.has(`ghost__${u}`) ? `ghost__${u}` : null;
+        if (targetId) {
+          addEdge(elkEdges, edgeSeen, `union__${className}__${u}`, className, targetId);
         }
       }
     }
 
-    // range edges (only to known classes/enums)
+    // range edges
     for (const [slotName, slot] of Object.entries(classDef.attributes)) {
-      if (slot.range && allIds.has(slot.range)) {
+      if (!slot.range) continue;
+      const targetId = localIds.has(slot.range)
+        ? slot.range
+        : allGhostIds.has(`ghost__${slot.range}`)
+        ? `ghost__${slot.range}`
+        : null;
+      if (targetId) {
         addEdge(
           elkEdges,
           edgeSeen,
           `range__${className}__${slotName}__${slot.range}`,
           className,
-          slot.range
+          targetId
         );
       }
     }
@@ -144,16 +201,29 @@ function addEdge(
   edges.push({ id, sources: [source], targets: [target] });
 }
 
+/**
+ * Recursively extract absolute positions from ELK result, including children
+ * of compound (group) nodes.
+ */
 function elkResultToLayout(elkNode: ElkNode): CanvasLayout {
   const layout: CanvasLayout = {
     nodes: {},
     viewport: { x: 0, y: 0, zoom: 1 },
   };
-  for (const child of elkNode.children ?? []) {
-    if (child.x !== undefined && child.y !== undefined) {
-      layout.nodes[child.id] = { x: child.x, y: child.y };
+
+  function extractPositions(node: ElkNode, offsetX: number, offsetY: number) {
+    for (const child of node.children ?? []) {
+      const absX = (child.x ?? 0) + offsetX;
+      const absY = (child.y ?? 0) + offsetY;
+      layout.nodes[child.id] = { x: absX, y: absY };
+      // Recurse into compound nodes to get ghost children's absolute positions
+      if (child.children?.length) {
+        extractPositions(child, absX, absY);
+      }
     }
   }
+
+  extractPositions(elkNode, 0, 0);
   return layout;
 }
 

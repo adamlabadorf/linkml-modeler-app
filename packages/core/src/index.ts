@@ -12,6 +12,7 @@ export {
   resolveImports,
   buildDependencyGraph,
   collectImportedEntities,
+  collectReferencedImportedEntities,
   findMissingImport,
 } from './io/importResolver.js';
 export type { SchemaDependency, ImportedEntity } from './io/importResolver.js';

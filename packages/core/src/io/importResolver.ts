@@ -245,6 +245,42 @@ export function findMissingImport(
   return null;
 }
 
+/**
+ * Returns only the imported entities that are actually referenced by the active
+ * schema (via range, is_a, mixins, or union_of). This prevents showing every
+ * entity from an imported schema when only a few are used.
+ */
+export function collectReferencedImportedEntities(
+  activeSchema: SchemaFile,
+  allSchemas: SchemaFile[]
+): ImportedEntity[] {
+  const allImported = collectImportedEntities(activeSchema, allSchemas);
+  if (allImported.length === 0) return allImported;
+
+  // Build set of names referenced by the active schema's classes
+  const referencedNames = new Set<string>();
+  for (const classDef of Object.values(activeSchema.schema.classes)) {
+    if (classDef.isA) referencedNames.add(classDef.isA);
+    for (const m of classDef.mixins) referencedNames.add(m);
+    if (classDef.unionOf) {
+      for (const u of classDef.unionOf) referencedNames.add(u);
+    }
+    for (const slot of Object.values(classDef.attributes)) {
+      if (slot.range) referencedNames.add(slot.range);
+    }
+  }
+
+  // Remove names that are defined locally (not imported)
+  for (const name of Object.keys(activeSchema.schema.classes)) {
+    referencedNames.delete(name);
+  }
+  for (const name of Object.keys(activeSchema.schema.enums)) {
+    referencedNames.delete(name);
+  }
+
+  return allImported.filter((e) => referencedNames.has(e.name));
+}
+
 function makeRelativeImport(fromFilePath: string, toFilePath: string): string {
   const fromParts = fromFilePath.split('/').slice(0, -1);
   const toParts = toFilePath.replace(/\.ya?ml$/, '').split('/');

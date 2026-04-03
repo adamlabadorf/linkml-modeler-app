@@ -7,3 +7,4 @@ export type { AutoLayoutOptions } from './autoLayout.js';
 export type { LinkMLEdgeType } from './edges.js';
 export type { ClassNodeData } from './ClassNode.js';
 export type { EnumNodeData } from './EnumNode.js';
+export type { ImportGroupNodeData } from './ImportGroupNode.js';
