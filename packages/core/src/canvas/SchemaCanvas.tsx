@@ -589,6 +589,7 @@ function SchemaCanvasInner() {
         onPaneClick={onPaneClick}
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
+        multiSelectionKeyCode="Shift"
         selectionOnDrag={true}
         onPaneContextMenu={onPaneContextMenu}
         onNodeContextMenu={onNodeContextMenu}
