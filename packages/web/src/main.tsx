@@ -31,10 +31,6 @@ import {
   PlatformContext,
   usePlatform,
   useAppStore,
-  emptySchema,
-  emptyClassDefinition,
-  emptyEnumDefinition,
-  emptyCanvasLayout,
   serializeYaml,
   PropertiesPanel,
   SchemaSettingsDialog,
@@ -42,9 +38,9 @@ import {
   ValidationPanel,
   FocusModeToolbar,
   MenuBar,
+  SplashPage,
+  SchemaCanvas,
 } from '@linkml-editor/core';
-import { SchemaCanvas } from '@linkml-editor/core';
-import type { Project } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
 import { GitPanel } from './editor/GitPanel.js';
 
@@ -58,109 +54,6 @@ async function createPlatform() {
     return new ElectronPlatform();
   }
   return new WebPlatform();
-}
-
-// ── Seed demo project ─────────────────────────────────────────────────────────
-function makeDemoProject(): Project {
-  // ── Core/base schema (shared types) ─────────────────────────────────────────
-  const namedThingClass = {
-    ...emptyClassDefinition('NamedThing'),
-    description: 'Anything with a name',
-    abstract: true,
-    attributes: {
-      id: { name: 'id', range: 'string', identifier: true },
-      name: { name: 'name', range: 'string' },
-    },
-  };
-
-  const hasAliasesMixin = {
-    ...emptyClassDefinition('HasAliases'),
-    mixin: true,
-    attributes: {
-      aliases: { name: 'aliases', range: 'string', multivalued: true },
-    },
-  };
-
-  const baseSchema = {
-    ...emptySchema('base', 'https://example.org/base', 'base'),
-    title: 'Base Types Schema',
-    description: 'Shared base types imported by other schemas',
-    classes: {
-      NamedThing: namedThingClass,
-      HasAliases: hasAliasesMixin,
-    },
-    enums: {},
-  };
-
-  // ── Main schema (imports base) ───────────────────────────────────────────────
-  const personClass = {
-    ...emptyClassDefinition('Person'),
-    description: 'A human being',
-    isA: 'NamedThing',
-    mixins: ['HasAliases'],
-    attributes: {
-      age: { name: 'age', range: 'integer' },
-      employment_status: { name: 'employment_status', range: 'EmploymentStatus' },
-      employer: { name: 'employer', range: 'Organization' },
-    },
-  };
-
-  const organizationClass = {
-    ...emptyClassDefinition('Organization'),
-    description: 'A group acting as a unit',
-    isA: 'NamedThing',
-    attributes: {
-      employees: { name: 'employees', range: 'Person', multivalued: true },
-    },
-  };
-
-  const employmentEnum = {
-    ...emptyEnumDefinition('EmploymentStatus'),
-    permissibleValues: {
-      EMPLOYED: { text: 'EMPLOYED', meaning: 'schema:employedPerson' },
-      UNEMPLOYED: { text: 'UNEMPLOYED' },
-      RETIRED: { text: 'RETIRED' },
-    },
-  };
-
-  const mainSchema = {
-    ...emptySchema('personinfo', 'https://example.org/personinfo', 'personinfo'),
-    title: 'Person Info Schema',
-    description: 'A demo schema for interactive editing',
-    imports: ['linkml:types', './base'],
-    classes: {
-      Person: personClass,
-      Organization: organizationClass,
-    },
-    enums: {
-      EmploymentStatus: employmentEnum,
-    },
-  };
-
-  return {
-    id: 'demo-project',
-    name: 'Demo — Person Info',
-    rootPath: '/',
-    schemas: [
-      {
-        id: 'demo-schema',
-        filePath: 'personinfo.yaml',
-        schema: mainSchema,
-        isDirty: false,
-        canvasLayout: emptyCanvasLayout(),
-      },
-      {
-        id: 'demo-base',
-        filePath: 'base.yaml',
-        schema: baseSchema,
-        isDirty: false,
-        canvasLayout: emptyCanvasLayout(),
-        isReadOnly: false,
-      },
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
 }
 
 // ── YAML Preview panel ────────────────────────────────────────────────────────
@@ -293,7 +186,6 @@ const toastStyles: Record<string, React.CSSProperties> = {
 // ── App ───────────────────────────────────────────────────────────────────────
 function App() {
   const platform = usePlatform();
-  const setProject = useAppStore((s) => s.setProject);
   const activeProject = useAppStore((s) => s.activeProject);
   const schemaSettingsOpen = useAppStore((s) => s.schemaSettingsOpen);
   const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
@@ -304,12 +196,6 @@ function App() {
   const yamlPreviewOpen = useAppStore((s) => s.yamlPreviewOpen);
   const validationIssues = useAppStore((s) => s.validationIssues);
   const [isSaving, setIsSaving] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!activeProject) {
-      setProject(makeDemoProject());
-    }
-  }, [activeProject, setProject]);
 
   // ── Save project to disk ───────────────────────────────────────────────────
   const saveProject = React.useCallback(async () => {
@@ -383,6 +269,16 @@ function App() {
     window.addEventListener('keydown', handleSaveShortcut);
     return () => window.removeEventListener('keydown', handleSaveShortcut);
   }, [saveProject]);
+
+  // Show splash page when no project is loaded
+  if (!activeProject) {
+    return (
+      <div style={styles.app}>
+        <SplashPage />
+        <ToastList />
+      </div>
+    );
+  }
 
   return (
     <div style={styles.app}>
