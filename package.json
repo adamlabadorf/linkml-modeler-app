@@ -6,21 +6,34 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r build",
+    "build:core": "pnpm --filter @linkml-editor/core build",
+    "build:web": "pnpm run build:core && pnpm --filter @linkml-editor/web build:electron",
+    "build:electron": "pnpm --filter @linkml-editor/electron build",
+    "build:all": "pnpm run build:core && pnpm --filter @linkml-editor/web build:electron && pnpm run build:electron",
     "dev": "pnpm --filter @linkml-editor/web dev",
+    "dev:web": "pnpm --filter @linkml-editor/web dev",
+    "dev:electron": "concurrently --kill-others --names CORE,WEB,ELEC,LAUNCH \"pnpm --filter @linkml-editor/core dev\" \"pnpm --filter @linkml-editor/web dev\" \"pnpm --filter @linkml-editor/electron dev\" \"wait-on http://localhost:5173 && pnpm --filter @linkml-editor/electron exec electron .\"",
     "test": "pnpm -r test",
     "lint": "eslint packages/*/src --ext .ts,.tsx",
     "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "clean": "rm -rf packages/core/dist packages/web/dist packages/electron/dist packages/electron/release",
+    "package:electron": "pnpm run build:all && pnpm --filter @linkml-editor/electron package",
+    "package:electron:linux": "pnpm run build:all && pnpm --filter @linkml-editor/electron package:linux",
+    "package:electron:mac": "pnpm run build:all && pnpm --filter @linkml-editor/electron package:mac",
+    "package:electron:win": "pnpm run build:all && pnpm --filter @linkml-editor/electron package:win",
     "docs:dev": "pnpm --filter @linkml-editor/docs dev",
     "docs:build": "pnpm --filter @linkml-editor/docs build"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "concurrently": "^9.2.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^3.2.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "wait-on": "^9.0.4"
   },
   "engines": {
     "node": ">=20.0.0",

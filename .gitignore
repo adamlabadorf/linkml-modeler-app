@@ -7,3 +7,7 @@ dist/
 out/
 release/
 *.tsbuildinfo
+
+# Claude Code local state
+.claude/
+.agents/

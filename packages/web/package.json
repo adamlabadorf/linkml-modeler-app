@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
+    "build:electron": "tsc -p tsconfig.json && vite build --mode electron",
     "preview": "vite preview",
     "test": "vitest run"
   },

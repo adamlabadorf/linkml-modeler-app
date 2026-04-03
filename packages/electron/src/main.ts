@@ -10,7 +10,9 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 import { app, BrowserWindow, dialog, ipcMain, net, protocol, shell } from 'electron';
 
-const isDev = process.env.NODE_ENV !== 'production';
+// Use app.isPackaged (reliable in both dev and packaged builds) rather than
+// NODE_ENV, which is not set automatically in packaged Electron apps.
+const isDev = !app.isPackaged;
 
 // Register custom protocol as privileged before app is ready.
 // This allows ES module scripts and fetch to work correctly,
@@ -27,6 +29,28 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
+// ── MIME types ───────────────────────────────────────────────────────────────
+// Windows registry may map .js to text/plain; always set correct Content-Type.
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.mjs': 'application/javascript; charset=utf-8',
+  '.cjs': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.webp': 'image/webp',
+};
+
 // ── Window ────────────────────────────────────────────────────────────────────
 
 async function createWindow(): Promise<void> {
@@ -34,7 +58,7 @@ async function createWindow(): Promise<void> {
     width: 1440,
     height: 900,
     backgroundColor: '#0f172a',
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -52,22 +76,42 @@ async function createWindow(): Promise<void> {
       ? path.join(process.resourcesPath, 'web')
       : path.join(__dirname, '../../web/dist');
 
-    protocol.handle('app', (request) => {
-      let urlPath = new URL(request.url).pathname;
-      // Normalize: strip leading slash on Windows (e.g. /C:/... → C:/...)
-      if (process.platform === 'win32' && urlPath.startsWith('/')) {
+    protocol.handle('app', async (request) => {
+      let urlPath = decodeURIComponent(new URL(request.url).pathname);
+      // Strip leading slash so path.join treats it as relative to webDistDir.
+      // On Windows this also avoids /C:/... being treated as an absolute path.
+      if (urlPath.startsWith('/')) {
         urlPath = urlPath.slice(1);
       }
-      // Default to index.html for root requests
-      if (urlPath === '' || urlPath === '/' || urlPath === '.') {
+      // Default to index.html for root or SPA fallback
+      if (urlPath === '' || urlPath === '.' || urlPath === './') {
         urlPath = 'index.html';
       }
       const filePath = path.join(webDistDir, urlPath);
-      return net.fetch(pathToFileURL(filePath).href);
+      console.log('[protocol]', request.url, '->', filePath);
+      const response = await net.fetch(pathToFileURL(filePath).href);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeType = MIME_TYPES[ext];
+      if (mimeType) {
+        const headers = new Headers(response.headers);
+        headers.set('Content-Type', mimeType);
+        return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+      }
+      return response;
     });
 
     await win.loadURL('app://./index.html');
   }
+
+  // Debug: log load failures and renderer console messages
+  win.webContents.on('did-fail-load', (_e, code, desc, url) => {
+    console.error('[did-fail-load]', { code, desc, url });
+  });
+  win.webContents.on('console-message', (_e, level, message, line, sourceId) => {
+    console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
+  });
+  // Open DevTools in packaged builds only when explicitly requested
+  // (isDev already opens them above)
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);

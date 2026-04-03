@@ -17,10 +17,10 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "test": "echo 'No electron tests yet' && exit 0",
-    "package": "pnpm run build && electron-builder --publish never",
-    "package:linux": "pnpm run build && electron-builder --linux --publish never",
-    "package:mac": "pnpm run build && electron-builder --mac --publish never",
-    "package:win": "pnpm run build && electron-builder --win --publish never"
+    "package": "pnpm --filter @linkml-editor/web build:electron && pnpm run build && electron-builder --publish never",
+    "package:linux": "pnpm --filter @linkml-editor/web build:electron && pnpm run build && electron-builder --linux --publish never",
+    "package:mac": "pnpm --filter @linkml-editor/web build:electron && pnpm run build && electron-builder --mac --publish never",
+    "package:win": "pnpm --filter @linkml-editor/web build:electron && pnpm run build && electron-builder --win --publish never"
   },
   "dependencies": {
     "@linkml-editor/core": "workspace:*",
@@ -68,13 +68,9 @@
     },
     "win": {
       "target": [
-        "nsis"
+        "portable"
       ],
       "icon": "build/icons/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
     }
   }
 }
