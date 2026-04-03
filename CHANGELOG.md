@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.3] - 2026-04-03
+
+### Added
+
+- **Editor**: Show imported schema classes and enums in range slot dropdown
+
+### Fixed
+
+- **Canvas**: Change multi-select modifier key from Ctrl to Shift
+- **Canvas**: Group imported schema classes in collapsible containers to prevent overlap
+
 ## [0.1.2] - 2026-04-02
 
 ### Fixed

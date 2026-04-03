@@ -1,6 +1,6 @@
 {
   "name": "@linkml-editor/electron",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "LinkML Modeler desktop application",
   "author": {
     "name": "Adam Labadorf",
