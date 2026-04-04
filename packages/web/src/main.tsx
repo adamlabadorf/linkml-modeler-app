@@ -66,7 +66,22 @@ async function createPlatform(): Promise<{ platform: import('@linkml-editor/core
   const token = await local.getCredential('github-token');
   if (token) {
     const { CloudPlatform } = await import('./platform/CloudPlatform.js');
-    return { platform: new CloudPlatform(local, token), isCloud: true };
+
+    // In Electron, resolve the configured clone directory
+    let cloneRoot: string | undefined;
+    if (IS_ELECTRON) {
+      const configuredDir = await local.getSetting('github-clone-dir');
+      if (configuredDir) {
+        cloneRoot = configuredDir;
+      } else {
+        // Default: ~/Documents/LinkMLProjects/
+        const electronAPI = (window as unknown as { electronAPI?: { getDocumentsPath?(): Promise<string> } }).electronAPI;
+        const documents = await electronAPI?.getDocumentsPath?.() ?? '';
+        cloneRoot = documents ? `${documents}/LinkMLProjects` : undefined;
+      }
+    }
+
+    return { platform: new CloudPlatform(local, token, { cloneRoot }), isCloud: true };
   }
 
   return { platform: local, isCloud: false };

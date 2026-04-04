@@ -57,11 +57,21 @@ const GITHUB_API = 'https://api.github.com';
 
 // ── CloudPlatform ─────────────────────────────────────────────────────────────
 
+export interface CloudPlatformOptions {
+  /**
+   * Root directory for local clones.
+   * - Web: defaults to OPFS namespace (derived by WebProjectRegistry.opfsPathForRepo)
+   * - Electron: defaults to ~/Documents/LinkMLProjects/ (passed in at construction)
+   */
+  cloneRoot?: string;
+}
+
 export class CloudPlatform implements PlatformAPI {
   readonly platform: 'web' | 'electron';
   gitAvailable = true;
 
   private readonly _registry: WebProjectRegistry;
+  private readonly _cloneRoot: string | null;
   private _currentRepoPath: string | null = null;
   private _syncDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private _syncListeners: SyncStatusListener[] = [];
@@ -70,9 +80,23 @@ export class CloudPlatform implements PlatformAPI {
   constructor(
     private readonly local: PlatformAPI,
     private readonly token: string,
+    options: CloudPlatformOptions = {},
   ) {
     this.platform = local.platform;
     this._registry = new WebProjectRegistry();
+    this._cloneRoot = options.cloneRoot ?? null;
+  }
+
+  /** Resolve the local clone path for a given repoUrl */
+  private _clonePathForRepo(repoUrl: string): string {
+    if (this._cloneRoot) {
+      // Electron: use configured directory + {repo} name
+      const parsed = WebProjectRegistry.parseOwnerRepo(repoUrl);
+      const repo = parsed?.repo ?? repoUrl.split('/').pop() ?? 'repo';
+      return `${this._cloneRoot}/${repo}`;
+    }
+    // Web: OPFS namespace
+    return WebProjectRegistry.opfsPathForRepo(repoUrl);
   }
 
   // ── Sync status ──────────────────────────────────────────────────────────────
@@ -119,7 +143,7 @@ export class CloudPlatform implements PlatformAPI {
     persistLayout = false,
     onProgress?: (phase: string, loaded: number, total: number) => void,
   ): Promise<CloudOpenResult> {
-    const clonePath = WebProjectRegistry.opfsPathForRepo(repoUrl);
+    const clonePath = this._clonePathForRepo(repoUrl);
     const parsed = WebProjectRegistry.parseOwnerRepo(repoUrl);
     const repoName = parsed?.repo ?? repoUrl.split('/').pop() ?? 'repo';
 
@@ -205,7 +229,7 @@ export class CloudPlatform implements PlatformAPI {
     const repoData = await createRes.json() as { clone_url: string; html_url: string; name: string };
     const repoUrl = repoData.html_url;
     const cloneUrl = repoData.clone_url;
-    const clonePath = WebProjectRegistry.opfsPathForRepo(repoUrl);
+    const clonePath = this._clonePathForRepo(repoUrl);
 
     // Clone the freshly created repo (has auto_init commit)
     const cloneResult = await this.local.gitClone(cloneUrl, clonePath, {
@@ -317,7 +341,7 @@ export class CloudPlatform implements PlatformAPI {
     const repoData = await createRes.json() as { clone_url: string; html_url: string; name: string };
     const repoUrl = repoData.html_url;
     const cloneUrl = repoData.clone_url;
-    const clonePath = WebProjectRegistry.opfsPathForRepo(repoUrl);
+    const clonePath = this._clonePathForRepo(repoUrl);
 
     // Clone
     const cloneResult = await this.local.gitClone(cloneUrl, clonePath, {

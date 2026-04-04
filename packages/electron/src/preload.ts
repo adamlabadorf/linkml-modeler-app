@@ -63,6 +63,9 @@ const electronAPI = {
 
   openExternal: (url: string) =>
     ipcRenderer.invoke('shell:openExternal', url),
+
+  getDocumentsPath: (): Promise<string> =>
+    ipcRenderer.invoke('app:getDocumentsPath'),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

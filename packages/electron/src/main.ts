@@ -417,6 +417,12 @@ function registerIpcHandlers(): void {
     await writeSettingsFile(settings);
   });
 
+  // ── App paths ────────────────────────────────────────────────────────────────
+
+  ipcMain.handle('app:getDocumentsPath', () => {
+    return app.getPath('documents');
+  });
+
   // ── Shell ────────────────────────────────────────────────────────────────────
 
   ipcMain.handle('shell:openExternal', async (_event, url: string) => {
