@@ -60,6 +60,9 @@ const electronAPI = {
 
   setSetting: (key: string, value: string) =>
     ipcRenderer.invoke('settings:set', key, value),
+
+  openExternal: (url: string) =>
+    ipcRenderer.invoke('shell:openExternal', url),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

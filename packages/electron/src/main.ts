@@ -417,6 +417,12 @@ function registerIpcHandlers(): void {
     await writeSettingsFile(settings);
   });
 
+  // ── Shell ────────────────────────────────────────────────────────────────────
+
+  ipcMain.handle('shell:openExternal', async (_event, url: string) => {
+    await shell.openExternal(url);
+  });
+
   ipcMain.handle('platform:gitClone', async (_event, url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }) => {
     try {
       const fs = await getFs();

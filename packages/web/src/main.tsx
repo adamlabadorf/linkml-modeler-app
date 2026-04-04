@@ -44,6 +44,9 @@ import {
 } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
 import { GitPanel } from './editor/GitPanel.js';
+import { AuthProvider } from './auth/AuthContext.js';
+import { SignInPrompt } from './components/SignInPrompt.js';
+import { UserMenu } from './components/UserMenu.js';
 
 // ── Detect Electron ───────────────────────────────────────────────────────────
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
@@ -304,6 +307,7 @@ function App() {
     return (
       <div style={styles.app}>
         <SplashPage />
+        <SignInPrompt />
         {cloneDialogOpen && (
           <CloneDialog onClose={() => setCloneDialogOpen(false)} />
         )}
@@ -329,8 +333,12 @@ function App() {
         <div style={styles.headerRight}>
           {isDirty && <span style={styles.dirtyBadge}>● unsaved changes</span>}
           {isSaving && <span style={styles.savingBadge}>saving…</span>}
+          <UserMenu />
         </div>
       </header>
+
+      {/* Sign-in banner (unauthenticated) */}
+      <SignInPrompt />
 
       {/* Main layout */}
       <div style={styles.main}>
@@ -490,7 +498,9 @@ async function bootstrap() {
     <React.StrictMode>
       <ErrorBoundary>
         <PlatformContext.Provider value={platform}>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </PlatformContext.Provider>
       </ErrorBoundary>
     </React.StrictMode>
