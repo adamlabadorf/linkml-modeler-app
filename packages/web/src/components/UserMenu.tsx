@@ -8,12 +8,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthContext.js';
 import { DeviceFlowModal } from './DeviceFlowModal.js';
+import { GitHubProjectDialog } from './GitHubProjectDialog.js';
 
 const CLIENT_ID = (import.meta as unknown as { env: Record<string, string> }).env?.VITE_GITHUB_CLIENT_ID ?? '';
 
 export function UserMenu() {
   const { session, loading, startSignIn, deviceFlow, cancelSignIn, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -76,10 +78,21 @@ export function UserMenu() {
             <div style={styles.userHandle}>@{session.login}</div>
           </div>
           <div style={styles.divider} />
+          <button
+            style={styles.menuItem}
+            onClick={() => { setOpen(false); setProjectDialogOpen(true); }}
+          >
+            GitHub Projects…
+          </button>
+          <div style={styles.divider} />
           <button style={styles.menuItem} onClick={handleSignOut}>
             Sign Out
           </button>
         </div>
+      )}
+
+      {projectDialogOpen && (
+        <GitHubProjectDialog onClose={() => setProjectDialogOpen(false)} />
       )}
     </div>
   );
