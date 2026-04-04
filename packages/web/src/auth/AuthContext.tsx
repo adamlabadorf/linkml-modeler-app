@@ -85,6 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newSession = await handle.poll();
       setSession(newSession);
       setDeviceFlow(null);
+      // Reload so bootstrap() picks up the stored token and activates CloudPlatform
+      window.location.reload();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       // If cancelled, just close silently

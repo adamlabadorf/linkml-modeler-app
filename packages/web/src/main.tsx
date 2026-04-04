@@ -47,17 +47,29 @@ import { GitPanel } from './editor/GitPanel.js';
 import { AuthProvider } from './auth/AuthContext.js';
 import { SignInPrompt } from './components/SignInPrompt.js';
 import { UserMenu } from './components/UserMenu.js';
+import { SyncStatusIndicator } from './components/SyncStatusIndicator.js';
 
 // ── Detect Electron ───────────────────────────────────────────────────────────
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
 
 // ── Platform selection ────────────────────────────────────────────────────────
-async function createPlatform() {
+async function createPlatform(): Promise<{ platform: import('@linkml-editor/core').PlatformAPI; isCloud: boolean }> {
+  let local;
   if (IS_ELECTRON) {
     const { ElectronPlatform } = await import('./platform/ElectronPlatform.js');
-    return new ElectronPlatform();
+    local = new ElectronPlatform();
+  } else {
+    local = new WebPlatform();
   }
-  return new WebPlatform();
+
+  // Check for stored GitHub token — activate CloudPlatform if present
+  const token = await local.getCredential('github-token');
+  if (token) {
+    const { CloudPlatform } = await import('./platform/CloudPlatform.js');
+    return { platform: new CloudPlatform(local, token), isCloud: true };
+  }
+
+  return { platform: local, isCloud: false };
 }
 
 // ── YAML Preview panel ────────────────────────────────────────────────────────
@@ -203,6 +215,7 @@ function App() {
   const validationIssues = useAppStore((s) => s.validationIssues);
   const cloneDialogOpen = useAppStore((s) => s.cloneDialogOpen);
   const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
+  const syncStatus = useAppStore((s) => s.syncStatus);
   const [isSaving, setIsSaving] = React.useState(false);
 
   // ── Save project to disk ───────────────────────────────────────────────────
@@ -331,7 +344,8 @@ function App() {
           />
         </div>
         <div style={styles.headerRight}>
-          {isDirty && <span style={styles.dirtyBadge}>● unsaved changes</span>}
+          <SyncStatusIndicator />
+          {isDirty && syncStatus === null && <span style={styles.dirtyBadge}>● unsaved changes</span>}
           {isSaving && <span style={styles.savingBadge}>saving…</span>}
           <UserMenu />
         </div>
@@ -490,9 +504,31 @@ const styles: Record<string, React.CSSProperties> = {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 async function bootstrap() {
-  const platform = await createPlatform();
+  const { platform, isCloud } = await createPlatform();
   const container = document.getElementById('root')!;
   const root = createRoot(container);
+
+  // Wire up sync status and beforeunload for CloudPlatform
+  if (isCloud) {
+    const { CloudPlatform } = await import('./platform/CloudPlatform.js');
+    if (platform instanceof CloudPlatform) {
+      const cloudPlatform = platform;
+
+      // Propagate sync status into the Zustand store
+      cloudPlatform.onSyncStatus((status) => {
+        const { setSyncStatus, pushToast } = useAppStore.getState();
+        setSyncStatus(status);
+        if (status === 'error') {
+          pushToast({ message: 'Sync failed — another session may have modified this project. Please refresh.', severity: 'error' });
+        }
+      });
+
+      // Final push on page unload
+      window.addEventListener('beforeunload', () => {
+        void cloudPlatform.flushSync();
+      });
+    }
+  }
 
   root.render(
     <React.StrictMode>
