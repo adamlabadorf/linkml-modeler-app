@@ -355,6 +355,68 @@ function registerIpcHandlers(): void {
     }
   });
 
+  // ── Credentials (keytar) ─────────────────────────────────────────────────────
+
+  ipcMain.handle('credential:store', async (_event, key: string, value: string) => {
+    try {
+      const keytar = await import('keytar').catch(() => null);
+      if (keytar) {
+        await keytar.setPassword('linkml-modeler', key, value);
+      }
+    } catch { /* keytar unavailable */ }
+  });
+
+  ipcMain.handle('credential:get', async (_event, key: string) => {
+    try {
+      const keytar = await import('keytar').catch(() => null);
+      if (keytar) {
+        return await keytar.getPassword('linkml-modeler', key);
+      }
+    } catch { /* keytar unavailable */ }
+    return null;
+  });
+
+  ipcMain.handle('credential:delete', async (_event, key: string) => {
+    try {
+      const keytar = await import('keytar').catch(() => null);
+      if (keytar) {
+        await keytar.deletePassword('linkml-modeler', key);
+      }
+    } catch { /* keytar unavailable */ }
+  });
+
+  // ── Settings (userData JSON file) ────────────────────────────────────────────
+
+  async function readSettingsFile(): Promise<Record<string, string>> {
+    try {
+      const fs = await getFs();
+      const pathModule = await import('path');
+      const settingsPath = pathModule.join(app.getPath('userData'), 'settings.json');
+      const raw = await fs.readFile(settingsPath, 'utf8');
+      return JSON.parse(raw) as Record<string, string>;
+    } catch {
+      return {};
+    }
+  }
+
+  async function writeSettingsFile(settings: Record<string, string>): Promise<void> {
+    const fs = await getFs();
+    const pathModule = await import('path');
+    const settingsPath = pathModule.join(app.getPath('userData'), 'settings.json');
+    await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+  }
+
+  ipcMain.handle('settings:get', async (_event, key: string) => {
+    const settings = await readSettingsFile();
+    return settings[key] ?? null;
+  });
+
+  ipcMain.handle('settings:set', async (_event, key: string, value: string) => {
+    const settings = await readSettingsFile();
+    settings[key] = value;
+    await writeSettingsFile(settings);
+  });
+
   ipcMain.handle('platform:gitClone', async (_event, url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }) => {
     try {
       const fs = await getFs();

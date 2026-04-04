@@ -69,4 +69,24 @@ export class StubWebPlatform implements PlatformAPI {
   async gitClone(_url: string, destPath: string, _options?: GitCloneOptions): Promise<GitCloneResult> {
     return { ok: false, destPath, error: 'StubWebPlatform: gitClone not implemented' };
   }
+
+  async storeCredential(_key: string, _value: string): Promise<void> {
+    // no-op in stub
+  }
+
+  async getCredential(_key: string): Promise<string | null> {
+    return null;
+  }
+
+  async deleteCredential(_key: string): Promise<void> {
+    // no-op in stub
+  }
+
+  async getSetting(_key: string): Promise<string | null> {
+    return null;
+  }
+
+  async setSetting(_key: string, _value: string): Promise<void> {
+    // no-op in stub
+  }
 }

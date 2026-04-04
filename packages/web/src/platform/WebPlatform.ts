@@ -319,6 +319,28 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
+  // ── Credential storage (localStorage) ──────────────────────────────────────
+
+  async storeCredential(key: string, value: string): Promise<void> {
+    localStorage.setItem(`linkml-editor:${key}`, value);
+  }
+
+  async getCredential(key: string): Promise<string | null> {
+    return localStorage.getItem(`linkml-editor:${key}`);
+  }
+
+  async deleteCredential(key: string): Promise<void> {
+    localStorage.removeItem(`linkml-editor:${key}`);
+  }
+
+  async getSetting(key: string): Promise<string | null> {
+    return localStorage.getItem(`linkml-editor-settings:${key}`);
+  }
+
+  async setSetting(key: string, value: string): Promise<void> {
+    localStorage.setItem(`linkml-editor-settings:${key}`, value);
+  }
+
   async gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult> {
     try {
       // Ensure destination directory exists

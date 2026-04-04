@@ -45,6 +45,21 @@ const electronAPI = {
 
   gitClone: (url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }) =>
     ipcRenderer.invoke('platform:gitClone', url, destPath, options),
+
+  storeCredential: (key: string, value: string) =>
+    ipcRenderer.invoke('credential:store', key, value),
+
+  getCredential: (key: string) =>
+    ipcRenderer.invoke('credential:get', key),
+
+  deleteCredential: (key: string) =>
+    ipcRenderer.invoke('credential:delete', key),
+
+  getSetting: (key: string) =>
+    ipcRenderer.invoke('settings:get', key),
+
+  setSetting: (key: string, value: string) =>
+    ipcRenderer.invoke('settings:set', key, value),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

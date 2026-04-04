@@ -82,6 +82,15 @@ export interface PlatformAPI {
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
   gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult>;
 
+  // Credential storage (secure, per-environment)
+  storeCredential(key: string, value: string): Promise<void>;
+  getCredential(key: string): Promise<string | null>;
+  deleteCredential(key: string): Promise<void>;
+
+  // Persistent app settings (non-sensitive)
+  getSetting(key: string): Promise<string | null>;
+  setSetting(key: string, value: string): Promise<void>;
+
   // Environment
   platform: 'web' | 'electron';
   gitAvailable: boolean; // Detected at startup
