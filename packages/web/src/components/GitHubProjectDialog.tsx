@@ -193,10 +193,7 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
       onClose();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      const friendly = msg.toLowerCase().includes('not found')
-        ? "Repository not found or you don't have access to it."
-        : msg;
-      setCloneError(friendly);
+      setCloneError(msg);
     } finally {
       setCloneSubmitting(false);
       setCloneProgress(null);

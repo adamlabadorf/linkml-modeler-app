@@ -22,6 +22,7 @@ import type {
   GitCloneOptions,
   GitCloneResult,
 } from '@linkml-editor/core';
+import { friendlyGitError } from './gitErrorMessages.js';
 
 // ── LightningFS singleton (OPFS-backed) ───────────────────────────────────────
 const fs = new LightningFS('linkml-editor-fs');
@@ -329,6 +330,7 @@ export class WebPlatform implements PlatformAPI {
       return { ok: true };
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
+      console.error('[gitPull]', repoPath, e);
       return { ok: false, error: msg };
     }
   }
@@ -411,7 +413,8 @@ export class WebPlatform implements PlatformAPI {
       return { ok: true, destPath };
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      return { ok: false, destPath, error: msg };
+      console.error('[gitClone]', url, e);
+      return { ok: false, destPath, error: friendlyGitError(msg) };
     }
   }
 }

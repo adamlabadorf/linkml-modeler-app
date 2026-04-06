@@ -154,7 +154,8 @@ export class CloudPlatform implements PlatformAPI {
     });
 
     if (!cloneResult.ok) {
-      throw new Error(`Clone failed: ${cloneResult.error ?? 'unknown error'}`);
+      console.error('[cloneProject]', repoUrl, cloneResult.error);
+      throw new Error(cloneResult.error ?? 'Clone failed: unknown error');
     }
 
     // Check if .linkml-editor/project.json already exists in the repo
