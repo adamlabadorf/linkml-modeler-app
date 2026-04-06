@@ -5,7 +5,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useAppStore } from '../store/index.js';
 import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue } from '../model/index.js';
-import { collectImportedEntities } from '../io/importResolver.js';
 
 // ── Shared field components ───────────────────────────────────────────────────
 
@@ -120,28 +119,6 @@ function Checkbox({
   );
 }
 
-function Select({
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-  placeholder?: string;
-}) {
-  return (
-    <select style={styles.select} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
-      {placeholder && <option value="">{placeholder}</option>}
-      {options.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
-    </select>
-  );
-}
 
 interface OptionGroup {
   label: string;
@@ -205,54 +182,47 @@ function DeleteButton({ label, onConfirm }: { label: string; onConfirm: () => vo
 
 // ── Panel sections ────────────────────────────────────────────────────────────
 
-/** Build grouped range option lists from local + imported entities. */
+/** Returns grouped class+enum options from every schema in the project. */
 function useRangeOptionGroups(_schemaId: string, excludeClassName?: string) {
-  const activeSchemaFile = useAppStore((s) => s.getActiveSchema());
   const allSchemas = useAppStore((s) => s.activeProject?.schemas ?? []);
-  const schema = activeSchemaFile?.schema;
 
   return useMemo(() => {
     const builtinTypes = ['string', 'integer', 'float', 'boolean', 'date', 'datetime', 'uri', 'uriorcurie'];
-    const allClassNames = Object.keys(schema?.classes ?? {}).filter((n) => n !== excludeClassName);
-    const allEnumNames = Object.keys(schema?.enums ?? {});
-
     const groups: OptionGroup[] = [
       { label: 'Built-in types', options: builtinTypes },
     ];
 
-    if (allClassNames.length > 0) {
-      groups.push({ label: 'Classes (this schema)', options: allClassNames });
-    }
-    if (allEnumNames.length > 0) {
-      groups.push({ label: 'Enums (this schema)', options: allEnumNames });
-    }
-
-    // Collect entities from imported schemas
-    if (activeSchemaFile) {
-      const imported = collectImportedEntities(activeSchemaFile, allSchemas);
-      // Group by source file path
-      const bySource = new Map<string, { classes: string[]; enums: string[] }>();
-      for (const entity of imported) {
-        let entry = bySource.get(entity.sourceFilePath);
-        if (!entry) {
-          entry = { classes: [], enums: [] };
-          bySource.set(entity.sourceFilePath, entry);
-        }
-        if (entity.type === 'class') entry.classes.push(entity.name);
-        else entry.enums.push(entity.name);
-      }
-
-      for (const [filePath, entry] of bySource) {
-        const label = filePath.replace(/\.ya?ml$/, '').split('/').pop() ?? filePath;
-        const combined = [...entry.classes, ...entry.enums];
-        if (combined.length > 0) {
-          groups.push({ label: `Imported: ${label}`, options: combined });
-        }
+    for (const sf of allSchemas) {
+      const label = sf.filePath.replace(/\.ya?ml$/, '');
+      const classNames = Object.keys(sf.schema.classes).filter((n) => n !== excludeClassName);
+      const enumNames = Object.keys(sf.schema.enums);
+      const options = [...classNames, ...enumNames];
+      if (options.length > 0) {
+        groups.push({ label, options });
       }
     }
 
     return groups;
-  }, [schema, activeSchemaFile, allSchemas, excludeClassName]);
+  }, [allSchemas, excludeClassName]);
+}
+
+/** Returns grouped class-only options from every schema in the project. */
+function useIsAOptionGroups(excludeClassName?: string) {
+  const allSchemas = useAppStore((s) => s.activeProject?.schemas ?? []);
+
+  return useMemo(() => {
+    const groups: OptionGroup[] = [];
+
+    for (const sf of allSchemas) {
+      const label = sf.filePath.replace(/\.ya?ml$/, '');
+      const classNames = Object.keys(sf.schema.classes).filter((n) => n !== excludeClassName);
+      if (classNames.length > 0) {
+        groups.push({ label, options: classNames });
+      }
+    }
+
+    return groups;
+  }, [allSchemas, excludeClassName]);
 }
 
 function ClassPanel({ schemaId, className }: { schemaId: string; className: string }) {
@@ -267,13 +237,12 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
   const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
 
   const rangeOptionGroups = useRangeOptionGroups(schemaId, className);
+  const isAOptionGroups = useIsAOptionGroups(className);
   const [newSlotName, setNewSlotName] = useState('');
 
   const classDef = schema?.classes[className] as ClassDefinition | undefined;
   if (!classDef) return <EmptyPanel message="Class not found" />;
   const cls = classDef;
-
-  const allClassNames = Object.keys(schema?.classes ?? {}).filter((n) => n !== className);
 
   const update = (partial: Partial<ClassDefinition>) => updateClass(schemaId, className, partial);
 
@@ -313,10 +282,10 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
       </FieldRow>
 
       <FieldRow label="is_a">
-        <Select
+        <GroupedSelect
           value={classDef.isA ?? ''}
           onChange={(v) => update({ isA: v || undefined })}
-          options={allClassNames}
+          groups={isAOptionGroups}
           placeholder="(none)"
         />
       </FieldRow>
