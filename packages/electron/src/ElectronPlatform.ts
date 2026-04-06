@@ -31,6 +31,11 @@ type ElectronBridge = {
   gitPush(repoPath: string): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
   gitClone(url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }): Promise<GitCloneResult>;
+  storeCredential(key: string, value: string): Promise<void>;
+  getCredential(key: string): Promise<string | null>;
+  deleteCredential(key: string): Promise<void>;
+  getSetting(key: string): Promise<string | null>;
+  setSetting(key: string, value: string): Promise<void>;
 };
 
 function bridge(): ElectronBridge {
@@ -96,5 +101,25 @@ export class ElectronPlatform implements PlatformAPI {
       branch: options?.branch,
       credentials: options?.credentials,
     });
+  }
+
+  async storeCredential(key: string, value: string): Promise<void> {
+    return bridge().storeCredential(key, value);
+  }
+
+  async getCredential(key: string): Promise<string | null> {
+    return bridge().getCredential(key);
+  }
+
+  async deleteCredential(key: string): Promise<void> {
+    return bridge().deleteCredential(key);
+  }
+
+  async getSetting(key: string): Promise<string | null> {
+    return bridge().getSetting(key);
+  }
+
+  async setSetting(key: string, value: string): Promise<void> {
+    return bridge().setSetting(key, value);
   }
 }
