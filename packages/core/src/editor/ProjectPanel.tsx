@@ -72,6 +72,15 @@ export function ProjectPanel() {
                 {sf.isReadOnly && <span style={styles.readOnlyBadge}>imported</span>}
               </div>
 
+              {/* Schema name subtitle */}
+              {sf.schema.name && (
+                <div style={styles.schemaNameRow}>
+                  <span style={styles.schemaName} title={sf.schema.id}>
+                    {sf.schema.name}
+                  </span>
+                </div>
+              )}
+
               {/* Stats */}
               <div style={styles.statsRow}>
                 <span style={styles.stat} title={`${classCount} class(es)`}>
@@ -80,11 +89,6 @@ export function ProjectPanel() {
                 <span style={styles.stat} title={`${enumCount} enum(s)`}>
                   ◈ {enumCount}
                 </span>
-                {sf.schema.name && (
-                  <span style={styles.statNamespace} title={sf.schema.id}>
-                    {sf.schema.name}
-                  </span>
-                )}
               </div>
 
               {/* Import paths */}
@@ -204,6 +208,19 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#64748b',
     flexShrink: 0,
   },
+  schemaNameRow: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  schemaName: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    color: '#7c9cbf',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   statsRow: {
     display: 'flex',
     alignItems: 'center',
@@ -213,16 +230,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     fontFamily: 'monospace',
     color: '#475569',
-  },
-  statNamespace: {
-    fontSize: 9,
-    fontFamily: 'monospace',
-    color: '#334155',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    flex: 1,
-    marginLeft: 4,
   },
   importsRow: {
     display: 'flex',

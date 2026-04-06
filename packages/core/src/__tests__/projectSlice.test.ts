@@ -79,6 +79,21 @@ describe('ProjectSlice', () => {
     expect(updated.isDirty).toBe(true);
   });
 
+  it('updateSchema — updates schema name and produces new activeProject reference (PTS-58)', () => {
+    const store = createStore();
+    const s = makeSchemaFile('my_schema');
+    store.getState().setProject(makeProject('test', [s]));
+
+    const projectBefore = store.getState().activeProject;
+    store.getState().updateSchema(s.id, { name: 'new_schema_name' });
+    const projectAfter = store.getState().activeProject;
+
+    expect(projectAfter!.schemas[0].schema.name).toBe('new_schema_name');
+    expect(projectAfter!.schemas[0].isDirty).toBe(true);
+    // New object reference ensures Zustand subscribers (e.g. ProjectPanel) re-render
+    expect(projectAfter).not.toBe(projectBefore);
+  });
+
   it('markSchemaDirty — sets dirty flag', () => {
     const store = createStore();
     const s = makeSchemaFile('core');
