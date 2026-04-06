@@ -1,3 +1,7 @@
+// isomorphic-git requires Buffer to be available as a global in the browser.
+import { Buffer } from 'buffer';
+globalThis.Buffer = Buffer;
+
 import React, { Component, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -324,38 +328,15 @@ function App() {
     useAppStore.getState().setGitPanelOpen(true);
   }, []);
 
-  const handleMenuPush = React.useCallback(async () => {
-    // Open the git panel so the credentials dialog can appear there
+  const handleMenuPush = React.useCallback(() => {
+    // Open the git panel — the Push button there has proper credential UI.
     useAppStore.getState().setGitPanelOpen(true);
-    const repoPath = useAppStore.getState().activeProject?.rootPath ?? '/';
-    try {
-      const result = await platform.gitPush(repoPath);
-      if (result?.ok) {
-        pushToast({ message: 'Pushed to remote', severity: 'success' });
-      } else {
-        pushToast({ message: result?.error ?? 'Push failed', severity: 'error' });
-      }
-    } catch (e: unknown) {
-      pushToast({ message: e instanceof Error ? e.message : String(e), severity: 'error' });
-    }
-  }, [platform, pushToast]);
+  }, []);
 
-  const handleMenuPull = React.useCallback(async () => {
-    const project = useAppStore.getState().activeProject;
-    if (!project?.gitConfig?.remoteUrl) return;
+  const handleMenuPull = React.useCallback(() => {
+    // Open the git panel — the Pull button there has proper credential UI.
     useAppStore.getState().setGitPanelOpen(true);
-    const repoPath = project.rootPath;
-    try {
-      const result = await platform.gitPull(repoPath);
-      if (result?.ok) {
-        pushToast({ message: 'Pulled from remote', severity: 'success' });
-      } else {
-        pushToast({ message: result?.error ?? 'Pull failed', severity: 'error' });
-      }
-    } catch (e: unknown) {
-      pushToast({ message: e instanceof Error ? e.message : String(e), severity: 'error' });
-    }
-  }, [platform, pushToast]);
+  }, []);
 
   // ── New Project / Open Project (for MenuBar) ─────────────────────────────
   const handleNewProject = React.useCallback(() => {
@@ -373,6 +354,8 @@ function App() {
         return;
       }
       setProject(project);
+      const hasGit = await platform.initGit(dirPath);
+      useAppStore.getState().setGitAvailable(hasGit);
     } catch (err) {
       pushToast({
         message: `Failed to open project: ${err instanceof Error ? err.message : String(err)}`,

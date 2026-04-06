@@ -28,6 +28,11 @@ import { friendlyGitError } from './gitErrorMessages.js';
 const fs = new LightningFS('linkml-editor-fs');
 const pfs = fs.promises;
 
+// GitHub (and most git hosts) don't set CORS headers, so browser fetch() is
+// blocked. Route all remote git operations through this CORS proxy.
+// See: https://isomorphic-git.org/docs/en/cors_proxy
+const CORS_PROXY = 'https://cors.isomorphic-git.org';
+
 // ── FSAA availability ─────────────────────────────────────────────────────────
 const FSAA_AVAILABLE =
   typeof window !== 'undefined' &&
@@ -57,6 +62,11 @@ export class WebPlatform implements PlatformAPI {
     if (repoPath) {
       this.gitAvailable = await detectGit(repoPath);
     }
+  }
+
+  async initGit(dirPath: string): Promise<boolean> {
+    this.gitAvailable = await detectGit(dirPath);
+    return this.gitAvailable;
   }
 
   // ── File I/O ────────────────────────────────────────────────────────────────
@@ -293,6 +303,7 @@ export class WebPlatform implements PlatformAPI {
         fs,
         http,
         dir: repoPath,
+        corsProxy: CORS_PROXY,
         onAuth,
       });
       return { ok: true };
@@ -324,6 +335,7 @@ export class WebPlatform implements PlatformAPI {
         fs,
         http,
         dir: repoPath,
+        corsProxy: CORS_PROXY,
         onAuth,
         author: { name: 'LinkML Editor', email: 'editor@linkml.io' },
       });
@@ -400,6 +412,7 @@ export class WebPlatform implements PlatformAPI {
         http,
         dir: destPath,
         url,
+        corsProxy: CORS_PROXY,
         singleBranch: true,
         depth: 1,
         ref: options?.branch || undefined,

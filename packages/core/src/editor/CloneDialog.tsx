@@ -18,6 +18,7 @@ type CloneState = 'idle' | 'cloning' | 'opening' | 'done' | 'error';
 export function CloneDialog({ onClose }: CloneDialogProps) {
   const platform = usePlatform();
   const setProject = useAppStore((s) => s.setProject);
+  const setGitAvailable = useAppStore((s) => s.setGitAvailable);
   const pushToast = useAppStore((s) => s.pushToast);
 
   const [url, setUrl] = React.useState('');
@@ -78,6 +79,7 @@ export function CloneDialog({ onClose }: CloneDialogProps) {
       // Set source to 'git' for recent projects tracking
       project.rootPath = result.destPath;
       setProject(project);
+      setGitAvailable(true);
       pushToast({ message: `Cloned ${repoName} successfully`, severity: 'success', durationMs: 3000 });
       onClose();
     } catch (err) {

@@ -34,6 +34,7 @@ function makeMockLocal() {
     }),
     writeFile: vi.fn(async (path: string, content: string) => { files.set(path, content); }),
     listDirectory: vi.fn(async () => []),
+    initGit: vi.fn(async () => true),
     gitStatus: vi.fn(async () => ({
       branch: 'main', aheadCount: 0, behindCount: 0,
       stagedFiles: [], unstagedFiles: [], untrackedFiles: ['file.yaml'],

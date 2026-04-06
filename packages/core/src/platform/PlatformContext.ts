@@ -75,6 +75,8 @@ export interface PlatformAPI {
   listDirectory(path: string): Promise<DirEntry[]>;
 
   // Git — all methods no-op / return null when git unavailable
+  /** Detect whether a git repo exists at dirPath and update internal gitAvailable state. Returns true if found. */
+  initGit(dirPath: string): Promise<boolean>;
   gitStatus(repoPath: string): Promise<GitStatus | null>;
   gitStage(repoPath: string, paths: string[]): Promise<void>;
   gitCommit(repoPath: string, message: string): Promise<string | null>;

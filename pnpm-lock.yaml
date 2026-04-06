@@ -135,6 +135,9 @@ importers:
       '@linkml-editor/core':
         specifier: workspace:*
         version: link:../core
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
       isomorphic-git:
         specifier: ^1.37.4
         version: 1.37.4

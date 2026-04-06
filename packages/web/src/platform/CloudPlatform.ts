@@ -422,6 +422,10 @@ export class CloudPlatform implements PlatformAPI {
 
   // ── PlatformAPI: Git ─────────────────────────────────────────────────────────
 
+  async initGit(dirPath: string): Promise<boolean> {
+    return this.local.initGit(dirPath);
+  }
+
   async gitStatus(repoPath: string): Promise<GitStatus | null> {
     return this.local.gitStatus(repoPath);
   }

@@ -52,6 +52,11 @@ export class ElectronPlatform implements PlatformAPI {
     }
   }
 
+  async initGit(dirPath: string): Promise<boolean> {
+    this.gitAvailable = await bridge().gitAvailable(dirPath);
+    return this.gitAvailable;
+  }
+
   async openFile(options?: OpenFileOptions): Promise<FileResult | null> {
     return bridge().openFile(options);
   }

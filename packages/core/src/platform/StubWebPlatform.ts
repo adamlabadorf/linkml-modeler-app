@@ -46,6 +46,10 @@ export class StubWebPlatform implements PlatformAPI {
     return [];
   }
 
+  async initGit(_dirPath: string): Promise<boolean> {
+    return false;
+  }
+
   async gitStatus(_repoPath: string): Promise<GitStatus | null> {
     return null;
   }
