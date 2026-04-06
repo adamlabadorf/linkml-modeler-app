@@ -41,6 +41,7 @@ function makeMockLocal() {
     gitStage: vi.fn(async () => {}),
     gitCommit: vi.fn(async () => 'abc1234'),
     gitPush: vi.fn<Parameters<PlatformAPI['gitPush']>, ReturnType<PlatformAPI['gitPush']>>(async () => ({ ok: true })),
+    gitPull: vi.fn<Parameters<PlatformAPI['gitPull']>, ReturnType<PlatformAPI['gitPull']>>(async () => ({ ok: true })),
     gitLog: vi.fn(async () => []),
     gitClone: vi.fn(async (_url: string, destPath: string) => ({ ok: true, destPath })),
     storeCredential: vi.fn(async (k: string, v: string) => { credentials.set(k, v); }),

@@ -36,6 +36,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
   const stagedPaths = useAppStore((s) => s.stagedPaths);
   const isCommitting = useAppStore((s) => s.isCommitting);
   const isPushing = useAppStore((s) => s.isPushing);
+  const isPulling = useAppStore((s) => s.isPulling);
   const lastGitError = useAppStore((s) => s.lastGitError);
   const activeProject = useAppStore((s) => s.activeProject);
 
@@ -48,6 +49,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
   const clearStaged = useAppStore((s) => s.clearStaged);
   const setIsCommitting = useAppStore((s) => s.setIsCommitting);
   const setIsPushing = useAppStore((s) => s.setIsPushing);
+  const setIsPulling = useAppStore((s) => s.setIsPulling);
   const setLastGitError = useAppStore((s) => s.setLastGitError);
   const pushToast = useAppStore((s) => s.pushToast);
 
@@ -161,6 +163,25 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     }
   }, [gitAvailable, repoPath, platform, requestCredentials, setIsPushing, setLastGitError, pushToast, refreshStatus]);
 
+  const handlePull = useCallback(async () => {
+    if (!gitAvailable) return;
+    setIsPulling(true);
+    setLastGitError(null);
+    try {
+      const result = await platform.gitPull(repoPath, requestCredentials);
+      if (result?.ok) {
+        pushToast({ message: 'Pulled from remote', severity: 'success' });
+        await refreshStatus();
+      } else {
+        setLastGitError(result?.error ?? 'Pull failed');
+      }
+    } catch (e: unknown) {
+      setLastGitError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsPulling(false);
+    }
+  }, [gitAvailable, repoPath, platform, requestCredentials, setIsPulling, setLastGitError, pushToast, refreshStatus]);
+
   if (!gitPanelOpen) {
     return (
       <div style={styles.collapsedBar} onClick={() => setGitPanelOpen(true)}>
@@ -224,6 +245,16 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
           <button style={styles.headerBtn} onClick={refreshStatus} title="Refresh git status">
             ↻
           </button>
+          {activeProject?.gitConfig?.remoteUrl && (
+            <button
+              style={{ ...styles.headerBtn, ...(isPulling ? styles.headerBtnDisabled : {}) }}
+              onClick={handlePull}
+              disabled={isPulling}
+              title="Pull from remote"
+            >
+              {isPulling ? '…' : '↓ Pull'}
+            </button>
+          )}
           <button
             style={{ ...styles.headerBtn, ...(isPushing ? styles.headerBtnDisabled : {}) }}
             onClick={handlePush}

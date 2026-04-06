@@ -332,6 +332,49 @@ function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('platform:gitPull', async (_event, repoPath: string) => {
+    try {
+      const fs = await getFs();
+      const git = await getGit();
+      const httpModule = await getHttp();
+      const g = git as unknown as {
+        getConfig: (opts: object) => Promise<string | undefined>;
+        pull: (opts: object) => Promise<void>;
+      };
+
+      const remoteUrl = await g.getConfig({
+        fs: { promises: fs }, dir: repoPath, path: 'remote.origin.url',
+      }) ?? '';
+
+      let creds = credentialCache.get(remoteUrl);
+
+      if (!creds) {
+        try {
+          const keytar = await import('keytar').catch(() => null);
+          if (keytar) {
+            const username = await keytar.findPassword(`linkml-editor:username:${remoteUrl}`) ?? undefined;
+            const password = await keytar.findPassword(`linkml-editor:${remoteUrl}`) ?? undefined;
+            if (username && password) {
+              creds = { username, password };
+              credentialCache.set(remoteUrl, creds);
+            }
+          }
+        } catch { /* keytar unavailable */ }
+      }
+
+      await g.pull({
+        fs: { promises: fs },
+        http: httpModule,
+        dir: repoPath,
+        onAuth: () => creds ?? { username: '', password: '' },
+        author: { name: 'LinkML Editor', email: 'editor@linkml.io' },
+      });
+      return { ok: true };
+    } catch (e: unknown) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  });
+
   ipcMain.handle('platform:gitLog', async (_event, repoPath: string, limit: number) => {
     try {
       const fs = await getFs();

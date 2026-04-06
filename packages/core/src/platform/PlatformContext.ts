@@ -79,6 +79,7 @@ export interface PlatformAPI {
   gitStage(repoPath: string, paths: string[]): Promise<void>;
   gitCommit(repoPath: string, message: string): Promise<string | null>;
   gitPush(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
+  gitPull(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
   gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult>;
 

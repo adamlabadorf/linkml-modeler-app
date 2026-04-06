@@ -444,6 +444,17 @@ export class CloudPlatform implements PlatformAPI {
     }));
   }
 
+  async gitPull(
+    repoPath: string,
+    _onAuth?: (url: string) => Promise<GitCredentials | null>,
+  ): Promise<GitPushResult | null> {
+    // Always use token auth for cloud platform — ignore caller's onAuth
+    return this.local.gitPull(repoPath, async () => ({
+      username: 'x-token',
+      password: this.token,
+    }));
+  }
+
   async gitLog(repoPath: string, limit: number): Promise<GitCommit[]> {
     return this.local.gitLog(repoPath, limit);
   }
@@ -568,12 +579,10 @@ export class CloudPlatform implements PlatformAPI {
   }
 
   private async _pull(repoPath: string): Promise<void> {
-    // isomorphic-git pull = fetch + merge. Use gitClone on local to handle this.
-    // For now, we use the underlying platform's gitClone capabilities don't support pull.
-    // We need to implement pull via isomorphic-git directly on the local WebPlatform fs.
-    // Since PlatformAPI doesn't have a pull method, we skip this for Phase 3
-    // and rely on the fact that CloudPlatform is single-writer (§5.10).
-    void repoPath;
+    const result = await this.gitPull(repoPath);
+    if (result && !result.ok) {
+      throw new Error(result.error ?? 'Pull failed');
+    }
   }
 
   private async _writeProjectConfig(repoPath: string, config: GitHubProjectConfig): Promise<void> {

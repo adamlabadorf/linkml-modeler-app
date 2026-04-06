@@ -301,6 +301,38 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
+  async gitPull(repoPath: string, onAuthRequest?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null> {
+    if (!this.gitAvailable) return null;
+    try {
+      const onAuth = async (url: string) => {
+        const cached = this._credentials.get(url);
+        if (cached) return cached;
+        if (onAuthRequest) {
+          const creds = await onAuthRequest(url);
+          if (!creds) return { cancel: true };
+          this._credentials.set(url, creds);
+          return creds;
+        }
+        const username = prompt(`Git username for ${url}:`) ?? '';
+        const password = prompt(`Git password/token for ${url}:`) ?? '';
+        this._credentials.set(url, { username, password });
+        return { username, password };
+      };
+
+      await git.pull({
+        fs,
+        http,
+        dir: repoPath,
+        onAuth,
+        author: { name: 'LinkML Editor', email: 'editor@linkml.io' },
+      });
+      return { ok: true };
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { ok: false, error: msg };
+    }
+  }
+
   async gitLog(repoPath: string, limit: number): Promise<GitCommit[]> {
     if (!this.gitAvailable) return [];
     try {

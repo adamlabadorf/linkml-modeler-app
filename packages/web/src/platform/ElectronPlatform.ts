@@ -28,6 +28,7 @@ type ElectronBridge = {
   gitStage(repoPath: string, paths: string[]): Promise<void>;
   gitCommit(repoPath: string, message: string): Promise<string | null>;
   gitPush(repoPath: string): Promise<GitPushResult | null>;
+  gitPull(repoPath: string): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
   gitClone(url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }): Promise<GitCloneResult>;
   storeCredential(key: string, value: string): Promise<void>;
@@ -90,6 +91,11 @@ export class ElectronPlatform implements PlatformAPI {
   async gitPush(repoPath: string, _onAuth?: (url: string) => Promise<{ username: string; password: string } | null>): Promise<GitPushResult | null> {
     // Electron handles credentials via keytar in the main process
     return bridge().gitPush(repoPath);
+  }
+
+  async gitPull(repoPath: string, _onAuth?: (url: string) => Promise<{ username: string; password: string } | null>): Promise<GitPushResult | null> {
+    // Electron handles credentials via keytar in the main process
+    return bridge().gitPull(repoPath);
   }
 
   async gitLog(repoPath: string, limit: number): Promise<GitCommit[]> {

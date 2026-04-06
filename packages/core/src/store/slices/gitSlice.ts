@@ -12,6 +12,7 @@ export interface GitSlice {
   stagedPaths: Set<string>;
   isCommitting: boolean;
   isPushing: boolean;
+  isPulling: boolean;
   lastGitError: string | null;
 
   // Actions
@@ -25,6 +26,7 @@ export interface GitSlice {
   clearStaged(): void;
   setIsCommitting(value: boolean): void;
   setIsPushing(value: boolean): void;
+  setIsPulling(value: boolean): void;
   setLastGitError(error: string | null): void;
 }
 
@@ -36,6 +38,7 @@ export const createGitSlice: StateCreator<GitSlice, [], [], GitSlice> = (set, ge
   stagedPaths: new Set(),
   isCommitting: false,
   isPushing: false,
+  isPulling: false,
   lastGitError: null,
 
   setGitAvailable(available) {
@@ -87,6 +90,10 @@ export const createGitSlice: StateCreator<GitSlice, [], [], GitSlice> = (set, ge
 
   setIsPushing(value) {
     set({ isPushing: value });
+  },
+
+  setIsPulling(value) {
+    set({ isPulling: value });
   },
 
   setLastGitError(error) {

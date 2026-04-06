@@ -30,6 +30,7 @@ vi.mock('isomorphic-git', () => ({
     add: vi.fn().mockResolvedValue(undefined),
     commit: vi.fn().mockResolvedValue('abc1234'),
     push: vi.fn().mockResolvedValue({}),
+    pull: vi.fn().mockResolvedValue({}),
     log: vi.fn().mockResolvedValue([]),
   },
 }));
@@ -85,6 +86,13 @@ describe('WebPlatform', () => {
     const p = new WebPlatform();
     const status = await p.gitStatus('/repo');
     expect(status).toBeNull();
+  });
+
+  it('gitPull returns null when git unavailable', async () => {
+    const { WebPlatform } = await import('../platform/WebPlatform.js');
+    const p = new WebPlatform();
+    const result = await p.gitPull('/repo');
+    expect(result).toBeNull();
   });
 
   it('storeCredential and getCredential round-trip via localStorage', async () => {
@@ -144,6 +152,7 @@ describe('ElectronPlatform', () => {
     gitStage: vi.fn(),
     gitCommit: vi.fn().mockResolvedValue(null),
     gitPush: vi.fn().mockResolvedValue({ ok: true }),
+    gitPull: vi.fn().mockResolvedValue({ ok: true }),
     gitLog: vi.fn().mockResolvedValue([]),
     gitClone: vi.fn().mockResolvedValue({ ok: true, destPath: '/dest' }),
     storeCredential: vi.fn().mockResolvedValue(undefined),
@@ -198,5 +207,13 @@ describe('ElectronPlatform', () => {
     const p = new ElectronPlatform();
     await p.setSetting('cloneDir', '/tmp/repos');
     expect(mockElectronAPI.setSetting).toHaveBeenCalledWith('cloneDir', '/tmp/repos');
+  });
+
+  it('gitPull delegates to bridge', async () => {
+    const { ElectronPlatform } = await import('../platform/ElectronPlatform.js');
+    const p = new ElectronPlatform();
+    const result = await p.gitPull('/some/repo');
+    expect(mockElectronAPI.gitPull).toHaveBeenCalledWith('/some/repo');
+    expect(result).toEqual({ ok: true });
   });
 });

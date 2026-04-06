@@ -324,6 +324,23 @@ function App() {
     }
   }, [platform, pushToast]);
 
+  const handleMenuPull = React.useCallback(async () => {
+    const project = useAppStore.getState().activeProject;
+    if (!project?.gitConfig?.remoteUrl) return;
+    useAppStore.getState().setGitPanelOpen(true);
+    const repoPath = project.rootPath;
+    try {
+      const result = await platform.gitPull(repoPath);
+      if (result?.ok) {
+        pushToast({ message: 'Pulled from remote', severity: 'success' });
+      } else {
+        pushToast({ message: result?.error ?? 'Pull failed', severity: 'error' });
+      }
+    } catch (e: unknown) {
+      pushToast({ message: e instanceof Error ? e.message : String(e), severity: 'error' });
+    }
+  }, [platform, pushToast]);
+
   // ── Ctrl+S / Cmd+S keyboard shortcut ───────────────────────────────────────
   React.useEffect(() => {
     function handleSaveShortcut(e: KeyboardEvent) {
@@ -364,6 +381,7 @@ function App() {
             onImportSchema={() => setImportDialogOpen(true)}
             onCommit={handleMenuCommit}
             onPush={handleMenuPush}
+            onPull={activeProject?.gitConfig?.remoteUrl ? handleMenuPull : undefined}
           />
         </div>
         <div style={styles.headerRight}>

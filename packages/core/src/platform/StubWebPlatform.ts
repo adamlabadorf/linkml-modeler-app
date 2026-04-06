@@ -62,6 +62,10 @@ export class StubWebPlatform implements PlatformAPI {
     return null;
   }
 
+  async gitPull(_repoPath: string, _onAuth?: (url: string) => Promise<{ username: string; password: string } | null>): Promise<GitPushResult | null> {
+    return null;
+  }
+
   async gitLog(_repoPath: string, _limit: number): Promise<GitCommit[]> {
     return [];
   }

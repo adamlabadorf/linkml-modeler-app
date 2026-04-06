@@ -28,6 +28,7 @@ interface MenuBarProps {
   onCloseProject?: () => void;
   onCommit?: () => void;
   onPush?: () => void;
+  onPull?: () => void;
 }
 
 // ── DropdownMenu ─────────────────────────────────────────────────────────────
@@ -170,6 +171,7 @@ export function MenuBar({
   onCloseProject,
   onCommit,
   onPush,
+  onPull,
 }: MenuBarProps) {
   const [openMenu, setOpenMenu] = React.useState<string | null>(null);
   const anyOpen = openMenu !== null;
@@ -230,6 +232,7 @@ export function MenuBar({
   const gitItems: MenuEntry[] = [
     { label: 'Commit\u2026', action: onCommit, disabled: !onCommit },
     { label: 'Push', action: onPush, disabled: !onPush },
+    { label: 'Pull', action: onPull, disabled: !onPull },
     { separator: true },
     { label: 'Toggle Git Panel', checked: gitPanelOpen, action: () => setGitPanelOpen(!gitPanelOpen) },
   ];

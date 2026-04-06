@@ -40,6 +40,9 @@ const electronAPI = {
   gitPush: (repoPath: string) =>
     ipcRenderer.invoke('platform:gitPush', repoPath),
 
+  gitPull: (repoPath: string) =>
+    ipcRenderer.invoke('platform:gitPull', repoPath),
+
   gitLog: (repoPath: string, limit: number) =>
     ipcRenderer.invoke('platform:gitLog', repoPath, limit),
 
