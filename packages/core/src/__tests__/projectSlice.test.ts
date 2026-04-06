@@ -140,4 +140,48 @@ describe('ProjectSlice', () => {
     store.getState().markSchemaDirty(s.id, true);
     expect(store.getState().getIsDirty()).toBe(true);
   });
+
+  describe('project switching', () => {
+    it('closeProject returns false when no schema is dirty', () => {
+      const store = createStore();
+      const project = makeProject('proj-a', [makeSchemaFile('schema-a')]);
+      store.getState().setProject(project);
+
+      const wasDirty = store.getState().closeProject();
+
+      expect(wasDirty).toBe(false);
+      expect(store.getState().activeProject).toBeNull();
+    });
+
+    it('closeProject returns true when a schema is dirty', () => {
+      const store = createStore();
+      const s = makeSchemaFile('schema-a');
+      store.getState().setProject(makeProject('proj-a', [s]));
+      store.getState().markSchemaDirty(s.id, true);
+
+      const wasDirty = store.getState().closeProject();
+
+      expect(wasDirty).toBe(true);
+      expect(store.getState().activeProject).toBeNull();
+    });
+
+    it('setProject after closeProject loads new project correctly', () => {
+      const store = createStore();
+
+      const schemaA = makeSchemaFile('schema-a');
+      const projectA = makeProject('proj-a', [schemaA]);
+      store.getState().setProject(projectA);
+      expect(store.getState().activeProject?.name).toBe('proj-a');
+
+      store.getState().closeProject();
+      expect(store.getState().activeProject).toBeNull();
+
+      const schemaB = makeSchemaFile('schema-b');
+      const projectB = makeProject('proj-b', [schemaB]);
+      store.getState().setProject(projectB);
+
+      expect(store.getState().activeProject?.name).toBe('proj-b');
+      expect(store.getState().activeSchemaId).toBe(schemaB.id);
+    });
+  });
 });

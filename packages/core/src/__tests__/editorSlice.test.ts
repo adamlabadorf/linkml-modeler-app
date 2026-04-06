@@ -47,4 +47,25 @@ describe('EditorSlice', () => {
     expect(store.getState().propertiesPanelOpen).toBe(false);
     expect(store.getState().gitPanelOpen).toBe(true); // unaffected
   });
+
+  it('switchProjectDialogOpen — starts false', () => {
+    const store = createStore();
+    expect(store.getState().switchProjectDialogOpen).toBe(false);
+  });
+
+  it('setSwitchProjectDialogOpen — opens and closes the dialog', () => {
+    const store = createStore();
+    store.getState().setSwitchProjectDialogOpen(true);
+    expect(store.getState().switchProjectDialogOpen).toBe(true);
+    store.getState().setSwitchProjectDialogOpen(false);
+    expect(store.getState().switchProjectDialogOpen).toBe(false);
+  });
+
+  it('setSwitchProjectDialogOpen — does not affect other panel states', () => {
+    const store = createStore();
+    store.getState().setPropertiesPanelOpen(false);
+    store.getState().setSwitchProjectDialogOpen(true);
+    expect(store.getState().propertiesPanelOpen).toBe(false);
+    expect(store.getState().switchProjectDialogOpen).toBe(true);
+  });
 });

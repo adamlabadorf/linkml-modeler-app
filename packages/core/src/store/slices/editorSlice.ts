@@ -19,6 +19,7 @@ export interface EditorSlice {
   cloneDialogOpen: boolean;
   importDialogOpen: boolean;
   newSchemaDialogOpen: boolean;
+  switchProjectDialogOpen: boolean;
 
   // Actions
   setActiveEntity(entity: ActiveEntity): void;
@@ -32,6 +33,7 @@ export interface EditorSlice {
   setCloneDialogOpen(open: boolean): void;
   setImportDialogOpen(open: boolean): void;
   setNewSchemaDialogOpen(open: boolean): void;
+  setSwitchProjectDialogOpen(open: boolean): void;
 }
 
 export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> = (set) => ({
@@ -45,6 +47,7 @@ export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> =
   cloneDialogOpen: false,
   importDialogOpen: false,
   newSchemaDialogOpen: false,
+  switchProjectDialogOpen: false,
 
   setActiveEntity(entity) {
     set({ activeEntity: entity });
@@ -88,5 +91,9 @@ export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> =
 
   setNewSchemaDialogOpen(open) {
     set({ newSchemaDialogOpen: open });
+  },
+
+  setSwitchProjectDialogOpen(open) {
+    set({ switchProjectDialogOpen: open });
   },
 });

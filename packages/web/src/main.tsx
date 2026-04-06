@@ -50,6 +50,8 @@ import { AuthProvider } from './auth/AuthContext.js';
 import { SignInPrompt } from './components/SignInPrompt.js';
 import { UserMenu } from './components/UserMenu.js';
 import { SyncStatusIndicator } from './components/SyncStatusIndicator.js';
+import { ProjectSwitcherDialog } from './components/ProjectSwitcherDialog.js';
+import { WebProjectRegistry } from './platform/ProjectRegistry.js';
 
 // ── Detect Electron ───────────────────────────────────────────────────────────
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
@@ -236,7 +238,18 @@ function App() {
   const setImportDialogOpen = useAppStore((s) => s.setImportDialogOpen);
   const newSchemaDialogOpen = useAppStore((s) => s.newSchemaDialogOpen);
   const setNewSchemaDialogOpen = useAppStore((s) => s.setNewSchemaDialogOpen);
+  const switchProjectDialogOpen = useAppStore((s) => s.switchProjectDialogOpen);
+  const setSwitchProjectDialogOpen = useAppStore((s) => s.setSwitchProjectDialogOpen);
   const syncStatus = useAppStore((s) => s.syncStatus);
+
+  // Enable "Switch Project" when 2+ projects are registered
+  const [registeredProjectCount, setRegisteredProjectCount] = React.useState(() =>
+    new WebProjectRegistry().getAll().length
+  );
+  React.useEffect(() => {
+    // Refresh count when the dialog opens or closes so the menu item stays in sync
+    setRegisteredProjectCount(new WebProjectRegistry().getAll().length);
+  }, [switchProjectDialogOpen]);
   const [isSaving, setIsSaving] = React.useState(false);
 
   // ── Save project to disk ───────────────────────────────────────────────────
@@ -377,6 +390,7 @@ function App() {
             onSave={saveProject}
             onSaveAs={saveProject}
             onOpenFromUrl={() => setCloneDialogOpen(true)}
+            onSwitchProject={registeredProjectCount >= 2 ? () => setSwitchProjectDialogOpen(true) : undefined}
             onNewSchema={() => setNewSchemaDialogOpen(true)}
             onImportSchema={() => setImportDialogOpen(true)}
             onCommit={handleMenuCommit}
@@ -471,6 +485,11 @@ function App() {
       {/* New schema dialog */}
       {newSchemaDialogOpen && (
         <NewSchemaDialog onClose={() => setNewSchemaDialogOpen(false)} />
+      )}
+
+      {/* Project switcher dialog */}
+      {switchProjectDialogOpen && (
+        <ProjectSwitcherDialog onClose={() => setSwitchProjectDialogOpen(false)} />
       )}
 
       {/* Toast notifications */}
