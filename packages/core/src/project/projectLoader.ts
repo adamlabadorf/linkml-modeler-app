@@ -5,6 +5,7 @@ import type { Project, SchemaFile } from '../model/index.js';
 import { emptyCanvasLayout, emptySchema } from '../model/index.js';
 import { parseYaml } from '../io/yaml.js';
 import { resolveImports } from '../io/importResolver.js';
+import { readEditorManifest, applyManifestToSchemas } from '../io/editorManifest.js';
 
 /**
  * Check if a YAML string looks like a LinkML schema by testing for
@@ -24,7 +25,7 @@ function looksLikeLinkMLSchema(content: string): boolean {
 export async function openProjectFromDirectory(
   dirPath: string,
   platform: PlatformAPI
-): Promise<Project> {
+): Promise<{ project: Project; hiddenSchemaIds: Set<string> }> {
   const entries = await platform.listDirectory(dirPath);
   const yamlFiles = entries.filter(
     (e) => !e.isDirectory && /\.(ya?ml)$/i.test(e.name)
@@ -57,16 +58,24 @@ export async function openProjectFromDirectory(
   const importedFiles = await resolveImports(schemaFiles, platform, dirPath);
   const allSchemas = [...schemaFiles, ...importedFiles];
 
+  // Apply editor manifest (layout + visibility) if present
+  const manifest = await readEditorManifest(platform, dirPath);
+  const { schemas: schemasWithLayout, hiddenSchemaIds } = manifest
+    ? applyManifestToSchemas(allSchemas, manifest)
+    : { schemas: allSchemas, hiddenSchemaIds: new Set<string>() };
+
   const dirName = dirPath.split('/').filter(Boolean).pop() ?? 'Untitled Project';
 
-  return {
+  const project: Project = {
     id: crypto.randomUUID(),
     name: dirName,
     rootPath: dirPath,
-    schemas: allSchemas,
+    schemas: schemasWithLayout,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+
+  return { project, hiddenSchemaIds };
 }
 
 /**

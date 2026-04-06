@@ -13,6 +13,7 @@ export function SplashPage() {
   const setGitAvailable = useAppStore((s) => s.setGitAvailable);
   const pushToast = useAppStore((s) => s.pushToast);
   const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
+  const setHiddenSchemaIds = useAppStore((s) => s.setHiddenSchemaIds);
 
   const [recentProjects, setRecentProjects] = React.useState<RecentProject[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -32,13 +33,14 @@ export function SplashPage() {
 
     setIsLoading(true);
     try {
-      const project = await openProjectFromDirectory(dirPath, platform);
+      const { project, hiddenSchemaIds } = await openProjectFromDirectory(dirPath, platform);
       if (project.schemas.length === 0) {
         pushToast({ message: 'No LinkML schemas found in this directory', severity: 'warning' });
         setIsLoading(false);
         return;
       }
       setProject(project);
+      setHiddenSchemaIds(hiddenSchemaIds);
       const hasGit = await platform.initGit(dirPath);
       setGitAvailable(hasGit);
     } catch (err) {
@@ -53,7 +55,7 @@ export function SplashPage() {
   const handleOpenRecent = async (recent: RecentProject) => {
     setIsLoading(true);
     try {
-      const project = await openProjectFromDirectory(recent.rootPath, platform);
+      const { project, hiddenSchemaIds } = await openProjectFromDirectory(recent.rootPath, platform);
       if (project.schemas.length === 0) {
         pushToast({ message: 'No LinkML schemas found — the directory may have changed', severity: 'warning' });
         setIsLoading(false);
@@ -62,6 +64,7 @@ export function SplashPage() {
       // Preserve the project name from the recent entry
       project.name = recent.name;
       setProject(project);
+      setHiddenSchemaIds(hiddenSchemaIds);
       const hasGit = await platform.initGit(recent.rootPath);
       setGitAvailable(hasGit);
     } catch (err) {

@@ -34,7 +34,9 @@ import { edgeTypes, EdgeMarkerDefs } from './edges.js';
 import { deriveGraph } from './deriveGraph.js';
 import { runAutoLayout } from './autoLayout.js';
 import { useAppStore } from '../store/index.js';
+import { usePlatform } from '../platform/PlatformContext.js';
 import { collectReferencedImportedEntities } from '../io/importResolver.js';
+import { buildManifestData, writeEditorManifest } from '../io/editorManifest.js';
 import type { CanvasLayout } from '../model/index.js';
 import { emptyClassDefinition, emptyEnumDefinition } from '../model/index.js';
 
@@ -209,6 +211,7 @@ const dlgStyles: Record<string, React.CSSProperties> = {
 // ── Inner canvas component ────────────────────────────────────────────────────
 function SchemaCanvasInner() {
   const { fitView, screenToFlowPosition } = useReactFlow();
+  const platform = usePlatform();
 
   // Zustand store
   const activeProject = useAppStore((s) => s.activeProject);
@@ -222,6 +225,8 @@ function SchemaCanvasInner() {
   const storeEdges = useAppStore((s) => s.edges);
   const viewport = useAppStore((s) => s.viewport);
   const focusMode = useAppStore((s) => s.focusMode);
+  const hiddenSchemaIds = useAppStore((s) => s.hiddenSchemaIds);
+  const updateCanvasLayout = useAppStore((s) => s.updateCanvasLayout);
   const setSelection = useAppStore((s) => s.setSelection);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
   const clearActiveEntity = useAppStore((s) => s.clearActiveEntity);
@@ -240,6 +245,23 @@ function SchemaCanvasInner() {
     viewport: { x: 0, y: 0, zoom: 1 },
   });
   const layoutRanRef = useRef(false);
+
+  // Refs for manifest writing — always up to date, no closure staleness
+  const localLayoutRef = useRef(localLayout);
+  localLayoutRef.current = localLayout;
+  const manifestWriteStateRef = useRef({ activeProject, activeSchemaId, hiddenSchemaIds, platform });
+  manifestWriteStateRef.current = { activeProject, activeSchemaId, hiddenSchemaIds, platform };
+  const manifestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Save layout to store when active schema changes (before the new schema loads)
+  const prevActiveSchemaIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prevId = prevActiveSchemaIdRef.current;
+    if (prevId && prevId !== activeSchemaId) {
+      updateCanvasLayout(prevId, localLayoutRef.current);
+    }
+    prevActiveSchemaIdRef.current = activeSchemaId ?? null;
+  }, [activeSchemaId, updateCanvasLayout]);
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ name: string; type: 'class' | 'enum' } | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
@@ -289,18 +311,31 @@ function SchemaCanvasInner() {
     layoutRanRef.current = false;
   }, [activeSchemaId]);
 
+  // Debounced manifest write — stable callback, reads latest values via ref
+  const scheduleManifestWrite = useCallback(() => {
+    if (manifestTimerRef.current) clearTimeout(manifestTimerRef.current);
+    manifestTimerRef.current = setTimeout(() => {
+      const { activeProject, activeSchemaId, hiddenSchemaIds, platform } = manifestWriteStateRef.current;
+      if (!activeProject?.rootPath) return;
+      const manifest = buildManifestData(activeProject, activeSchemaId, localLayoutRef.current, hiddenSchemaIds);
+      writeEditorManifest(platform, activeProject.rootPath, manifest);
+    }, 1000);
+  }, []);
+
   const handleAutoLayout = useCallback(async () => {
     if (!activeSchemaFile) return;
     const layout = await runAutoLayout(activeSchemaFile.schema, {}, ghostEntities);
     setLocalLayout(layout);
     setTimeout(() => fitView({ padding: 0.1, duration: 400 }), 100);
-  }, [activeSchemaFile, ghostEntities, fitView]);
+    scheduleManifestWrite();
+  }, [activeSchemaFile, ghostEntities, fitView, scheduleManifestWrite]);
 
   // ── ReactFlow event handlers ──────────────────────────────────────────────
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
       setNodes(applyNodeChanges(changes, storeNodes) as typeof storeNodes);
+      let positionChanged = false;
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
           setLocalLayout((prev) => ({
@@ -311,10 +346,12 @@ function SchemaCanvasInner() {
             },
           }));
           updateNodePosition(change.id, change.position.x, change.position.y);
+          positionChanged = true;
         }
       }
+      if (positionChanged) scheduleManifestWrite();
     },
-    [storeNodes, setNodes, updateNodePosition]
+    [storeNodes, setNodes, updateNodePosition, scheduleManifestWrite]
   );
 
   const onEdgesChange: OnEdgesChange = useCallback(
@@ -323,8 +360,12 @@ function SchemaCanvasInner() {
   );
 
   const onMoveEnd = useCallback(
-    (_event: unknown, vp: { x: number; y: number; zoom: number }) => setViewport(vp),
-    [setViewport]
+    (_event: unknown, vp: { x: number; y: number; zoom: number }) => {
+      setViewport(vp);
+      setLocalLayout((prev) => ({ ...prev, viewport: vp }));
+      scheduleManifestWrite();
+    },
+    [setViewport, scheduleManifestWrite]
   );
 
   // Double-click → collapse/expand (handles both entity nodes and import groups)

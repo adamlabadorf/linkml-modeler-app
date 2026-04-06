@@ -17,6 +17,7 @@ export function ProjectSwitcherDialog({ onClose }: ProjectSwitcherDialogProps) {
   const closeProject = useAppStore((s) => s.closeProject);
   const setProject = useAppStore((s) => s.setProject);
   const pushToast = useAppStore((s) => s.pushToast);
+  const setHiddenSchemaIds = useAppStore((s) => s.setHiddenSchemaIds);
 
   const [projects, setProjects] = React.useState<ProjectRegistryEntry[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -40,7 +41,7 @@ export function ProjectSwitcherDialog({ onClose }: ProjectSwitcherDialogProps) {
 
     setLoading(true);
     try {
-      const project = await openProjectFromDirectory(entry.localPath, platform);
+      const { project, hiddenSchemaIds } = await openProjectFromDirectory(entry.localPath, platform);
       if (project.schemas.length === 0) {
         pushToast({ message: `No LinkML schemas found in "${entry.repoName}"`, severity: 'warning' });
         setLoading(false);
@@ -56,6 +57,7 @@ export function ProjectSwitcherDialog({ onClose }: ProjectSwitcherDialogProps) {
         };
       }
       setProject(project);
+      setHiddenSchemaIds(hiddenSchemaIds);
       onClose();
     } catch (err) {
       pushToast({

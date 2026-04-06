@@ -10,16 +10,34 @@
  */
 import React from 'react';
 import { useAppStore } from '../store/index.js';
+import { usePlatform } from '../platform/PlatformContext.js';
+import { buildManifestData, writeEditorManifest } from '../io/editorManifest.js';
 
 function basename(filePath: string): string {
   return filePath.split('/').pop() ?? filePath;
 }
 
 export function ProjectPanel() {
+  const platform = usePlatform();
   const activeProject = useAppStore((s) => s.activeProject);
   const activeSchemaId = useAppStore((s) => s.activeSchemaId);
   const setActiveSchema = useAppStore((s) => s.setActiveSchema);
   const clearActiveEntity = useAppStore((s) => s.clearActiveEntity);
+  const hiddenSchemaIds = useAppStore((s) => s.hiddenSchemaIds);
+  const setSchemaVisible = useAppStore((s) => s.setSchemaVisible);
+
+  const handleToggleVisibility = (e: React.MouseEvent, schemaId: string) => {
+    e.stopPropagation();
+    const isCurrentlyHidden = hiddenSchemaIds.has(schemaId);
+    setSchemaVisible(schemaId, isCurrentlyHidden);
+    if (!activeProject) return;
+    // Write manifest immediately — visibility change is low-frequency
+    const nextHidden = new Set(hiddenSchemaIds);
+    if (isCurrentlyHidden) nextHidden.delete(schemaId);
+    else nextHidden.add(schemaId);
+    const manifest = buildManifestData(activeProject, null, null, nextHidden);
+    writeEditorManifest(platform, activeProject.rootPath, manifest);
+  };
 
   if (!activeProject) {
     return (
@@ -43,6 +61,7 @@ export function ProjectPanel() {
       <div style={styles.fileList}>
         {activeProject.schemas.map((sf) => {
           const isActive = sf.id === activeSchemaId;
+          const isHidden = hiddenSchemaIds.has(sf.id);
           const classCount = Object.keys(sf.schema.classes).length;
           const enumCount = Object.keys(sf.schema.enums).length;
           const name = basename(sf.filePath);
@@ -54,6 +73,7 @@ export function ProjectPanel() {
                 ...styles.fileRow,
                 ...(isActive ? styles.fileRowActive : {}),
                 ...(sf.isReadOnly ? styles.fileRowReadOnly : {}),
+                ...(isHidden ? styles.fileRowHidden : {}),
               }}
               onClick={() => { clearActiveEntity(); if (!sf.isReadOnly) setActiveSchema(sf.id); }}
               title={sf.filePath}
@@ -71,6 +91,13 @@ export function ProjectPanel() {
                 </span>
                 {sf.isDirty && <span style={styles.dirtyDot} title="Unsaved changes">●</span>}
                 {sf.isReadOnly && <span style={styles.readOnlyBadge}>imported</span>}
+                <button
+                  style={styles.visibilityBtn}
+                  onClick={(e) => handleToggleVisibility(e, sf.id)}
+                  title={isHidden ? 'Show schema' : 'Hide schema'}
+                >
+                  {isHidden ? '○' : '●'}
+                </button>
               </div>
 
               {/* Schema name subtitle */}
@@ -168,6 +195,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fileRowReadOnly: {
     opacity: 0.6,
+  },
+  fileRowHidden: {
+    opacity: 0.35,
+  },
+  visibilityBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#334155',
+    cursor: 'pointer',
+    padding: '0 2px',
+    fontSize: 8,
+    lineHeight: 1,
+    flexShrink: 0,
+    marginLeft: 'auto',
   },
   fileNameRow: {
     display: 'flex',

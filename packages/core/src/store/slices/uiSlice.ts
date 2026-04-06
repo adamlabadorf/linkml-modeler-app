@@ -18,6 +18,8 @@ export interface UISlice {
   toastQueue: Toast[];
   zoom: number; // canvas zoom level mirror for status bar
   syncStatus: SyncStatus; // null = not in cloud mode
+  /** Schema IDs that are hidden in the project panel / canvas */
+  hiddenSchemaIds: Set<string>;
 
   // Actions
   setTheme(theme: Theme): void;
@@ -27,6 +29,9 @@ export interface UISlice {
   dismissToast(id: string): void;
   setZoom(zoom: number): void;
   setSyncStatus(status: SyncStatus): void;
+  setSchemaVisible(schemaId: string, visible: boolean): void;
+  /** Bulk-set hidden IDs, typically called when loading a project manifest. */
+  setHiddenSchemaIds(ids: Set<string>): void;
 }
 
 let toastCounter = 0;
@@ -38,6 +43,7 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set) => ({
   toastQueue: [],
   zoom: 1,
   syncStatus: null,
+  hiddenSchemaIds: new Set(),
 
   setTheme(theme) {
     set({ theme });
@@ -66,5 +72,18 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set) => ({
 
   setSyncStatus(status) {
     set({ syncStatus: status });
+  },
+
+  setSchemaVisible(schemaId, visible) {
+    set((state) => {
+      const next = new Set(state.hiddenSchemaIds);
+      if (visible) next.delete(schemaId);
+      else next.add(schemaId);
+      return { hiddenSchemaIds: next };
+    });
+  },
+
+  setHiddenSchemaIds(ids) {
+    set({ hiddenSchemaIds: ids });
   },
 });

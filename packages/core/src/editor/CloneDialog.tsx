@@ -20,6 +20,7 @@ export function CloneDialog({ onClose }: CloneDialogProps) {
   const setProject = useAppStore((s) => s.setProject);
   const setGitAvailable = useAppStore((s) => s.setGitAvailable);
   const pushToast = useAppStore((s) => s.pushToast);
+  const setHiddenSchemaIds = useAppStore((s) => s.setHiddenSchemaIds);
 
   const [url, setUrl] = React.useState('');
   const [branch, setBranch] = React.useState('');
@@ -71,13 +72,14 @@ export function CloneDialog({ onClose }: CloneDialogProps) {
     setProgress('Scanning for LinkML schemas...');
 
     try {
-      const project = await openProjectFromDirectory(result.destPath, platform);
+      const { project, hiddenSchemaIds } = await openProjectFromDirectory(result.destPath, platform);
       if (project.schemas.length === 0) {
         pushToast({ message: 'Repository cloned but no LinkML schemas found', severity: 'warning' });
       }
       // Set source to 'git' for recent projects tracking
       project.rootPath = result.destPath;
       setProject(project);
+      setHiddenSchemaIds(hiddenSchemaIds);
       setGitAvailable(true);
       pushToast({ message: `Cloned ${repoName} successfully`, severity: 'success', durationMs: 3000 });
       onClose();

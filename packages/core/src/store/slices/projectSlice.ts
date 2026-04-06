@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand';
-import type { Project, SchemaFile, LinkMLSchema, ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue } from '../../model/index.js';
+import type { Project, SchemaFile, LinkMLSchema, ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, CanvasLayout } from '../../model/index.js';
 import { findMissingImport, resolveImportPath } from '../../io/importResolver.js';
 import { addRecentProject } from '../../project/recentProjects.js';
 
@@ -42,6 +42,10 @@ export interface ProjectSlice {
   addPermissibleValue(schemaId: string, enumName: string, value: PermissibleValue): void;
   updatePermissibleValue(schemaId: string, enumName: string, valueText: string, partial: Partial<PermissibleValue>): void;
   deletePermissibleValue(schemaId: string, enumName: string, valueText: string): void;
+
+  // ── Canvas layout ────────────────────────────────────────────────────────────
+  /** Persist the current canvas layout back into the SchemaFile (called on schema switch / save). */
+  updateCanvasLayout(schemaId: string, layout: CanvasLayout): void;
 
   // ── Import management ────────────────────────────────────────────────────────
   /** Add a local import path to the schema's imports list if not already present. */
@@ -446,6 +450,22 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
             },
           };
         }),
+      };
+    });
+  },
+
+  // ── Canvas layout ────────────────────────────────────────────────────────────
+
+  updateCanvasLayout(schemaId, layout) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: {
+          ...state.activeProject,
+          schemas: state.activeProject.schemas.map((s) =>
+            s.id === schemaId ? { ...s, canvasLayout: layout } : s
+          ),
+        },
       };
     });
   },

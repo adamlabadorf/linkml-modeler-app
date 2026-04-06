@@ -7,6 +7,13 @@ export { parseYaml, serializeYaml, validateSchema } from './io/yaml.js';
 export type { ValidationError } from './io/yaml.js';
 export { parseManifest, serializeManifest, MANIFEST_FILENAME } from './io/manifest.js';
 export {
+  readEditorManifest,
+  writeEditorManifest,
+  buildManifestData,
+  applyManifestToSchemas,
+} from './io/editorManifest.js';
+export type { EditorManifestData, SchemaManifestEntry } from './io/editorManifest.js';
+export {
   isLocalImport,
   resolveImportPath,
   resolveImports,
