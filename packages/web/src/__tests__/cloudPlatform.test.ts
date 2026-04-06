@@ -3,6 +3,7 @@
  * Mocks isomorphic-git + GitHub API fetch.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { PlatformAPI } from '@linkml-editor/core';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ function makeMockLocal() {
     })),
     gitStage: vi.fn(async () => {}),
     gitCommit: vi.fn(async () => 'abc1234'),
-    gitPush: vi.fn(async () => ({ ok: true })),
+    gitPush: vi.fn<Parameters<PlatformAPI['gitPush']>, ReturnType<PlatformAPI['gitPush']>>(async () => ({ ok: true })),
     gitLog: vi.fn(async () => []),
     gitClone: vi.fn(async (_url: string, destPath: string) => ({ ok: true, destPath })),
     storeCredential: vi.fn(async (k: string, v: string) => { credentials.set(k, v); }),
