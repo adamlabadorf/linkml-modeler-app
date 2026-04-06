@@ -4,7 +4,11 @@
  */
 import React, { useCallback, useMemo, useState } from 'react';
 import { useAppStore } from '../store/index.js';
-import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue } from '../model/index.js';
+import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, SchemaFile } from '../model/index.js';
+import { emptyCanvasLayout } from '../model/index.js';
+import { usePlatform } from '../platform/PlatformContext.js';
+import { parseYaml } from '../io/yaml.js';
+import { isUrlImport, isLocalImport, resolveImportPath } from '../io/importResolver.js';
 
 // ── Shared field components ───────────────────────────────────────────────────
 
@@ -671,12 +675,105 @@ function EdgePanel({ edgeId }: { edgeId: string }) {
 }
 
 function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
-  const schema = useAppStore((s) => s.getActiveSchema())?.schema;
+  const activeSchemaFile = useAppStore((s) => s.getActiveSchema());
+  const schema = activeSchemaFile?.schema;
   const updateSchema = useAppStore((s) => s.updateSchema);
+  const addImport = useAppStore((s) => s.addImport);
+  const addSchemaFile = useAppStore((s) => s.addSchemaFile);
+  const removeSchemaFile = useAppStore((s) => s.removeSchemaFile);
+  const activeProject = useAppStore((s) => s.activeProject);
+  const platform = usePlatform();
+
+  const [newImport, setNewImport] = React.useState('');
+  const [resolving, setResolving] = React.useState(false);
 
   if (!schema) return <EmptyPanel message="No schema loaded" />;
 
   const update = (partial: Parameters<typeof updateSchema>[1]) => updateSchema(schemaId, partial);
+
+  const handleAddImport = async () => {
+    const imp = newImport.trim();
+    if (!imp || schema.imports.includes(imp)) return;
+
+    addImport(schemaId, imp);
+    setNewImport('');
+
+    // Attempt to resolve and load the imported schema
+    setResolving(true);
+    try {
+      let file: SchemaFile | null = null;
+
+      if (isUrlImport(imp)) {
+        try {
+          const resp = await fetch(imp);
+          if (resp.ok) {
+            const content = await resp.text();
+            const parsedSchema = parseYaml(content);
+            file = {
+              id: crypto.randomUUID(),
+              filePath: imp,
+              schema: parsedSchema,
+              isDirty: false,
+              canvasLayout: emptyCanvasLayout(),
+              isReadOnly: true,
+              sourceUrl: imp,
+            };
+          }
+        } catch { /* URL not reachable — validation panel will flag it */ }
+      } else if (isLocalImport(imp) && activeSchemaFile && activeProject) {
+        const resolved = resolveImportPath(imp, activeSchemaFile.filePath, activeProject.rootPath);
+        if (!activeProject.schemas.some((s) => s.filePath === resolved)) {
+          try {
+            const absPath = activeProject.rootPath ? `${activeProject.rootPath}/${resolved}` : resolved;
+            const content = await platform.readFile(absPath);
+            const parsedSchema = parseYaml(content);
+            file = {
+              id: crypto.randomUUID(),
+              filePath: resolved,
+              schema: parsedSchema,
+              isDirty: false,
+              canvasLayout: emptyCanvasLayout(),
+              isReadOnly: true,
+            };
+          } catch { /* File not found — validation panel will flag it */ }
+        }
+      }
+
+      if (file) addSchemaFile(file);
+    } finally {
+      setResolving(false);
+    }
+  };
+
+  const handleRemoveImport = (imp: string) => {
+    update({ imports: schema.imports.filter((i) => i !== imp) });
+
+    if (!activeProject || !activeSchemaFile) return;
+
+    // Determine the resolved key for this import
+    let resolvedKey: string;
+    if (isUrlImport(imp)) {
+      resolvedKey = imp;
+    } else if (isLocalImport(imp)) {
+      resolvedKey = resolveImportPath(imp, activeSchemaFile.filePath, activeProject.rootPath);
+    } else {
+      return;
+    }
+
+    // Remove the associated read-only SchemaFile if no other schema still imports it
+    const importedFile = activeProject.schemas.find((s) => s.filePath === resolvedKey && s.isReadOnly);
+    if (importedFile) {
+      const stillNeeded = activeProject.schemas.some((s) => {
+        if (s.id === schemaId) return false;
+        return s.schema.imports.some((i) => {
+          if (isUrlImport(i)) return i === resolvedKey;
+          if (isLocalImport(i)) return resolveImportPath(i, s.filePath, activeProject.rootPath) === resolvedKey;
+          return false;
+        });
+      });
+      if (!stillNeeded) removeSchemaFile(importedFile.id);
+    }
+  };
 
   return (
     <div>
@@ -750,6 +847,42 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
           monospace
         />
       </FieldRow>
+
+      <SectionHeader title="Imports" />
+
+      {schema.imports.map((imp) => (
+        <div key={imp} style={styles.importRow}>
+          <span style={styles.importPath}>{imp}</span>
+          <button
+            style={styles.importRemoveBtn}
+            onClick={() => handleRemoveImport(imp)}
+            title="Remove import"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+
+      <div style={styles.addRow}>
+        <input
+          style={{ ...styles.input, ...styles.inputMono, flex: 1 }}
+          value={newImport}
+          onChange={(e) => setNewImport(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleAddImport(); }}
+          placeholder="linkml:types, ./common, https://…"
+          disabled={resolving}
+        />
+        <button
+          style={{
+            ...styles.btnPrimary,
+            ...(!newImport.trim() || resolving ? { opacity: 0.4, cursor: 'default' } : {}),
+          }}
+          onClick={handleAddImport}
+          disabled={!newImport.trim() || resolving}
+        >
+          {resolving ? '…' : '+'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -1057,6 +1190,31 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 6,
     padding: '6px 12px',
     alignItems: 'center',
+  },
+  importRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '3px 12px',
+  },
+  importPath: {
+    flex: 1,
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#94a3b8',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  importRemoveBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#475569',
+    cursor: 'pointer',
+    padding: '1px 4px',
+    fontSize: 11,
+    borderRadius: 3,
+    flexShrink: 0,
   },
   actionsRow: {
     padding: '8px 12px',

@@ -20,6 +20,13 @@ export function isLocalImport(importStr: string): boolean {
 }
 
 /**
+ * Checks whether an import string is an HTTP/HTTPS URL.
+ */
+export function isUrlImport(importStr: string): boolean {
+  return importStr.startsWith('http://') || importStr.startsWith('https://');
+}
+
+/**
  * Resolves an import path relative to the schema file's directory.
  * Adds `.yaml` extension if no extension is present.
  */
@@ -86,6 +93,29 @@ export function buildDependencyGraph(schemas: SchemaFile[]): Map<string, SchemaD
 }
 
 /**
+ * Fetches a schema from a remote URL and returns it as a read-only SchemaFile.
+ */
+async function loadSchemaFromUrl(url: string): Promise<SchemaFile | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const content = await response.text();
+    const schema = parseYaml(content);
+    return {
+      id: crypto.randomUUID(),
+      filePath: url,
+      schema,
+      isDirty: false,
+      canvasLayout: emptyCanvasLayout(),
+      isReadOnly: true,
+      sourceUrl: url,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Loads a single schema file from the platform as a read-only SchemaFile.
  */
 async function loadSchemaFile(
@@ -134,10 +164,11 @@ export async function resolveImports(
   // Seed queue with unresolved imports from the provided schemas
   for (const schema of schemas) {
     for (const imp of schema.schema.imports) {
-      if (!isLocalImport(imp)) continue;
-      const resolved = resolveImportPath(imp, schema.filePath, rootPath);
-      if (!loaded.has(resolved)) {
-        queue.push({ filePath: resolved, depth: 1 });
+      if (isUrlImport(imp)) {
+        if (!loaded.has(imp)) queue.push({ filePath: imp, depth: 1 });
+      } else if (isLocalImport(imp)) {
+        const resolved = resolveImportPath(imp, schema.filePath, rootPath);
+        if (!loaded.has(resolved)) queue.push({ filePath: resolved, depth: 1 });
       }
     }
   }
@@ -148,7 +179,9 @@ export async function resolveImports(
     const { filePath, depth } = queue.shift()!;
     if (loaded.has(filePath) || depth > maxDepth) continue;
 
-    const file = await loadSchemaFile(filePath, platform, rootPath);
+    const file = isUrlImport(filePath)
+      ? await loadSchemaFromUrl(filePath)
+      : await loadSchemaFile(filePath, platform, rootPath);
     if (!file) continue;
 
     loaded.set(filePath, file);
@@ -157,10 +190,11 @@ export async function resolveImports(
     // Queue transitive imports
     if (depth < maxDepth) {
       for (const imp of file.schema.imports) {
-        if (!isLocalImport(imp)) continue;
-        const resolved = resolveImportPath(imp, filePath, rootPath);
-        if (!loaded.has(resolved)) {
-          queue.push({ filePath: resolved, depth: depth + 1 });
+        if (isUrlImport(imp)) {
+          if (!loaded.has(imp)) queue.push({ filePath: imp, depth: depth + 1 });
+        } else if (isLocalImport(imp)) {
+          const resolved = resolveImportPath(imp, filePath, rootPath);
+          if (!loaded.has(resolved)) queue.push({ filePath: resolved, depth: depth + 1 });
         }
       }
     }

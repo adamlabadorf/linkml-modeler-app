@@ -19,6 +19,7 @@ export function ProjectPanel() {
   const activeProject = useAppStore((s) => s.activeProject);
   const activeSchemaId = useAppStore((s) => s.activeSchemaId);
   const setActiveSchema = useAppStore((s) => s.setActiveSchema);
+  const clearActiveEntity = useAppStore((s) => s.clearActiveEntity);
 
   if (!activeProject) {
     return (
@@ -54,7 +55,7 @@ export function ProjectPanel() {
                 ...(isActive ? styles.fileRowActive : {}),
                 ...(sf.isReadOnly ? styles.fileRowReadOnly : {}),
               }}
-              onClick={() => !sf.isReadOnly && setActiveSchema(sf.id)}
+              onClick={() => { clearActiveEntity(); if (!sf.isReadOnly) setActiveSchema(sf.id); }}
               title={sf.filePath}
             >
               {/* File icon + name */}
@@ -166,7 +167,6 @@ const styles: Record<string, React.CSSProperties> = {
     paddingLeft: 8,
   },
   fileRowReadOnly: {
-    cursor: 'default',
     opacity: 0.6,
   },
   fileNameRow: {

@@ -17,7 +17,6 @@ interface ImportSchemaDialogProps {
 }
 
 type ImportMode = 'file' | 'url';
-type UrlMode = 'copy' | 'reference';
 
 function deriveFilenameFromUrl(url: string): string {
   try {
@@ -44,7 +43,6 @@ export function ImportSchemaDialog({ onClose }: ImportSchemaDialogProps) {
 
   const [mode, setMode] = React.useState<ImportMode>('file');
   const [urlValue, setUrlValue] = React.useState('');
-  const [urlMode, setUrlMode] = React.useState<UrlMode>('copy');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
 
@@ -115,23 +113,20 @@ export function ImportSchemaDialog({ onClose }: ImportSchemaDialogProps) {
         return;
       }
 
-      const isReference = urlMode === 'reference';
       const file = {
         id: crypto.randomUUID(),
         filePath,
         schema,
-        isDirty: !isReference,
+        isDirty: true,
         canvasLayout: emptyCanvasLayout(),
-        isReadOnly: isReference,
+        isReadOnly: false,
         sourceUrl: urlValue.trim(),
       };
 
       addSchemaFile(file);
       setActiveSchema(file.id);
       pushToast({
-        message: isReference
-          ? `Imported "${filePath}" as URL reference`
-          : `Imported "${filePath}" — save to write to disk`,
+        message: `Imported "${filePath}" — save to write to disk`,
         severity: 'success',
         durationMs: 3000,
       });
@@ -191,36 +186,9 @@ export function ImportSchemaDialog({ onClose }: ImportSchemaDialogProps) {
               autoFocus
             />
 
-            <div style={styles.radioGroup}>
-              <label style={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="urlMode"
-                  value="copy"
-                  checked={urlMode === 'copy'}
-                  onChange={() => setUrlMode('copy')}
-                  style={styles.radio}
-                />
-                <span>
-                  <strong>Copy locally</strong>
-                  <span style={styles.radioHint}> — save schema into project on next save</span>
-                </span>
-              </label>
-              <label style={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="urlMode"
-                  value="reference"
-                  checked={urlMode === 'reference'}
-                  onChange={() => setUrlMode('reference')}
-                  style={styles.radio}
-                />
-                <span>
-                  <strong>Reference URL</strong>
-                  <span style={styles.radioHint}> — read-only, loaded from the URL each session</span>
-                </span>
-              </label>
-            </div>
+            <p style={styles.hint}>
+              The schema will be fetched and copied into the project as an editable file.
+            </p>
 
             <button
               style={{ ...styles.primaryBtn, ...((!isValidUrl || loading) ? styles.btnDisabled : {}) }}
@@ -322,29 +290,6 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-  },
-  radioGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-  },
-  radioLabel: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: 8,
-    fontSize: 12,
-    color: '#e2e8f0',
-    cursor: 'pointer',
-    lineHeight: 1.4,
-  },
-  radio: {
-    marginTop: 2,
-    accentColor: '#60a5fa',
-    flexShrink: 0,
-  },
-  radioHint: {
-    color: '#64748b',
-    fontSize: 11,
   },
   primaryBtn: {
     background: '#2563eb',

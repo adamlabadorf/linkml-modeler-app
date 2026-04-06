@@ -4,6 +4,7 @@ import type { PlatformAPI } from '../platform/PlatformContext.js';
 import type { Project, SchemaFile } from '../model/index.js';
 import { emptyCanvasLayout, emptySchema } from '../model/index.js';
 import { parseYaml } from '../io/yaml.js';
+import { resolveImports } from '../io/importResolver.js';
 
 /**
  * Check if a YAML string looks like a LinkML schema by testing for
@@ -52,13 +53,17 @@ export async function openProjectFromDirectory(
     }
   }
 
+  // Resolve imports (local paths + URLs) for all loaded schemas
+  const importedFiles = await resolveImports(schemaFiles, platform, dirPath);
+  const allSchemas = [...schemaFiles, ...importedFiles];
+
   const dirName = dirPath.split('/').filter(Boolean).pop() ?? 'Untitled Project';
 
   return {
     id: crypto.randomUUID(),
     name: dirName,
     rootPath: dirPath,
-    schemas: schemaFiles,
+    schemas: allSchemas,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
