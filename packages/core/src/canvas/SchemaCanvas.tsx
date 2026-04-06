@@ -313,6 +313,36 @@ function SchemaCanvasInner() {
     layoutRanRef.current = false;
   }, [activeSchemaId]);
 
+  // Re-layout when new ghost entities appear that have no saved position
+  const prevGhostIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!activeSchemaFile || ghostEntities.length === 0) {
+      prevGhostIdsRef.current = new Set();
+      return;
+    }
+    const currentIds = new Set(ghostEntities.map((e) => `ghost__${e.name}`));
+    const prevIds = prevGhostIdsRef.current;
+    const hasNew = [...currentIds].some((id) => !prevIds.has(id));
+    prevGhostIdsRef.current = currentIds;
+    if (!hasNew) return;
+
+    // Check if any new ghost nodes lack saved layout positions
+    const hasUnsaved = [...currentIds].some(
+      (id) => !prevIds.has(id) && !localLayoutRef.current.nodes[id]
+    );
+    if (!hasUnsaved) return;
+
+    // Re-run auto-layout to incorporate the new ghost nodes
+    runAutoLayout(activeSchemaFile.schema, {}, ghostEntities).then((layout) => {
+      // Merge: keep existing user-adjusted positions, add new ghost positions
+      setLocalLayout((prev) => ({
+        nodes: { ...layout.nodes, ...prev.nodes },
+        viewport: prev.viewport,
+      }));
+      setTimeout(() => fitView({ padding: 0.1, duration: 400 }), 150);
+    });
+  }, [activeSchemaFile, ghostEntities, fitView]);
+
   // Zoom to node when a focus request is pending
   useEffect(() => {
     if (!focusNodeRequest) return;

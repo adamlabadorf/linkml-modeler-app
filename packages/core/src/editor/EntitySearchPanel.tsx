@@ -24,7 +24,24 @@ export function EntitySearchPanel() {
 
   const [query, setQuery] = useState('');
 
-  // Build a list of all entities grouped by schema
+  // Compute names referenced by the active schema (via range, is_a, mixins, union_of)
+  const activeSchemaReferencedNames = useMemo(() => {
+    if (!activeProject || !activeSchemaId) return new Set<string>();
+    const sf = activeProject.schemas.find((s) => s.id === activeSchemaId);
+    if (!sf) return new Set<string>();
+    const names = new Set<string>();
+    for (const classDef of Object.values(sf.schema.classes)) {
+      if (classDef.isA) names.add(classDef.isA);
+      for (const m of classDef.mixins) names.add(m);
+      if (classDef.unionOf) for (const u of classDef.unionOf) names.add(u);
+      for (const slot of Object.values(classDef.attributes)) {
+        if (slot.range) names.add(slot.range);
+      }
+    }
+    return names;
+  }, [activeProject, activeSchemaId]);
+
+  // Build a list of all entities grouped by schema, with referenced entities first
   const groups = useMemo(() => {
     if (!activeProject) return [];
     const lower = query.toLowerCase();
@@ -49,9 +66,17 @@ export function EntitySearchPanel() {
         })),
       ].filter((r) => !lower || r.name.toLowerCase().includes(lower));
 
+      // Sort: referenced entities first (alpha), then unreferenced (alpha)
+      rows.sort((a, b) => {
+        const aRef = activeSchemaReferencedNames.has(a.name);
+        const bRef = activeSchemaReferencedNames.has(b.name);
+        if (aRef !== bRef) return aRef ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+
       return { schemaId: sf.id, filePath: sf.filePath, isReadOnly: !!sf.isReadOnly, rows };
     }).filter((g) => g.rows.length > 0);
-  }, [activeProject, query]);
+  }, [activeProject, activeSchemaReferencedNames, query]);
 
   // Determine which entity names are in the active schema
   const activeSchemaEntityNames = useMemo(() => {
@@ -103,6 +128,7 @@ export function EntitySearchPanel() {
                 </div>
                 {g.rows.map((row) => {
                   const inActive = activeSchemaEntityNames.has(row.name) && row.schemaId === activeSchemaId;
+                  const isReferenced = activeSchemaReferencedNames.has(row.name) && row.schemaId !== activeSchemaId;
                   return (
                     <div
                       key={`${row.schemaId}:${row.type}:${row.name}`}
@@ -120,6 +146,7 @@ export function EntitySearchPanel() {
                       </span>
                       <span style={styles.entityName}>{row.name}</span>
                       {inActive && <span style={styles.activeMark} title="In active schema">✓</span>}
+                      {isReferenced && <span style={styles.referencedMark} title="Referenced by active schema">→</span>}
                     </div>
                   );
                 })}
@@ -231,6 +258,11 @@ const styles: Record<string, React.CSSProperties> = {
   activeMark: {
     fontSize: 9,
     color: '#22c55e',
+    flexShrink: 0,
+  },
+  referencedMark: {
+    fontSize: 9,
+    color: '#60a5fa',
     flexShrink: 0,
   },
 };
