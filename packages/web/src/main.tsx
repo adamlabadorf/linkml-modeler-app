@@ -43,6 +43,8 @@ import {
   CloneDialog,
   ImportSchemaDialog,
   NewSchemaDialog,
+  openProjectFromDirectory,
+  createNewProject,
 } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
 import { GitPanel } from './editor/GitPanel.js';
@@ -222,6 +224,7 @@ const toastStyles: Record<string, React.CSSProperties> = {
 function App() {
   const platform = usePlatform();
   const activeProject = useAppStore((s) => s.activeProject);
+  const setProject = useAppStore((s) => s.setProject);
   const schemaSettingsOpen = useAppStore((s) => s.schemaSettingsOpen);
   const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
   const schema = useAppStore((s) => s.getActiveSchema());
@@ -354,6 +357,30 @@ function App() {
     }
   }, [platform, pushToast]);
 
+  // ── New Project / Open Project (for MenuBar) ─────────────────────────────
+  const handleNewProject = React.useCallback(() => {
+    const project = createNewProject('Untitled Schema');
+    setProject(project);
+  }, [setProject]);
+
+  const handleOpenProject = React.useCallback(async () => {
+    const dirPath = await platform.openDirectory();
+    if (!dirPath) return;
+    try {
+      const project = await openProjectFromDirectory(dirPath, platform);
+      if (project.schemas.length === 0) {
+        pushToast({ message: 'No LinkML schemas found in this directory', severity: 'warning' });
+        return;
+      }
+      setProject(project);
+    } catch (err) {
+      pushToast({
+        message: `Failed to open project: ${err instanceof Error ? err.message : String(err)}`,
+        severity: 'error',
+      });
+    }
+  }, [platform, pushToast, setProject]);
+
   // ── Ctrl+S / Cmd+S keyboard shortcut ───────────────────────────────────────
   React.useEffect(() => {
     function handleSaveShortcut(e: KeyboardEvent) {
@@ -387,6 +414,8 @@ function App() {
         <div style={styles.headerLeft}>
           <span style={styles.logo}>⬡ LinkML Visual Schema Editor</span>
           <MenuBar
+            onNewProject={handleNewProject}
+            onOpenProject={handleOpenProject}
             onSave={saveProject}
             onSaveAs={saveProject}
             onOpenFromUrl={() => setCloneDialogOpen(true)}
