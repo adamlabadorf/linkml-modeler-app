@@ -42,6 +42,7 @@ import {
   SchemaCanvas,
   CloneDialog,
   ImportSchemaDialog,
+  NewSchemaDialog,
 } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
 import { GitPanel } from './editor/GitPanel.js';
@@ -233,6 +234,8 @@ function App() {
   const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
   const importDialogOpen = useAppStore((s) => s.importDialogOpen);
   const setImportDialogOpen = useAppStore((s) => s.setImportDialogOpen);
+  const newSchemaDialogOpen = useAppStore((s) => s.newSchemaDialogOpen);
+  const setNewSchemaDialogOpen = useAppStore((s) => s.setNewSchemaDialogOpen);
   const syncStatus = useAppStore((s) => s.syncStatus);
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -357,6 +360,7 @@ function App() {
             onSave={saveProject}
             onSaveAs={saveProject}
             onOpenFromUrl={() => setCloneDialogOpen(true)}
+            onNewSchema={() => setNewSchemaDialogOpen(true)}
             onImportSchema={() => setImportDialogOpen(true)}
             onCommit={handleMenuCommit}
             onPush={handleMenuPush}
@@ -444,6 +448,11 @@ function App() {
       {/* Import schema dialog */}
       {importDialogOpen && (
         <ImportSchemaDialog onClose={() => setImportDialogOpen(false)} />
+      )}
+
+      {/* New schema dialog */}
+      {newSchemaDialogOpen && (
+        <NewSchemaDialog onClose={() => setNewSchemaDialogOpen(false)} />
       )}
 
       {/* Toast notifications */}

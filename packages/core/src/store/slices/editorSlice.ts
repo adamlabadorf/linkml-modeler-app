@@ -18,6 +18,7 @@ export interface EditorSlice {
   yamlPreviewOpen: boolean;
   cloneDialogOpen: boolean;
   importDialogOpen: boolean;
+  newSchemaDialogOpen: boolean;
 
   // Actions
   setActiveEntity(entity: ActiveEntity): void;
@@ -30,6 +31,7 @@ export interface EditorSlice {
   setYamlPreviewOpen(open: boolean): void;
   setCloneDialogOpen(open: boolean): void;
   setImportDialogOpen(open: boolean): void;
+  setNewSchemaDialogOpen(open: boolean): void;
 }
 
 export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> = (set) => ({
@@ -42,6 +44,7 @@ export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> =
   yamlPreviewOpen: true,
   cloneDialogOpen: false,
   importDialogOpen: false,
+  newSchemaDialogOpen: false,
 
   setActiveEntity(entity) {
     set({ activeEntity: entity });
@@ -81,5 +84,9 @@ export const createEditorSlice: StateCreator<EditorSlice, [], [], EditorSlice> =
 
   setImportDialogOpen(open) {
     set({ importDialogOpen: open });
+  },
+
+  setNewSchemaDialogOpen(open) {
+    set({ newSchemaDialogOpen: open });
   },
 });
