@@ -10,6 +10,7 @@ import type { RecentProject } from '../model/index.js';
 export function SplashPage() {
   const platform = usePlatform();
   const setProject = useAppStore((s) => s.setProject);
+  const setGitAvailable = useAppStore((s) => s.setGitAvailable);
   const pushToast = useAppStore((s) => s.pushToast);
   const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
 
@@ -38,6 +39,8 @@ export function SplashPage() {
         return;
       }
       setProject(project);
+      const hasGit = await platform.initGit(dirPath);
+      setGitAvailable(hasGit);
     } catch (err) {
       pushToast({
         message: `Failed to open project: ${err instanceof Error ? err.message : String(err)}`,
@@ -59,6 +62,8 @@ export function SplashPage() {
       // Preserve the project name from the recent entry
       project.name = recent.name;
       setProject(project);
+      const hasGit = await platform.initGit(recent.rootPath);
+      setGitAvailable(hasGit);
     } catch (err) {
       pushToast({
         message: `Failed to open project: ${err instanceof Error ? err.message : String(err)}`,

@@ -47,7 +47,6 @@ import {
   CloneDialog,
   ImportSchemaDialog,
   NewSchemaDialog,
-  openProjectFromDirectory,
   createNewProject,
 } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
@@ -229,6 +228,7 @@ function App() {
   const platform = usePlatform();
   const activeProject = useAppStore((s) => s.activeProject);
   const setProject = useAppStore((s) => s.setProject);
+  const closeProject = useAppStore((s) => s.closeProject);
   const schemaSettingsOpen = useAppStore((s) => s.schemaSettingsOpen);
   const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
   const schema = useAppStore((s) => s.getActiveSchema());
@@ -344,25 +344,14 @@ function App() {
     setProject(project);
   }, [setProject]);
 
-  const handleOpenProject = React.useCallback(async () => {
-    const dirPath = await platform.openDirectory();
-    if (!dirPath) return;
-    try {
-      const project = await openProjectFromDirectory(dirPath, platform);
-      if (project.schemas.length === 0) {
-        pushToast({ message: 'No LinkML schemas found in this directory', severity: 'warning' });
-        return;
-      }
-      setProject(project);
-      const hasGit = await platform.initGit(dirPath);
-      useAppStore.getState().setGitAvailable(hasGit);
-    } catch (err) {
-      pushToast({
-        message: `Failed to open project: ${err instanceof Error ? err.message : String(err)}`,
-        severity: 'error',
-      });
+  const handleOpenProject = React.useCallback(() => {
+    // Return to the splash page so the user can pick New / Open Folder / Clone / Recent.
+    if (isDirty) {
+      if (!window.confirm('You have unsaved changes. Close project without saving?')) return;
     }
-  }, [platform, pushToast, setProject]);
+    closeProject();
+    useAppStore.getState().setGitAvailable(false);
+  }, [isDirty, closeProject]);
 
   // ── Ctrl+S / Cmd+S keyboard shortcut ───────────────────────────────────────
   React.useEffect(() => {

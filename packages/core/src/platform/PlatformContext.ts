@@ -97,6 +97,9 @@ export interface PlatformAPI {
   // Environment
   platform: 'web' | 'electron';
   gitAvailable: boolean; // Detected at startup
+
+  /** Returns the root directory where new cloned/created projects should be stored. */
+  getProjectsPath(): Promise<string>;
 }
 
 // ─── React context ────────────────────────────────────────────────────────────

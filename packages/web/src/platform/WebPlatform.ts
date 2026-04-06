@@ -69,6 +69,10 @@ export class WebPlatform implements PlatformAPI {
     return this.gitAvailable;
   }
 
+  async getProjectsPath(): Promise<string> {
+    return '/projects';
+  }
+
   // ── File I/O ────────────────────────────────────────────────────────────────
 
   async openFile(options?: OpenFileOptions): Promise<FileResult | null> {

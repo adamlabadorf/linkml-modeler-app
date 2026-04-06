@@ -426,6 +426,10 @@ export class CloudPlatform implements PlatformAPI {
     return this.local.initGit(dirPath);
   }
 
+  async getProjectsPath(): Promise<string> {
+    return this.local.getProjectsPath();
+  }
+
   async gitStatus(repoPath: string): Promise<GitStatus | null> {
     return this.local.gitStatus(repoPath);
   }

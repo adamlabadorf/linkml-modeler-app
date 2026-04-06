@@ -41,9 +41,8 @@ export function CloneDialog({ onClose }: CloneDialogProps) {
 
     // Derive repo name from URL for destination path
     const repoName = url.trim().split('/').pop()?.replace(/\.git$/, '') || 'cloned-repo';
-    const destPath = platform.platform === 'web'
-      ? `/projects/${repoName}-${Date.now()}`
-      : `/tmp/linkml-editor/${repoName}-${Date.now()}`;
+    const projectsDir = await platform.getProjectsPath();
+    const destPath = `${projectsDir}/${repoName}-${Date.now()}`;
 
     const credentials = showCredentials && username
       ? { username, password }

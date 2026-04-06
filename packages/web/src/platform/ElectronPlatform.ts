@@ -36,6 +36,7 @@ type ElectronBridge = {
   deleteCredential(key: string): Promise<void>;
   getSetting(key: string): Promise<string | null>;
   setSetting(key: string, value: string): Promise<void>;
+  getDocumentsPath(): Promise<string>;
 };
 
 function bridge(): ElectronBridge {
@@ -55,6 +56,13 @@ export class ElectronPlatform implements PlatformAPI {
   async initGit(dirPath: string): Promise<boolean> {
     this.gitAvailable = await bridge().gitAvailable(dirPath);
     return this.gitAvailable;
+  }
+
+  async getProjectsPath(): Promise<string> {
+    const configured = await bridge().getSetting('projects-dir');
+    if (configured) return configured;
+    const docs = await bridge().getDocumentsPath();
+    return `${docs}/LinkMLProjects`;
   }
 
   async openFile(options?: OpenFileOptions): Promise<FileResult | null> {

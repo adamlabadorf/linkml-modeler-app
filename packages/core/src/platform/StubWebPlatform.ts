@@ -50,6 +50,10 @@ export class StubWebPlatform implements PlatformAPI {
     return false;
   }
 
+  async getProjectsPath(): Promise<string> {
+    return '/projects';
+  }
+
   async gitStatus(_repoPath: string): Promise<GitStatus | null> {
     return null;
   }
