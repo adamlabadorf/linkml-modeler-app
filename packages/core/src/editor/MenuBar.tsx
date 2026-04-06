@@ -21,6 +21,7 @@ interface MenuBarProps {
   onNewProject?: () => void;
   onOpenProject?: () => void;
   onOpenFromUrl?: () => void;
+  onImportSchema?: () => void;
   onSave?: () => void;
   onSaveAs?: () => void;
   onCloseProject?: () => void;
@@ -161,6 +162,7 @@ export function MenuBar({
   onNewProject,
   onOpenProject,
   onOpenFromUrl,
+  onImportSchema,
   onSave,
   onSaveAs,
   onCloseProject,
@@ -197,6 +199,8 @@ export function MenuBar({
     { label: 'New Project', action: onNewProject, disabled: !onNewProject },
     { label: 'Open Project\u2026', shortcut: 'Ctrl+O', action: onOpenProject, disabled: !onOpenProject },
     { label: 'Open from URL\u2026', action: onOpenFromUrl, disabled: !onOpenFromUrl },
+    { separator: true },
+    { label: 'Import Schema\u2026', action: onImportSchema, disabled: !activeProject || !onImportSchema },
     { separator: true },
     { label: 'Save', shortcut: 'Ctrl+S', action: onSave, disabled: !isDirty || !onSave },
     { label: 'Save As\u2026', action: onSaveAs, disabled: !activeProject || !onSaveAs },

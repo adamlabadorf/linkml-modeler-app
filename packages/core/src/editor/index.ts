@@ -6,3 +6,4 @@ export { FocusModeToolbar } from './FocusModeToolbar.js';
 export { MenuBar } from './MenuBar.js';
 export { SplashPage } from './SplashPage.js';
 export { CloneDialog } from './CloneDialog.js';
+export { ImportSchemaDialog } from './ImportSchemaDialog.js';

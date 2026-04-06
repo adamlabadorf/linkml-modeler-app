@@ -20,6 +20,7 @@ export interface SchemaFile {
   isDirty: boolean; // Unsaved local changes
   canvasLayout: CanvasLayout; // Node positions (stored alongside .yaml)
   isReadOnly?: boolean; // True for imported (dependency) schemas
+  sourceUrl?: string; // Set when schema was imported from a remote URL
 }
 
 // ─── 4.1a Recent Projects ────────────────────────────────────────────────────

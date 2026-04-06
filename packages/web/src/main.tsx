@@ -41,6 +41,7 @@ import {
   SplashPage,
   SchemaCanvas,
   CloneDialog,
+  ImportSchemaDialog,
 } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
 import { GitPanel } from './editor/GitPanel.js';
@@ -230,6 +231,8 @@ function App() {
   const validationIssues = useAppStore((s) => s.validationIssues);
   const cloneDialogOpen = useAppStore((s) => s.cloneDialogOpen);
   const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
+  const importDialogOpen = useAppStore((s) => s.importDialogOpen);
+  const setImportDialogOpen = useAppStore((s) => s.setImportDialogOpen);
   const syncStatus = useAppStore((s) => s.syncStatus);
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -354,6 +357,7 @@ function App() {
             onSave={saveProject}
             onSaveAs={saveProject}
             onOpenFromUrl={() => setCloneDialogOpen(true)}
+            onImportSchema={() => setImportDialogOpen(true)}
             onCommit={handleMenuCommit}
             onPush={handleMenuPush}
           />
@@ -435,6 +439,11 @@ function App() {
       {/* Clone from URL dialog */}
       {cloneDialogOpen && (
         <CloneDialog onClose={() => setCloneDialogOpen(false)} />
+      )}
+
+      {/* Import schema dialog */}
+      {importDialogOpen && (
+        <ImportSchemaDialog onClose={() => setImportDialogOpen(false)} />
       )}
 
       {/* Toast notifications */}
