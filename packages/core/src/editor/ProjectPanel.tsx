@@ -8,10 +8,11 @@
  * - Read-only badge for imported schemas
  * - Click to switch active schema
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '../store/index.js';
 import { usePlatform } from '../platform/PlatformContext.js';
 import { buildManifestData, writeEditorManifest } from '../io/editorManifest.js';
+import { EntitySearchPanel } from './EntitySearchPanel.js';
 
 function basename(filePath: string): string {
   return filePath.split('/').pop() ?? filePath;
@@ -25,6 +26,7 @@ export function ProjectPanel() {
   const clearActiveEntity = useAppStore((s) => s.clearActiveEntity);
   const hiddenSchemaIds = useAppStore((s) => s.hiddenSchemaIds);
   const setSchemaVisible = useAppStore((s) => s.setSchemaVisible);
+  const [searchMode, setSearchMode] = useState(false);
 
   const handleToggleVisibility = (e: React.MouseEvent, schemaId: string) => {
     e.stopPropagation();
@@ -53,12 +55,36 @@ export function ProjectPanel() {
   return (
     <div style={styles.panel}>
       {/* Panel header */}
-      <div style={styles.header}>
-        <span style={styles.title}>⬡ {activeProject.name}</span>
+      <div style={{ ...styles.header, display: 'flex', alignItems: 'center' }}>
+        {searchMode ? (
+          <>
+            <button
+              style={styles.searchToggleBtn}
+              onClick={() => setSearchMode(false)}
+              title="Back to file list"
+            >
+              ← Files
+            </button>
+          </>
+        ) : (
+          <>
+            <span style={{ ...styles.title, flex: 1 }}>⬡ {activeProject.name}</span>
+            <button
+              style={styles.searchToggleBtn}
+              onClick={() => setSearchMode(true)}
+              title="Search entities"
+            >
+              🔍
+            </button>
+          </>
+        )}
       </div>
 
-      {/* Schema file list */}
-      <div style={styles.fileList}>
+      {/* Search mode: show entity search panel */}
+      {searchMode && <EntitySearchPanel />}
+
+      {/* File list mode */}
+      {!searchMode && <div style={styles.fileList}>
         {activeProject.schemas.map((sf) => {
           const isActive = sf.id === activeSchemaId;
           const isHidden = hiddenSchemaIds.has(sf.id);
@@ -132,16 +158,18 @@ export function ProjectPanel() {
             </div>
           );
         })}
-      </div>
+      </div>}
 
-      {/* Footer: total counts */}
-      <div style={styles.footer}>
-        <span style={styles.footerText}>
-          {activeProject.schemas.filter((s) => !s.isReadOnly).length} schema(s)
-          {activeProject.schemas.some((s) => s.isReadOnly) &&
-            ` · ${activeProject.schemas.filter((s) => s.isReadOnly).length} imported`}
-        </span>
-      </div>
+      {/* Footer: total counts (file mode only) */}
+      {!searchMode && (
+        <div style={styles.footer}>
+          <span style={styles.footerText}>
+            {activeProject.schemas.filter((s) => !s.isReadOnly).length} schema(s)
+            {activeProject.schemas.some((s) => s.isReadOnly) &&
+              ` · ${activeProject.schemas.filter((s) => s.isReadOnly).length} imported`}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -301,5 +329,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     color: '#334155',
     fontFamily: 'monospace',
+  },
+  searchToggleBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#475569',
+    cursor: 'pointer',
+    fontSize: 11,
+    padding: '0 2px',
+    fontFamily: 'monospace',
+    flexShrink: 0,
   },
 };

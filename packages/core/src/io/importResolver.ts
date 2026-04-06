@@ -222,9 +222,12 @@ export function collectImportedEntities(
 
   // Determine which schemas are directly imported
   for (const imp of activeSchema.schema.imports) {
-    if (!isLocalImport(imp)) continue;
-    const resolved = resolveImportPath(imp, activeSchema.filePath, '');
-    activeImports.add(resolved);
+    if (isUrlImport(imp)) {
+      activeImports.add(imp); // URL schemas use URL as filePath
+    } else if (isLocalImport(imp)) {
+      const resolved = resolveImportPath(imp, activeSchema.filePath, '');
+      activeImports.add(resolved);
+    }
   }
 
   const entities: ImportedEntity[] = [];
@@ -261,9 +264,11 @@ export function findMissingImport(
 
   // Already imported?
   const currentImportPaths = new Set(
-    activeSchema.schema.imports
-      .filter(isLocalImport)
-      .map((imp) => resolveImportPath(imp, activeSchema.filePath, ''))
+    activeSchema.schema.imports.flatMap((imp) => {
+      if (isUrlImport(imp)) return [imp];
+      if (isLocalImport(imp)) return [resolveImportPath(imp, activeSchema.filePath, '')];
+      return [];
+    })
   );
 
   for (const schema of allSchemas) {

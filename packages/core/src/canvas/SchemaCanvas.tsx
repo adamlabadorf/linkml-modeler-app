@@ -225,6 +225,8 @@ function SchemaCanvasInner() {
   const storeEdges = useAppStore((s) => s.edges);
   const viewport = useAppStore((s) => s.viewport);
   const focusMode = useAppStore((s) => s.focusMode);
+  const focusNodeRequest = useAppStore((s) => s.focusNodeRequest);
+  const requestFocusNode = useAppStore((s) => s.requestFocusNode);
   const hiddenSchemaIds = useAppStore((s) => s.hiddenSchemaIds);
   const updateCanvasLayout = useAppStore((s) => s.updateCanvasLayout);
   const setSelection = useAppStore((s) => s.setSelection);
@@ -310,6 +312,17 @@ function SchemaCanvasInner() {
   useEffect(() => {
     layoutRanRef.current = false;
   }, [activeSchemaId]);
+
+  // Zoom to node when a focus request is pending
+  useEffect(() => {
+    if (!focusNodeRequest) return;
+    const node = storeNodes.find((n) => n.id === focusNodeRequest);
+    if (node) {
+      fitView({ nodes: [{ id: focusNodeRequest }], padding: 0.4, duration: 400, maxZoom: 1.5 });
+      requestFocusNode(null);
+    }
+    // If node not found yet (e.g., schema is still switching), keep request pending
+  }, [focusNodeRequest, storeNodes, fitView, requestFocusNode]);
 
   // Debounced manifest write — stable callback, reads latest values via ref
   const scheduleManifestWrite = useCallback(() => {

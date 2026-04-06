@@ -15,6 +15,7 @@ export interface CanvasSlice {
   selectedNodeIds: string[];
   selectedEdgeIds: string[];
   focusMode: FocusMode | null;
+  focusNodeRequest: string | null;
 
   // Actions
   setNodes(nodes: Node<CanvasNodeData>[]): void;
@@ -25,6 +26,7 @@ export interface CanvasSlice {
   clearSelection(): void;
   setFocusMode(mode: FocusMode | null): void;
   toggleNodeCollapsed(nodeId: string): void;
+  requestFocusNode(name: string | null): void;
 }
 
 export type FocusMode =
@@ -38,6 +40,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice, [], [], CanvasSlice> =
   selectedNodeIds: [],
   selectedEdgeIds: [],
   focusMode: null,
+  focusNodeRequest: null,
 
   setNodes(nodes) {
     set({ nodes });
@@ -79,5 +82,9 @@ export const createCanvasSlice: StateCreator<CanvasSlice, [], [], CanvasSlice> =
           : n
       ),
     }));
+  },
+
+  requestFocusNode(name) {
+    set({ focusNodeRequest: name });
   },
 });
