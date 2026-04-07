@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppStore, useTemporalStore } from '../store/index.js';
+import { startTour, type TourId } from '../tours/index.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MenuItem {
@@ -195,6 +196,16 @@ export function MenuBar({
   const [aboutOpen, setAboutOpen] = React.useState(false);
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
 
+  const launchTour = React.useCallback((id: TourId) => {
+    const store = useAppStore.getState();
+    startTour(id, {
+      openValidationPanel: () => store.setValidationPanelOpen(true),
+      openGitPanel: () => store.setGitPanelOpen(true),
+      openPropertiesPanel: () => store.setPropertiesPanelOpen(true),
+      openYamlPreview: () => store.setYamlPreviewOpen(true),
+    });
+  }, []);
+
   const toggle = (menu: string) => setOpenMenu((prev) => (prev === menu ? null : menu));
   const close = () => setOpenMenu(null);
   const hover = (menu: string) => {
@@ -241,6 +252,15 @@ export function MenuBar({
   ];
 
   const helpItems: MenuEntry[] = [
+    { label: '▶ App Overview', action: () => launchTour('overview') },
+    { separator: true },
+    { label: '▶ Getting Started (Splash Page)', action: () => launchTour('overview'), disabled: !activeProject },
+    { label: '▶ Project Panel', action: () => launchTour('project-panel'), disabled: !activeProject },
+    { label: '▶ Canvas & Workspace', action: () => launchTour('canvas'), disabled: !activeProject },
+    { label: '▶ Properties & YAML Preview', action: () => launchTour('properties'), disabled: !activeProject },
+    { label: '▶ Validation', action: () => launchTour('validation'), disabled: !activeProject },
+    { label: '▶ Git Workflow', action: () => launchTour('git'), disabled: !activeProject },
+    { separator: true },
     { label: 'Keyboard Shortcuts', action: () => setShortcutsOpen(true) },
     { label: 'Documentation', action: () => window.open('https://linkml.io/linkml/', '_blank') },
     { separator: true },
@@ -249,12 +269,12 @@ export function MenuBar({
 
   return (
     <>
-      <nav style={menuStyles.bar} role="menubar">
+      <nav id="lme-menubar" style={menuStyles.bar} role="menubar">
         <DropdownMenu label="File" items={fileItems} isOpen={openMenu === 'file'} onToggle={() => toggle('file')} onClose={close} onHover={() => hover('file')} />
         <DropdownMenu label="Edit" items={editItems} isOpen={openMenu === 'edit'} onToggle={() => toggle('edit')} onClose={close} onHover={() => hover('edit')} />
         <DropdownMenu label="View" items={viewItems} isOpen={openMenu === 'view'} onToggle={() => toggle('view')} onClose={close} onHover={() => hover('view')} />
         <DropdownMenu label="Git" items={gitItems} isOpen={openMenu === 'git'} onToggle={() => toggle('git')} onClose={close} onHover={() => hover('git')} />
-        <DropdownMenu label="Help" items={helpItems} isOpen={openMenu === 'help'} onToggle={() => toggle('help')} onClose={close} onHover={() => hover('help')} />
+        <span id="lme-help-menu"><DropdownMenu label="Help" items={helpItems} isOpen={openMenu === 'help'} onToggle={() => toggle('help')} onClose={close} onHover={() => hover('help')} /></span>
       </nav>
 
       {/* About dialog */}

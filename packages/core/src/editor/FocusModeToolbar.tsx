@@ -49,7 +49,7 @@ export function FocusModeToolbar() {
     focusMode?.type === 'subset' ? focusMode.subsetName : '';
 
   return (
-    <div style={styles.toolbar}>
+    <div id="lme-focus-toolbar" style={styles.toolbar}>
       {/* Subset focus */}
       {subsets.length > 0 && (
         <div style={styles.group}>

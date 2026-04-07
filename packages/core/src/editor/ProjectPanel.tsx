@@ -58,7 +58,7 @@ export function ProjectPanel() {
 
   if (!activeProject) {
     return (
-      <div style={styles.panel}>
+      <div id="lme-project-panel" style={styles.panel}>
         <div style={styles.header}>
           <span style={styles.title}>Project</span>
         </div>
@@ -71,7 +71,7 @@ export function ProjectPanel() {
   const importedSchemas = activeProject.schemas.filter((s) => s.isReadOnly);
 
   return (
-    <div style={styles.panel}>
+    <div id="lme-project-panel" style={styles.panel}>
       {/* Panel header */}
       <div style={styles.header}>
         {searchMode ? (

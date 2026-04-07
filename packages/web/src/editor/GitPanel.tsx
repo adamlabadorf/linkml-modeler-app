@@ -246,7 +246,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
 
   if (!gitPanelOpen) {
     return (
-      <div style={styles.collapsedBar} onClick={() => setGitPanelOpen(true)}>
+      <div id="lme-git-panel" style={styles.collapsedBar} onClick={() => setGitPanelOpen(true)}>
         <span style={styles.collapsedLabel}>
           {gitStatus ? `⎇ ${gitStatus.branch}` : '⎇ Git'}
         </span>
@@ -316,7 +316,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
   ];
 
   return (
-    <div style={styles.panel}>
+    <div id="lme-git-panel" style={styles.panel}>
       {/* Header */}
       <div style={styles.panelHeader}>
         <span style={styles.panelTitle}>

@@ -110,7 +110,7 @@ function YamlPreview() {
   }, [schema]);
 
   return (
-    <div style={yamlStyles.panel}>
+    <div id="lme-yaml-preview" style={yamlStyles.panel}>
       <div style={yamlStyles.header}>
         <span style={yamlStyles.title}>YAML Preview</span>
         {schema?.isDirty && <span style={yamlStyles.dirty}>● unsaved</span>}
@@ -382,9 +382,9 @@ function App() {
   return (
     <div style={styles.app}>
       {/* Header */}
-      <header style={styles.header}>
+      <header id="lme-header" style={styles.header}>
         <div style={styles.headerLeft}>
-          <span style={styles.logo}>⬡ LinkML Visual Schema Editor</span>
+          <span id="lme-logo" style={styles.logo}>⬡ LinkML Visual Schema Editor</span>
           <MenuBar
             onNewProject={handleNewProject}
             onOpenProject={handleOpenProject}
@@ -418,7 +418,7 @@ function App() {
         {/* Canvas + focus toolbar (center) */}
         <div style={styles.canvasColumn}>
           <FocusModeToolbar />
-          <div style={styles.canvasArea}>
+          <div id="lme-canvas-area" style={styles.canvasArea}>
             <SchemaCanvas />
           </div>
         </div>
@@ -435,7 +435,7 @@ function App() {
       <GitPanel onSaveBeforeCommit={saveProject} />
 
       {/* Status bar */}
-      <footer style={styles.footer}>
+      <footer id="lme-footer" style={styles.footer}>
         <span>
           {schema
             ? `${schema.filePath} · ${Object.keys(schema.schema.classes).length} class(es) · ${Object.keys(schema.schema.enums).length} enum(s)`
