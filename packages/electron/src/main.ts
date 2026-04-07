@@ -227,6 +227,22 @@ function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('platform:gitReadConfig', async (_event, repoPath: string) => {
+    try {
+      const fs = await getFs();
+      const git = await getGit();
+      const g = git as { getConfig: (opts: object) => Promise<string | undefined> };
+      const [remoteUrl, userName, userEmail] = await Promise.all([
+        g.getConfig({ fs: { promises: fs }, dir: repoPath, path: 'remote.origin.url' }).catch(() => undefined),
+        g.getConfig({ fs: { promises: fs }, dir: repoPath, path: 'user.name' }).catch(() => undefined),
+        g.getConfig({ fs: { promises: fs }, dir: repoPath, path: 'user.email' }).catch(() => undefined),
+      ]);
+      return { remoteUrl, userName, userEmail };
+    } catch {
+      return {};
+    }
+  });
+
   ipcMain.handle('platform:gitSetRemote', async (_event, repoPath: string, url: string) => {
     try {
       const fs = await getFs();

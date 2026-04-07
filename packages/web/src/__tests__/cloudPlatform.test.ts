@@ -37,6 +37,7 @@ function makeMockLocal() {
     initGit: vi.fn(async () => true),
     gitCreateRepo: vi.fn(async () => true),
     gitSetRemote: vi.fn(async () => {}),
+    gitReadConfig: vi.fn(async () => ({})),
     getProjectsPath: vi.fn(async () => '/projects'),
     gitStatus: vi.fn(async () => ({
       branch: 'main', aheadCount: 0, behindCount: 0,

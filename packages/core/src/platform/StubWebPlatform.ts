@@ -58,6 +58,10 @@ export class StubWebPlatform implements PlatformAPI {
     // no-op in stub
   }
 
+  async gitReadConfig(_repoPath: string): Promise<{ remoteUrl?: string; userName?: string; userEmail?: string }> {
+    return {};
+  }
+
   async getProjectsPath(): Promise<string> {
     return '/projects';
   }

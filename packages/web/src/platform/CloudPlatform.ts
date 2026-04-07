@@ -434,6 +434,10 @@ export class CloudPlatform implements PlatformAPI {
     return this.local.gitSetRemote(repoPath, url);
   }
 
+  async gitReadConfig(repoPath: string): Promise<{ remoteUrl?: string; userName?: string; userEmail?: string }> {
+    return this.local.gitReadConfig(repoPath);
+  }
+
   async getProjectsPath(): Promise<string> {
     return this.local.getProjectsPath();
   }

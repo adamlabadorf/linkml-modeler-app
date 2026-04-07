@@ -90,6 +90,19 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
+  async gitReadConfig(repoPath: string): Promise<{ remoteUrl?: string; userName?: string; userEmail?: string }> {
+    try {
+      const [remoteUrl, userName, userEmail] = await Promise.all([
+        git.getConfig({ fs, dir: repoPath, path: 'remote.origin.url' }).catch(() => undefined) as Promise<string | undefined>,
+        git.getConfig({ fs, dir: repoPath, path: 'user.name' }).catch(() => undefined) as Promise<string | undefined>,
+        git.getConfig({ fs, dir: repoPath, path: 'user.email' }).catch(() => undefined) as Promise<string | undefined>,
+      ]);
+      return { remoteUrl, userName, userEmail };
+    } catch {
+      return {};
+    }
+  }
+
   async getProjectsPath(): Promise<string> {
     return '/projects';
   }

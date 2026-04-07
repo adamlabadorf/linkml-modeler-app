@@ -57,16 +57,52 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
 
   const [tab, setTab] = useState<Tab>('changes');
   const [isInitializing, setIsInitializing] = useState(false);
-  // Settings tab local state (mirrors gitConfig, saved on blur/submit)
+  // Settings tab local state (mirrors gitConfig + stored credentials)
   const [remoteUrl, setRemoteUrl] = useState(activeProject?.gitConfig?.remoteUrl ?? '');
   const [authorName, setAuthorName] = useState(activeProject?.gitConfig?.userName ?? '');
   const [authorEmail, setAuthorEmail] = useState(activeProject?.gitConfig?.userEmail ?? '');
-  // Sync settings fields when project changes
+  const [gitUsername, setGitUsername] = useState('');
+  const [gitToken, setGitToken] = useState('');
+
+  // When project changes or git becomes available, sync settings from gitConfig
+  // and fall back to reading from the actual git config + stored credentials.
   useEffect(() => {
     setRemoteUrl(activeProject?.gitConfig?.remoteUrl ?? '');
     setAuthorName(activeProject?.gitConfig?.userName ?? '');
     setAuthorEmail(activeProject?.gitConfig?.userEmail ?? '');
-  }, [activeProject?.id]);
+
+    if (!gitAvailable || !activeProject) return;
+    const repoP = activeProject.rootPath;
+
+    // Load stored credentials
+    Promise.all([
+      platform.getCredential('git-username'),
+      platform.getCredential('git-token'),
+    ]).then(([u, t]) => {
+      if (u) setGitUsername(u);
+      if (t) setGitToken(t);
+    });
+
+    // Fill any missing gitConfig fields from the actual git repo config
+    platform.gitReadConfig(repoP).then((cfg) => {
+      const updates: Record<string, string> = {};
+      if (cfg.remoteUrl && !activeProject.gitConfig?.remoteUrl) {
+        setRemoteUrl(cfg.remoteUrl);
+        updates.remoteUrl = cfg.remoteUrl;
+      }
+      if (cfg.userName && !activeProject.gitConfig?.userName) {
+        setAuthorName(cfg.userName);
+        updates.userName = cfg.userName;
+      }
+      if (cfg.userEmail && !activeProject.gitConfig?.userEmail) {
+        setAuthorEmail(cfg.userEmail);
+        updates.userEmail = cfg.userEmail;
+      }
+      if (Object.keys(updates).length > 0) {
+        updateGitConfig(updates);
+      }
+    });
+  }, [activeProject?.id, gitAvailable]); // eslint-disable-line react-hooks/exhaustive-deps
   const [credentialPrompt, setCredentialPrompt] = useState<{
     url: string;
     resolve: (creds: { username: string; password: string } | null) => void;
@@ -153,13 +189,22 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     pushToast, refreshStatus,
   ]);
 
-  const requestCredentials = useCallback((url: string): Promise<{ username: string; password: string } | null> => {
+  const requestCredentials = useCallback(async (url: string): Promise<{ username: string; password: string } | null> => {
+    // Use stored credentials if available
+    const [storedUser, storedToken] = await Promise.all([
+      platform.getCredential('git-username'),
+      platform.getCredential('git-token'),
+    ]);
+    if (storedUser && storedToken) {
+      return { username: storedUser, password: storedToken };
+    }
+    // Fall back to interactive dialog
     return new Promise((resolve) => {
       setCredUsername('');
       setCredPassword('');
       setCredentialPrompt({ url, resolve });
     });
-  }, []);
+  }, [platform]);
 
   const handlePush = useCallback(async () => {
     if (!gitAvailable) return;
@@ -451,8 +496,48 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
                 }}
               />
             </div>
+
+            <div style={styles.settingsDivider} />
+
+            <div style={styles.settingsSectionTitle}>Push / Pull credentials</div>
             <div style={styles.settingsGroup}>
-              <label style={styles.settingsLabel}>Author name</label>
+              <label style={styles.settingsLabel}>GitHub username</label>
+              <input
+                style={styles.settingsInput}
+                type="text"
+                placeholder="your-github-username"
+                value={gitUsername}
+                onChange={(e) => setGitUsername(e.target.value)}
+                onBlur={async () => {
+                  const u = gitUsername.trim();
+                  await platform.storeCredential('git-username', u);
+                }}
+              />
+            </div>
+            <div style={styles.settingsGroup}>
+              <label style={styles.settingsLabel}>Password / token</label>
+              <input
+                style={styles.settingsInput}
+                type="password"
+                placeholder="ghp_…"
+                value={gitToken}
+                onChange={(e) => setGitToken(e.target.value)}
+                onBlur={async () => {
+                  const t = gitToken.trim();
+                  await platform.storeCredential('git-token', t);
+                }}
+              />
+            </div>
+            <div style={styles.settingsHint}>
+              Stored credentials are used automatically for push and pull.
+              Use a GitHub personal access token for best results.
+            </div>
+
+            <div style={styles.settingsDivider} />
+
+            <div style={styles.settingsSectionTitle}>Commit author</div>
+            <div style={styles.settingsGroup}>
+              <label style={styles.settingsLabel}>Name</label>
               <input
                 style={styles.settingsInput}
                 type="text"
@@ -468,7 +553,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
               />
             </div>
             <div style={styles.settingsGroup}>
-              <label style={styles.settingsLabel}>Author email</label>
+              <label style={styles.settingsLabel}>Email</label>
               <input
                 style={styles.settingsInput}
                 type="email"
@@ -482,10 +567,6 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
                   }
                 }}
               />
-            </div>
-            <div style={styles.settingsHint}>
-              Author name and email are used for git commits.
-              Leave blank to use the platform default.
             </div>
           </div>
         </div>
@@ -581,7 +662,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     background: '#080f1a',
     borderTop: '1px solid #1e293b',
-    height: 280,
+    height: 320,
     flexShrink: 0,
     overflow: 'hidden',
   },
@@ -824,6 +905,19 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box' as const,
+  },
+  settingsDivider: {
+    borderTop: '1px solid #1e293b',
+    margin: '4px 0',
+  },
+  settingsSectionTitle: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    color: '#475569',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: -4,
   },
   settingsHint: {
     fontSize: 10,

@@ -34,6 +34,9 @@ const electronAPI = {
   gitSetRemote: (repoPath: string, url: string) =>
     ipcRenderer.invoke('platform:gitSetRemote', repoPath, url),
 
+  gitReadConfig: (repoPath: string) =>
+    ipcRenderer.invoke('platform:gitReadConfig', repoPath),
+
   gitStatus: (repoPath: string) =>
     ipcRenderer.invoke('platform:gitStatus', repoPath),
 

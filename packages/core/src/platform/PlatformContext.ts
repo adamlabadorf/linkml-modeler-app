@@ -81,6 +81,8 @@ export interface PlatformAPI {
   gitCreateRepo(dirPath: string): Promise<boolean>;
   /** Set or replace the `origin` remote URL for the repo at repoPath. */
   gitSetRemote(repoPath: string, url: string): Promise<void>;
+  /** Read remote.origin.url, user.name, and user.email from the git config. */
+  gitReadConfig(repoPath: string): Promise<{ remoteUrl?: string; userName?: string; userEmail?: string }>;
   gitStatus(repoPath: string): Promise<GitStatus | null>;
   gitStage(repoPath: string, paths: string[]): Promise<void>;
   gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null>;

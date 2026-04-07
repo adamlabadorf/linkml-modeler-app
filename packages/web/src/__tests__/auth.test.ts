@@ -32,6 +32,7 @@ function makeMockPlatform() {
     initGit: vi.fn(async () => false),
     gitCreateRepo: vi.fn(async () => false),
     gitSetRemote: vi.fn(async () => {}),
+    gitReadConfig: vi.fn(async () => ({})),
     getProjectsPath: vi.fn(async () => '/projects'),
     gitStatus: vi.fn(),
     gitStage: vi.fn(),
