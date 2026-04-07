@@ -468,7 +468,10 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
       <FieldRow label="is_a">
         <FilteredGroupedSelect
           value={classDef.isA ?? ''}
-          onChange={(v) => update({ isA: v || undefined })}
+          onChange={(v) => {
+            if (v) autoAddImportForRange(schemaId, v);
+            update({ isA: v || undefined });
+          }}
           groups={isAOptionGroups}
           placeholder="(none)"
         />

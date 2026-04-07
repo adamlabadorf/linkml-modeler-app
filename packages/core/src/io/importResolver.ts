@@ -276,6 +276,8 @@ export function findMissingImport(
     if (currentImportPaths.has(schema.filePath)) continue;
 
     if (rangeName in schema.schema.classes || rangeName in schema.schema.enums) {
+      // URL-imported schemas: return the URL as-is (makeRelativeImport would mangle it)
+      if (isUrlImport(schema.filePath)) return schema.filePath;
       // Return the relative import path (without .yaml)
       return makeRelativeImport(activeSchema.filePath, schema.filePath);
     }

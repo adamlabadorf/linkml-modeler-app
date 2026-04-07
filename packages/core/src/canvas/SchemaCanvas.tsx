@@ -241,6 +241,7 @@ function SchemaCanvasInner() {
   const addEnum = useAppStore((s) => s.addEnum);
   const deleteEnum = useAppStore((s) => s.deleteEnum);
   const updateClass = useAppStore((s) => s.updateClass);
+  const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
 
   // Local state
   const [localLayout, setLocalLayout] = useState<CanvasLayout>({
@@ -463,10 +464,14 @@ function SchemaCanvasInner() {
   const onConnect: OnConnect = useCallback(
     (connection) => {
       if (!activeSchemaId || !connection.source || !connection.target) return;
-      // Dragging from child to parent sets is_a
-      updateClass(activeSchemaId, connection.source, { isA: connection.target });
+      // Ghost node IDs are prefixed with 'ghost__'; strip it to get the real class name
+      const targetName = connection.target.startsWith('ghost__')
+        ? connection.target.slice('ghost__'.length)
+        : connection.target;
+      autoAddImportForRange(activeSchemaId, targetName);
+      updateClass(activeSchemaId, connection.source, { isA: targetName });
     },
-    [activeSchemaId, updateClass]
+    [activeSchemaId, updateClass, autoAddImportForRange]
   );
 
   // Context menu on canvas (right-click)
