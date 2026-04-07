@@ -134,11 +134,13 @@ function FilteredGroupedSelect({
   onChange,
   groups,
   placeholder,
+  clearable,
 }: {
   value: string;
   onChange: (v: string) => void;
   groups: OptionGroup[];
   placeholder?: string;
+  clearable?: boolean;
 }) {
   const [filterText, setFilterText] = React.useState('');
   const [isOpen, setIsOpen] = React.useState(false);
@@ -181,6 +183,12 @@ function FilteredGroupedSelect({
 
   const selectOption = (opt: string) => {
     onChange(opt);
+    close();
+  };
+
+  const clearValue = () => {
+    setFilterText('');
+    onChange('');
     close();
   };
 
@@ -235,7 +243,7 @@ function FilteredGroupedSelect({
     if (wrapperRef.current && wrapperRef.current.contains(e.relatedTarget as Node)) return;
     if (!isOpen) return;
     // commit free-typed value on blur
-    if (filterText && filterText !== value) {
+    if (filterText !== value) {
       onChange(filterText);
     }
     close();
@@ -262,7 +270,10 @@ function FilteredGroupedSelect({
   return (
     <div ref={wrapperRef} style={{ position: 'relative' }} tabIndex={-1}>
       <input
-        style={inputStyle}
+        style={{
+          ...inputStyle,
+          ...(clearable && value ? { paddingRight: 22 } : {}),
+        }}
         value={isOpen ? filterText : (value || '')}
         placeholder={placeholder ?? ''}
         onChange={(e) => setFilterText(e.target.value)}
@@ -270,6 +281,37 @@ function FilteredGroupedSelect({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
       />
+      {!!(clearable && value) && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            clearValue();
+          }}
+          title="Clear"
+          style={{
+            position: 'absolute',
+            right: 6,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: 16,
+            height: 16,
+            borderRadius: 3,
+            border: '1px solid #334155',
+            background: '#0f172a',
+            color: '#94a3b8',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontSize: 11,
+            lineHeight: '14px',
+            padding: 0,
+          }}
+          onMouseDown={(e) => e.preventDefault()} // don't steal focus / blur input
+        >
+          ✕
+        </button>
+      )}
       {isOpen && (
         <div
           style={{
@@ -474,6 +516,7 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
           }}
           groups={isAOptionGroups}
           placeholder="(none)"
+          clearable
         />
       </FieldRow>
 
