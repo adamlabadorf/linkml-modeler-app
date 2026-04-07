@@ -211,19 +211,22 @@ function elkResultToLayout(elkNode: ElkNode): CanvasLayout {
     viewport: { x: 0, y: 0, zoom: 1 },
   };
 
-  function extractPositions(node: ElkNode, offsetX: number, offsetY: number) {
+  function extractPositions(node: ElkNode, offsetX: number, offsetY: number, insideGroup: boolean) {
     for (const child of node.children ?? []) {
-      const absX = (child.x ?? 0) + offsetX;
-      const absY = (child.y ?? 0) + offsetY;
-      layout.nodes[child.id] = { x: absX, y: absY };
-      // Recurse into compound nodes to get ghost children's absolute positions
+      const relX = child.x ?? 0;
+      const relY = child.y ?? 0;
+      const absX = relX + offsetX;
+      const absY = relY + offsetY;
+      // Ghost children (inside import groups) save relative positions so they move
+      // with the group when it is dragged. All other nodes save absolute positions.
+      layout.nodes[child.id] = insideGroup ? { x: relX, y: relY } : { x: absX, y: absY };
       if (child.children?.length) {
-        extractPositions(child, absX, absY);
+        extractPositions(child, absX, absY, true);
       }
     }
   }
 
-  extractPositions(elkNode, 0, 0);
+  extractPositions(elkNode, 0, 0, false);
   return layout;
 }
 

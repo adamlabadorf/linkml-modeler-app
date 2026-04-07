@@ -199,17 +199,22 @@ export function deriveGraph(
     const groupId = `importGroup__${sourceFile}`;
     const isGroupCollapsed = collapsedGroups[groupId] ?? false;
 
-    // Compute child positions (absolute) — we always compute these so the group
-    // node knows its bounds even when collapsed.
+    // Group's absolute position (saved directly, not derived from children)
     const groupPos = layout.nodes[groupId] ?? gridPosition(gridIndex++);
-    const childPositions: Array<{
+
+    // Compute children with RELATIVE positions (relative to group top-left).
+    // Saved layout stores ghost positions as relative; defaults use the inner grid.
+    const childEntries: Array<{
       ghostId: string;
       entity: ImportedEntity;
-      absX: number;
-      absY: number;
+      relX: number;
+      relY: number;
       w: number;
       h: number;
     }> = [];
+
+    let maxRelX = 0;
+    let maxRelY = GROUP_HEADER + GROUP_PADDING;
 
     for (let i = 0; i < entities.length; i++) {
       const entity = entities[i];
@@ -217,34 +222,18 @@ export function deriveGraph(
       const w = entity.type === 'class' ? CLASS_NODE_WIDTH : ENUM_NODE_WIDTH;
       const h = entity.type === 'class' ? CLASS_NODE_HEIGHT : ENUM_NODE_HEIGHT;
 
-      // Check if the ghost has a saved layout position (absolute)
+      // Saved position is relative to the group
       const savedPos = layout.nodes[ghostId];
-      let absX: number;
-      let absY: number;
+      const relX = savedPos?.x ?? groupChildPosition(i).x;
+      const relY = savedPos?.y ?? groupChildPosition(i).y;
 
-      if (savedPos) {
-        absX = savedPos.x;
-        absY = savedPos.y;
-      } else {
-        // Place inside the group using internal grid
-        const inner = groupChildPosition(i);
-        absX = groupPos.x + inner.x;
-        absY = groupPos.y + inner.y;
-      }
-
-      childPositions.push({ ghostId, entity, absX, absY, w, h });
+      childEntries.push({ ghostId, entity, relX, relY, w, h });
+      maxRelX = Math.max(maxRelX, relX + w);
+      maxRelY = Math.max(maxRelY, relY + h);
     }
 
-    // Compute group bounds from children
-    const minX = Math.min(...childPositions.map((c) => c.absX));
-    const minY = Math.min(...childPositions.map((c) => c.absY));
-    const maxX = Math.max(...childPositions.map((c) => c.absX + c.w));
-    const maxY = Math.max(...childPositions.map((c) => c.absY + c.h));
-
-    const groupX = minX - GROUP_PADDING;
-    const groupY = minY - GROUP_HEADER - GROUP_PADDING;
-    const groupWidth = maxX - minX + 2 * GROUP_PADDING;
-    const expandedHeight = maxY - minY + GROUP_HEADER + 2 * GROUP_PADDING;
+    const groupWidth = maxRelX + GROUP_PADDING;
+    const expandedHeight = maxRelY + GROUP_PADDING;
     const collapsedHeight = GROUP_HEADER + GROUP_PADDING;
 
     // Create group background node (inserted at beginning for lower z-index)
@@ -260,20 +249,21 @@ export function deriveGraph(
     nodes.unshift({
       id: groupId,
       type: 'importGroupNode',
-      position: { x: groupX, y: groupY },
+      position: { x: groupPos.x, y: groupPos.y },
       data: groupData as unknown as CanvasNodeData,
       style: {
         width: groupWidth,
         height: isGroupCollapsed ? collapsedHeight : expandedHeight,
       },
       zIndex: -1,
-      draggable: false,
+      draggable: true,
       selectable: true,
     });
 
-    // Only add child nodes and their edges when the group is expanded
+    // Only add child nodes when the group is expanded.
+    // Children use parentId so they move with the group and positions are relative.
     if (!isGroupCollapsed) {
-      for (const child of childPositions) {
+      for (const child of childEntries) {
         existingIds.add(child.ghostId);
         allGhostIds.add(child.ghostId);
 
@@ -288,7 +278,9 @@ export function deriveGraph(
           nodes.push({
             id: child.ghostId,
             type: 'classNode',
-            position: { x: child.absX, y: child.absY },
+            parentId: groupId,
+            expandParent: false,
+            position: { x: child.relX, y: child.relY },
             data: nodeData as unknown as CanvasNodeData,
             width: CLASS_NODE_WIDTH,
             height: CLASS_NODE_HEIGHT,
@@ -304,7 +296,9 @@ export function deriveGraph(
           nodes.push({
             id: child.ghostId,
             type: 'enumNode',
-            position: { x: child.absX, y: child.absY },
+            parentId: groupId,
+            expandParent: false,
+            position: { x: child.relX, y: child.relY },
             data: nodeData as unknown as CanvasNodeData,
             width: ENUM_NODE_WIDTH,
             height: ENUM_NODE_HEIGHT,
