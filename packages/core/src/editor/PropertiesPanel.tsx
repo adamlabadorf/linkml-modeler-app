@@ -1129,7 +1129,7 @@ export function PropertiesPanel() {
   }
 
   return (
-    <div style={{ ...styles.panel, width: propertiesPanelWidth }}>
+    <div id="lme-properties-panel" style={{ ...styles.panel, width: propertiesPanelWidth }}>
       {/* Panel header */}
       <div style={styles.panelHeader}>
         <span style={styles.panelTitle}>Properties</span>

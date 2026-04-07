@@ -652,7 +652,7 @@ function SchemaCanvasInner() {
   }
 
   return (
-    <div style={styles.canvasWrapper} onClick={() => contextMenu && setContextMenu(null)}>
+    <div id="lme-canvas-wrapper" style={styles.canvasWrapper} onClick={() => contextMenu && setContextMenu(null)}>
       <EdgeMarkerDefs />
       <ReactFlow
         nodes={displayNodes}
@@ -696,8 +696,9 @@ function SchemaCanvasInner() {
       </ReactFlow>
 
       {/* Toolbar */}
-      <div style={styles.toolbar}>
+      <div id="lme-canvas-toolbar" style={styles.toolbar}>
         <button
+          id="lme-canvas-add-class"
           style={styles.toolbarBtn}
           onClick={() => handleAddClass({ x: 100, y: 100 })}
           title="Add Class"
@@ -705,13 +706,14 @@ function SchemaCanvasInner() {
           ⬡ + Class
         </button>
         <button
+          id="lme-canvas-add-enum"
           style={styles.toolbarBtn}
           onClick={() => handleAddEnum({ x: 400, y: 100 })}
           title="Add Enum"
         >
           ◈ + Enum
         </button>
-        <button style={styles.toolbarBtn} onClick={handleAutoLayout} title="Auto Layout (Ctrl+Shift+L)">
+        <button id="lme-canvas-layout" style={styles.toolbarBtn} onClick={handleAutoLayout} title="Auto Layout (Ctrl+Shift+L)">
           ⬡ Layout
         </button>
       </div>

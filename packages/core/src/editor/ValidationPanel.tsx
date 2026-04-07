@@ -230,7 +230,7 @@ export function ValidationPanel() {
 
   if (!validationPanelOpen) {
     return (
-      <div style={styles.collapsedBar} onClick={() => setValidationPanelOpen(true)}>
+      <div id="lme-validation-panel" style={styles.collapsedBar} onClick={() => setValidationPanelOpen(true)}>
         <span style={styles.collapsedLabel}>Validation</span>
         {counts.error > 0 && (
           <span style={{ ...styles.collapsedBadge, background: SEVERITY_COLOR.error }}>
@@ -247,7 +247,7 @@ export function ValidationPanel() {
   }
 
   return (
-    <div style={styles.panel}>
+    <div id="lme-validation-panel" style={styles.panel}>
       {/* Header */}
       <div style={styles.panelHeader}>
         <span style={styles.panelTitle}>Validation</span>
