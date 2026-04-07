@@ -64,7 +64,7 @@ export async function openProjectFromDirectory(
     ? applyManifestToSchemas(allSchemas, manifest)
     : { schemas: allSchemas, hiddenSchemaIds: new Set<string>() };
 
-  const dirName = dirPath.split('/').filter(Boolean).pop() ?? 'Untitled Project';
+  const dirName = dirPath.split(/[\\/]/).filter(Boolean).pop() ?? 'Untitled Project';
 
   const project: Project = {
     id: crypto.randomUUID(),
