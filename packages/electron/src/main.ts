@@ -350,12 +350,12 @@ function registerIpcHandlers(): void {
       let creds = credentialCache.get(remoteUrl);
 
       if (!creds) {
-        // Try keytar
+        // Try keytar using the same service/key that storeCredential writes
         try {
           const keytar = await import('keytar').catch(() => null);
           if (keytar) {
-            const username = await keytar.findPassword(`linkml-editor:username:${remoteUrl}`) ?? undefined;
-            const password = await keytar.findPassword(`linkml-editor:${remoteUrl}`) ?? undefined;
+            const username = await keytar.getPassword('linkml-modeler', 'git-username') ?? undefined;
+            const password = await keytar.getPassword('linkml-modeler', 'git-token') ?? undefined;
             if (username && password) {
               creds = { username, password };
               credentialCache.set(remoteUrl, creds);
@@ -396,8 +396,8 @@ function registerIpcHandlers(): void {
         try {
           const keytar = await import('keytar').catch(() => null);
           if (keytar) {
-            const username = await keytar.findPassword(`linkml-editor:username:${remoteUrl}`) ?? undefined;
-            const password = await keytar.findPassword(`linkml-editor:${remoteUrl}`) ?? undefined;
+            const username = await keytar.getPassword('linkml-modeler', 'git-username') ?? undefined;
+            const password = await keytar.getPassword('linkml-modeler', 'git-token') ?? undefined;
             if (username && password) {
               creds = { username, password };
               credentialCache.set(remoteUrl, creds);
