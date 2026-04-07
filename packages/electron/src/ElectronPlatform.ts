@@ -25,9 +25,11 @@ type ElectronBridge = {
   writeFile(path: string, content: string): Promise<void>;
   listDirectory(path: string): Promise<DirEntry[]>;
   gitAvailable(repoPath: string): Promise<boolean>;
+  gitCreateRepo(dirPath: string): Promise<boolean>;
+  gitSetRemote(repoPath: string, url: string): Promise<void>;
   gitStatus(repoPath: string): Promise<GitStatus | null>;
   gitStage(repoPath: string, paths: string[]): Promise<void>;
-  gitCommit(repoPath: string, message: string): Promise<string | null>;
+  gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null>;
   gitPush(repoPath: string): Promise<GitPushResult | null>;
   gitPull(repoPath: string): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
@@ -51,6 +53,27 @@ export class ElectronPlatform implements PlatformAPI {
     if (repoPath) {
       this.gitAvailable = await bridge().gitAvailable(repoPath);
     }
+  }
+
+  async initGit(dirPath: string): Promise<boolean> {
+    this.gitAvailable = await bridge().gitAvailable(dirPath);
+    return this.gitAvailable;
+  }
+
+  async gitCreateRepo(dirPath: string): Promise<boolean> {
+    const ok = await bridge().gitCreateRepo(dirPath);
+    if (ok) this.gitAvailable = true;
+    return ok;
+  }
+
+  async gitSetRemote(repoPath: string, url: string): Promise<void> {
+    return bridge().gitSetRemote(repoPath, url);
+  }
+
+  async getProjectsPath(): Promise<string> {
+    const configured = await bridge().getSetting('projects-dir');
+    if (configured) return configured;
+    return '/projects';
   }
 
   async openFile(options?: OpenFileOptions): Promise<FileResult | null> {
@@ -85,8 +108,8 @@ export class ElectronPlatform implements PlatformAPI {
     return bridge().gitStage(repoPath, paths);
   }
 
-  async gitCommit(repoPath: string, message: string): Promise<string | null> {
-    return bridge().gitCommit(repoPath, message);
+  async gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null> {
+    return bridge().gitCommit(repoPath, message, author);
   }
 
   async gitPush(repoPath: string): Promise<GitPushResult | null> {

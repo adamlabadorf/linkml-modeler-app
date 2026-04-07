@@ -50,6 +50,14 @@ export class StubWebPlatform implements PlatformAPI {
     return false;
   }
 
+  async gitCreateRepo(_dirPath: string): Promise<boolean> {
+    return false;
+  }
+
+  async gitSetRemote(_repoPath: string, _url: string): Promise<void> {
+    // no-op in stub
+  }
+
   async getProjectsPath(): Promise<string> {
     return '/projects';
   }
@@ -62,7 +70,7 @@ export class StubWebPlatform implements PlatformAPI {
     // no-op
   }
 
-  async gitCommit(_repoPath: string, _message: string): Promise<string | null> {
+  async gitCommit(_repoPath: string, _message: string, _author?: { name: string; email: string }): Promise<string | null> {
     return null;
   }
 

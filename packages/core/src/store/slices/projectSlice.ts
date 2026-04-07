@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand';
-import type { Project, SchemaFile, LinkMLSchema, ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, CanvasLayout } from '../../model/index.js';
+import type { Project, SchemaFile, LinkMLSchema, ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, CanvasLayout, GitConfig } from '../../model/index.js';
 import { findMissingImport, resolveImportPath } from '../../io/importResolver.js';
 import { addRecentProject } from '../../project/recentProjects.js';
 
@@ -42,6 +42,10 @@ export interface ProjectSlice {
   addPermissibleValue(schemaId: string, enumName: string, value: PermissibleValue): void;
   updatePermissibleValue(schemaId: string, enumName: string, valueText: string, partial: Partial<PermissibleValue>): void;
   deletePermissibleValue(schemaId: string, enumName: string, valueText: string): void;
+
+  // ── Git config ────────────────────────────────────────────────────────────────
+  /** Update git configuration fields on the active project. */
+  updateGitConfig(partial: Partial<GitConfig>): void;
 
   // ── Canvas layout ────────────────────────────────────────────────────────────
   /** Persist the current canvas layout back into the SchemaFile (called on schema switch / save). */
@@ -450,6 +454,25 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
             },
           };
         }),
+      };
+    });
+  },
+
+  // ── Git config ────────────────────────────────────────────────────────────────
+
+  updateGitConfig(partial) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: {
+          ...state.activeProject,
+          gitConfig: {
+            enabled: state.activeProject.gitConfig?.enabled ?? false,
+            defaultBranch: state.activeProject.gitConfig?.defaultBranch ?? 'main',
+            ...state.activeProject.gitConfig,
+            ...partial,
+          },
+        },
       };
     });
   },

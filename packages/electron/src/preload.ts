@@ -28,14 +28,20 @@ const electronAPI = {
   gitAvailable: (repoPath: string) =>
     ipcRenderer.invoke('platform:gitAvailable', repoPath),
 
+  gitCreateRepo: (dirPath: string) =>
+    ipcRenderer.invoke('platform:gitCreateRepo', dirPath),
+
+  gitSetRemote: (repoPath: string, url: string) =>
+    ipcRenderer.invoke('platform:gitSetRemote', repoPath, url),
+
   gitStatus: (repoPath: string) =>
     ipcRenderer.invoke('platform:gitStatus', repoPath),
 
   gitStage: (repoPath: string, paths: string[]) =>
     ipcRenderer.invoke('platform:gitStage', repoPath, paths),
 
-  gitCommit: (repoPath: string, message: string) =>
-    ipcRenderer.invoke('platform:gitCommit', repoPath, message),
+  gitCommit: (repoPath: string, message: string, author?: { name: string; email: string }) =>
+    ipcRenderer.invoke('platform:gitCommit', repoPath, message, author),
 
   gitPush: (repoPath: string) =>
     ipcRenderer.invoke('platform:gitPush', repoPath),

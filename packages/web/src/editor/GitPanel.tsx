@@ -11,7 +11,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAppStore, usePlatform } from '@linkml-editor/core';
 
-type Tab = 'changes' | 'log';
+type Tab = 'changes' | 'log' | 'settings';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,8 +52,21 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
   const setIsPulling = useAppStore((s) => s.setIsPulling);
   const setLastGitError = useAppStore((s) => s.setLastGitError);
   const pushToast = useAppStore((s) => s.pushToast);
+  const setGitAvailable = useAppStore((s) => s.setGitAvailable);
+  const updateGitConfig = useAppStore((s) => s.updateGitConfig);
 
   const [tab, setTab] = useState<Tab>('changes');
+  const [isInitializing, setIsInitializing] = useState(false);
+  // Settings tab local state (mirrors gitConfig, saved on blur/submit)
+  const [remoteUrl, setRemoteUrl] = useState(activeProject?.gitConfig?.remoteUrl ?? '');
+  const [authorName, setAuthorName] = useState(activeProject?.gitConfig?.userName ?? '');
+  const [authorEmail, setAuthorEmail] = useState(activeProject?.gitConfig?.userEmail ?? '');
+  // Sync settings fields when project changes
+  useEffect(() => {
+    setRemoteUrl(activeProject?.gitConfig?.remoteUrl ?? '');
+    setAuthorName(activeProject?.gitConfig?.userName ?? '');
+    setAuthorEmail(activeProject?.gitConfig?.userEmail ?? '');
+  }, [activeProject?.id]);
   const [credentialPrompt, setCredentialPrompt] = useState<{
     url: string;
     resolve: (creds: { username: string; password: string } | null) => void;
@@ -116,7 +129,11 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
       }
 
       await platform.gitStage(repoPath, Array.from(stagedPaths));
-      const oid = await platform.gitCommit(repoPath, commitMessage);
+      const author =
+        activeProject?.gitConfig?.userName && activeProject?.gitConfig?.userEmail
+          ? { name: activeProject.gitConfig.userName, email: activeProject.gitConfig.userEmail }
+          : undefined;
+      const oid = await platform.gitCommit(repoPath, commitMessage, author);
       if (oid) {
         setCommitMessage('');
         clearStaged();
@@ -207,6 +224,26 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
   }
 
   if (!gitAvailable) {
+    const handleInitRepo = async () => {
+      if (!activeProject) return;
+      setIsInitializing(true);
+      try {
+        const ok = await platform.gitCreateRepo(repoPath);
+        if (ok) {
+          setGitAvailable(true);
+          updateGitConfig({ enabled: true, defaultBranch: 'main' });
+          pushToast({ message: 'Git repository initialized', severity: 'success' });
+          await refreshStatus();
+        } else {
+          pushToast({ message: 'Failed to initialize git repository', severity: 'warning' });
+        }
+      } catch (e: unknown) {
+        pushToast({ message: e instanceof Error ? e.message : 'Git init failed', severity: 'warning' });
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
     return (
       <div style={styles.panel}>
         <div style={styles.panelHeader}>
@@ -214,9 +251,14 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
           <button style={styles.closeBtn} onClick={() => setGitPanelOpen(false)}>✕</button>
         </div>
         <div style={styles.noGit}>
-          Git not available for this project.
-          <br />
-          Open a project directory with a .git folder.
+          <div>No git repository found for this project.</div>
+          <button
+            style={{ ...styles.initBtn, ...(isInitializing ? styles.commitBtnDisabled : {}) }}
+            onClick={handleInitRepo}
+            disabled={isInitializing || !activeProject}
+          >
+            {isInitializing ? 'Initializing…' : '⎇ Initialize git repo'}
+          </button>
         </div>
       </div>
     );
@@ -291,6 +333,12 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
           onClick={() => setTab('log')}
         >
           Log ({commitLog.length})
+        </button>
+        <button
+          style={{ ...styles.tab, ...(tab === 'settings' ? styles.tabActive : {}) }}
+          onClick={() => setTab('settings')}
+        >
+          Settings
         </button>
       </div>
 
@@ -378,6 +426,68 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {tab === 'settings' && (
+        <div style={styles.tabContent}>
+          <div style={styles.settingsForm}>
+            <div style={styles.settingsGroup}>
+              <label style={styles.settingsLabel}>Remote URL (origin)</label>
+              <input
+                style={styles.settingsInput}
+                type="text"
+                placeholder="https://github.com/user/repo.git"
+                value={remoteUrl}
+                onChange={(e) => setRemoteUrl(e.target.value)}
+                onBlur={async () => {
+                  const url = remoteUrl.trim();
+                  if (url === (activeProject?.gitConfig?.remoteUrl ?? '')) return;
+                  updateGitConfig({ remoteUrl: url || undefined });
+                  if (url) {
+                    await platform.gitSetRemote(repoPath, url);
+                    pushToast({ message: 'Remote URL updated', severity: 'success' });
+                  }
+                }}
+              />
+            </div>
+            <div style={styles.settingsGroup}>
+              <label style={styles.settingsLabel}>Author name</label>
+              <input
+                style={styles.settingsInput}
+                type="text"
+                placeholder="Your Name"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                onBlur={() => {
+                  const name = authorName.trim();
+                  if (name !== (activeProject?.gitConfig?.userName ?? '')) {
+                    updateGitConfig({ userName: name || undefined });
+                  }
+                }}
+              />
+            </div>
+            <div style={styles.settingsGroup}>
+              <label style={styles.settingsLabel}>Author email</label>
+              <input
+                style={styles.settingsInput}
+                type="email"
+                placeholder="you@example.com"
+                value={authorEmail}
+                onChange={(e) => setAuthorEmail(e.target.value)}
+                onBlur={() => {
+                  const email = authorEmail.trim();
+                  if (email !== (activeProject?.gitConfig?.userEmail ?? '')) {
+                    updateGitConfig({ userEmail: email || undefined });
+                  }
+                }}
+              />
+            </div>
+            <div style={styles.settingsHint}>
+              Author name and email are used for git commits.
+              Leave blank to use the platform default.
+            </div>
+          </div>
         </div>
       )}
 
@@ -666,9 +776,61 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     color: '#475569',
     fontFamily: 'monospace',
-    fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 1.6,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 12,
+  },
+  initBtn: {
+    background: '#1d4ed8',
+    border: '1px solid #2563eb',
+    color: '#fff',
+    borderRadius: 4,
+    padding: '6px 16px',
+    fontSize: 12,
+    cursor: 'pointer',
+    fontFamily: 'monospace',
+    fontWeight: 600,
+  },
+  settingsForm: {
+    padding: '12px 10px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  },
+  settingsGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+  },
+  settingsLabel: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    color: '#64748b',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  settingsInput: {
+    background: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: 4,
+    color: '#e2e8f0',
+    fontSize: 11,
+    padding: '5px 8px',
+    fontFamily: 'monospace',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box' as const,
+  },
+  settingsHint: {
+    fontSize: 10,
+    color: '#475569',
+    fontFamily: 'monospace',
+    fontStyle: 'italic',
+    lineHeight: 1.5,
   },
   fileRow: {
     display: 'flex',

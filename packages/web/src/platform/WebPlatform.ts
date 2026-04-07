@@ -69,6 +69,27 @@ export class WebPlatform implements PlatformAPI {
     return this.gitAvailable;
   }
 
+  async gitCreateRepo(dirPath: string): Promise<boolean> {
+    try {
+      await git.init({ fs, dir: dirPath, defaultBranch: 'main' });
+      this.gitAvailable = true;
+      return true;
+    } catch (e) {
+      console.error('[WebPlatform.gitCreateRepo]', e);
+      return false;
+    }
+  }
+
+  async gitSetRemote(repoPath: string, url: string): Promise<void> {
+    try {
+      // Delete existing origin if present, then re-add
+      try { await git.deleteRemote({ fs, dir: repoPath, remote: 'origin' }); } catch { /* ok */ }
+      await git.addRemote({ fs, dir: repoPath, remote: 'origin', url });
+    } catch (e) {
+      console.error('[WebPlatform.gitSetRemote]', e);
+    }
+  }
+
   async getProjectsPath(): Promise<string> {
     return '/projects';
   }
@@ -268,14 +289,14 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
-  async gitCommit(repoPath: string, message: string): Promise<string | null> {
+  async gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null> {
     if (!this.gitAvailable) return null;
     try {
       const oid = await git.commit({
         fs,
         dir: repoPath,
         message,
-        author: { name: 'LinkML Editor', email: 'editor@linkml.io' },
+        author: author ?? { name: 'LinkML Editor', email: 'editor@linkml.io' },
       });
       return oid;
     } catch (e) {

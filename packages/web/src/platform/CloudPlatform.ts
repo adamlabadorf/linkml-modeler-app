@@ -426,6 +426,14 @@ export class CloudPlatform implements PlatformAPI {
     return this.local.initGit(dirPath);
   }
 
+  async gitCreateRepo(dirPath: string): Promise<boolean> {
+    return this.local.gitCreateRepo(dirPath);
+  }
+
+  async gitSetRemote(repoPath: string, url: string): Promise<void> {
+    return this.local.gitSetRemote(repoPath, url);
+  }
+
   async getProjectsPath(): Promise<string> {
     return this.local.getProjectsPath();
   }
@@ -438,8 +446,8 @@ export class CloudPlatform implements PlatformAPI {
     return this.local.gitStage(repoPath, paths);
   }
 
-  async gitCommit(repoPath: string, message: string): Promise<string | null> {
-    return this.local.gitCommit(repoPath, message);
+  async gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null> {
+    return this.local.gitCommit(repoPath, message, author);
   }
 
   async gitPush(

@@ -216,6 +216,32 @@ function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('platform:gitCreateRepo', async (_event, dirPath: string) => {
+    try {
+      const fs = await getFs();
+      const git = await getGit();
+      await (git as { init: (opts: object) => Promise<void> }).init({ fs: { promises: fs }, dir: dirPath, defaultBranch: 'main' });
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
+  ipcMain.handle('platform:gitSetRemote', async (_event, repoPath: string, url: string) => {
+    try {
+      const fs = await getFs();
+      const git = await getGit();
+      const g = git as {
+        deleteRemote: (opts: object) => Promise<void>;
+        addRemote: (opts: object) => Promise<void>;
+      };
+      try { await g.deleteRemote({ fs: { promises: fs }, dir: repoPath, remote: 'origin' }); } catch { /* ok */ }
+      await g.addRemote({ fs: { promises: fs }, dir: repoPath, remote: 'origin', url });
+    } catch (e) {
+      console.error('[electron:gitSetRemote]', e);
+    }
+  });
+
   ipcMain.handle('platform:gitStatus', async (_event, repoPath: string) => {
     try {
       const fs = await getFs();
@@ -262,7 +288,7 @@ function registerIpcHandlers(): void {
     }
   });
 
-  ipcMain.handle('platform:gitCommit', async (_event, repoPath: string, message: string) => {
+  ipcMain.handle('platform:gitCommit', async (_event, repoPath: string, message: string, author?: { name: string; email: string }) => {
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -271,12 +297,14 @@ function registerIpcHandlers(): void {
         commit: (opts: object) => Promise<string>;
       };
 
-      let authorName = 'LinkML Editor';
-      let authorEmail = 'editor@linkml.io';
-      try {
-        authorName = await g.getConfig({ fs: { promises: fs }, dir: repoPath, path: 'user.name' }) ?? authorName;
-        authorEmail = await g.getConfig({ fs: { promises: fs }, dir: repoPath, path: 'user.email' }) ?? authorEmail;
-      } catch { /* use defaults */ }
+      let authorName = author?.name ?? 'LinkML Editor';
+      let authorEmail = author?.email ?? 'editor@linkml.io';
+      if (!author) {
+        try {
+          authorName = await g.getConfig({ fs: { promises: fs }, dir: repoPath, path: 'user.name' }) ?? authorName;
+          authorEmail = await g.getConfig({ fs: { promises: fs }, dir: repoPath, path: 'user.email' }) ?? authorEmail;
+        } catch { /* use defaults */ }
+      }
 
       return await g.commit({
         fs: { promises: fs },

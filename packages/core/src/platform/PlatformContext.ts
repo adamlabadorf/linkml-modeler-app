@@ -77,9 +77,13 @@ export interface PlatformAPI {
   // Git — all methods no-op / return null when git unavailable
   /** Detect whether a git repo exists at dirPath and update internal gitAvailable state. Returns true if found. */
   initGit(dirPath: string): Promise<boolean>;
+  /** Create a new git repository at dirPath (git init). Returns true on success. */
+  gitCreateRepo(dirPath: string): Promise<boolean>;
+  /** Set or replace the `origin` remote URL for the repo at repoPath. */
+  gitSetRemote(repoPath: string, url: string): Promise<void>;
   gitStatus(repoPath: string): Promise<GitStatus | null>;
   gitStage(repoPath: string, paths: string[]): Promise<void>;
-  gitCommit(repoPath: string, message: string): Promise<string | null>;
+  gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null>;
   gitPush(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
   gitPull(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
