@@ -268,7 +268,7 @@ export function deriveGraph(
       },
       zIndex: -1,
       draggable: false,
-      selectable: false,
+      selectable: true,
     });
 
     // Only add child nodes and their edges when the group is expanded
@@ -292,7 +292,6 @@ export function deriveGraph(
             data: nodeData as unknown as CanvasNodeData,
             width: CLASS_NODE_WIDTH,
             height: CLASS_NODE_HEIGHT,
-            draggable: false,
           });
         } else {
           const nodeData: EnumNodeData = {
@@ -309,7 +308,6 @@ export function deriveGraph(
             data: nodeData as unknown as CanvasNodeData,
             width: ENUM_NODE_WIDTH,
             height: ENUM_NODE_HEIGHT,
-            draggable: false,
           });
         }
       }

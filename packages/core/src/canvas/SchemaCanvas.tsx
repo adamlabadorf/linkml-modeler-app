@@ -221,6 +221,7 @@ function SchemaCanvasInner() {
   const updateNodePosition = useAppStore((s) => s.updateNodePosition);
   const setViewport = useAppStore((s) => s.setViewport);
   const toggleNodeCollapsed = useAppStore((s) => s.toggleNodeCollapsed);
+  const collapsedGroups = useAppStore((s) => s.collapsedGroups);
   const storeNodes = useAppStore((s) => s.nodes);
   const storeEdges = useAppStore((s) => s.edges);
   const viewport = useAppStore((s) => s.viewport);
@@ -266,7 +267,6 @@ function SchemaCanvasInner() {
   }, [activeSchemaId, updateCanvasLayout]);
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ name: string; type: 'class' | 'enum' } | null>(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   const activeSchemaFile = useMemo(
     () => activeProject?.schemas.find((s) => s.id === activeSchemaId),
@@ -411,15 +411,10 @@ function SchemaCanvasInner() {
     [setViewport, scheduleManifestWrite]
   );
 
-  // Double-click → collapse/expand (handles both entity nodes and import groups)
+  // Double-click → collapse/expand entity nodes (import groups handle their own click)
   const onNodeDoubleClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
-      if (node.type === 'importGroupNode') {
-        setCollapsedGroups((prev) => ({
-          ...prev,
-          [node.id]: !prev[node.id],
-        }));
-      } else {
+      if (node.type !== 'importGroupNode') {
         toggleNodeCollapsed(node.id);
       }
     },
