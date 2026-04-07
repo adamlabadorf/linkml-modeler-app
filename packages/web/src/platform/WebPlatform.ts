@@ -29,9 +29,14 @@ const fs = new LightningFS('linkml-editor-fs');
 const pfs = fs.promises;
 
 // GitHub (and most git hosts) don't set CORS headers, so browser fetch() is
-// blocked. Route all remote git operations through this CORS proxy.
+// blocked. Route all remote git operations through a CORS proxy.
 // See: https://isomorphic-git.org/docs/en/cors_proxy
-const CORS_PROXY = 'https://cors.isomorphic-git.org';
+//
+// Set VITE_GIT_CORS_PROXY at build time to your own proxy (recommended for
+// production). Falls back to the public proxy for quick testing only.
+const CORS_PROXY: string =
+  (import.meta.env.VITE_GIT_CORS_PROXY as string | undefined) ??
+  'https://cors.isomorphic-git.org';
 
 // ── FSAA availability ─────────────────────────────────────────────────────────
 const FSAA_AVAILABLE =

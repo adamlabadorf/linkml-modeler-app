@@ -1,0 +1,38 @@
+# Web deployment: nginx serving the Vite build + isomorphic-git CORS proxy.
+#
+# Pre-requisite: build the web app with the proxy URL baked in:
+#
+#   VITE_GIT_CORS_PROXY=https://your-domain.com/cors-proxy \
+#     pnpm --filter @linkml-editor/web build
+#
+# For local testing use http://localhost/cors-proxy (nginx proxies it) or
+# point directly at the proxy port: http://localhost:9999
+#
+# Run from the repo root:
+#   docker compose -f deploy/web/docker-compose.yml up --build
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/web/Dockerfile.web
+    ports:
+      - "80:80"
+    depends_on:
+      - proxy
+    restart: unless-stopped
+
+  proxy:
+    build:
+      context: ../../packages/proxy
+    environment:
+      - PORT=9999
+      # Restrict to your app's domain in production, e.g.:
+      # ALLOW_ORIGIN=https://your-domain.com
+      - ALLOW_ORIGIN=*
+    restart: unless-stopped
+    # The proxy is intentionally not exposed on a host port — nginx reverse
+    # proxies /cors-proxy/ to it so it's reachable on the same origin.
+    # Uncomment to expose it directly for debugging:
+    # ports:
+    #   - "9999:9999"

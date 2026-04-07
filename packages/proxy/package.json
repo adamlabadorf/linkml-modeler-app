@@ -1,0 +1,15 @@
+{
+  "name": "@linkml-editor/cors-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CORS proxy for isomorphic-git browser git operations",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@isomorphic-git/cors-proxy": "^2.7.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
