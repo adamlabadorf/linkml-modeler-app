@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
   resolve: {
     alias: {
       '@linkml-editor/core': resolve(__dirname, '../core/src/index.ts'),
+      // Provide browser-compatible Buffer polyfill for both web and electron builds
+      buffer: resolve(__dirname, 'node_modules/buffer/index.js'),
     },
   },
   build: {
