@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const isElectron = mode === 'electron';
 
   return {
-  base: isElectron ? './' : '/',
+  base: isElectron ? './' : (process.env.VITE_BASE_URL ?? '/'),
   plugins: [react()],
   resolve: {
     alias: {

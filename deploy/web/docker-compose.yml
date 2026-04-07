@@ -1,9 +1,19 @@
 # Web deployment: nginx serving the Vite build + isomorphic-git CORS proxy.
 #
-# Pre-requisite: build the web app with the proxy URL baked in:
+# Pre-requisite: build the web app with the proxy URL and base path baked in:
 #
+#   VITE_BASE_URL=/ \
 #   VITE_GIT_CORS_PROXY=https://your-domain.com/cors-proxy \
 #     pnpm --filter @linkml-editor/web build
+#
+# To serve under a subpath (e.g. /linkml-editor/) set BASE_PATH and
+# VITE_BASE_URL to the same value at build time:
+#
+#   VITE_BASE_URL=/linkml-editor/ \
+#   VITE_GIT_CORS_PROXY=https://your-domain.com/linkml-editor/cors-proxy \
+#     pnpm --filter @linkml-editor/web build
+#
+#   BASE_PATH=/linkml-editor/ docker compose -f deploy/web/docker-compose.yml up --build
 #
 # For local testing use http://localhost/cors-proxy (nginx proxies it) or
 # point directly at the proxy port: http://localhost:9999
@@ -16,6 +26,9 @@ services:
     build:
       context: ../..
       dockerfile: deploy/web/Dockerfile.web
+      args:
+        # Must match the VITE_BASE_URL used when building the web package.
+        BASE_PATH: ${BASE_PATH:-/}
     ports:
       - "80:80"
     depends_on:

@@ -78,6 +78,64 @@ pnpm --filter @linkml-editor/web preview
 
 The `packages/web/dist/` directory is a self-contained static site — deploy it to any web server or CDN.
 
+### Deploying the web build with Docker
+
+A Docker Compose stack (nginx + CORS proxy) is provided under `deploy/web/`.
+
+```bash
+# Build the web package (root path, default)
+VITE_GIT_CORS_PROXY=https://your-domain.com/cors-proxy \
+  pnpm --filter @linkml-editor/web build
+
+# Start the stack
+docker compose -f deploy/web/docker-compose.yml up --build
+```
+
+The app is served on port 80. The CORS proxy is reachable at `/cors-proxy/` on the same origin.
+
+### Serving behind a reverse proxy at a subpath
+
+When your reverse proxy routes the app under a URL prefix (e.g. `https://your-domain.com/linkml-editor/`), two values must agree: the Vite asset base and the nginx location prefix. Both are controlled at **build time**.
+
+**Step 1 — build the web package with `VITE_BASE_URL` set:**
+
+```bash
+VITE_BASE_URL=/linkml-editor/ \
+VITE_GIT_CORS_PROXY=https://your-domain.com/linkml-editor/cors-proxy \
+  pnpm --filter @linkml-editor/web build
+```
+
+`VITE_BASE_URL` must end with `/`. It controls the `<script>` and `<link>` src attributes emitted in `index.html` so browsers fetch assets from the right path.
+
+**Step 2 — build and start Docker with `BASE_PATH` set to the same value:**
+
+```bash
+BASE_PATH=/linkml-editor/ \
+  docker compose -f deploy/web/docker-compose.yml up --build
+```
+
+`BASE_PATH` is passed as a Docker build arg and written into the nginx config. It must match `VITE_BASE_URL` exactly.
+
+**Configuration summary:**
+
+| Variable | Where used | Example |
+|---|---|---|
+| `VITE_BASE_URL` | `pnpm build` env (baked into `index.html`) | `/linkml-editor/` |
+| `VITE_GIT_CORS_PROXY` | `pnpm build` env (baked into JS bundle) | `https://your-domain.com/linkml-editor/cors-proxy` |
+| `BASE_PATH` | `docker compose` env → Docker build arg → nginx config | `/linkml-editor/` |
+
+**Reverse proxy config (example nginx upstream):**
+
+```nginx
+location /linkml-editor/ {
+    proxy_pass http://your-docker-host:80/linkml-editor/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
 ### Running the Electron production build
 
 ```bash

@@ -1,12 +1,22 @@
 # Serves the pre-built web app via nginx.
+#
+# Build args:
+#   BASE_PATH  — URL path prefix the app is served under (default: /).
+#                Must match the VITE_BASE_URL used when building the web package.
+#                Example: /linkml-editor/
+#
 # Build the web package first:
-#   VITE_GIT_CORS_PROXY=https://your-domain.com/cors-proxy \
+#   VITE_BASE_URL=/linkml-editor/ \
+#   VITE_GIT_CORS_PROXY=https://your-domain.com/linkml-editor/cors-proxy \
 #     pnpm --filter @linkml-editor/web build
 #
 # Then run from the repo root:
-#   docker compose -f deploy/web/docker-compose.yml up
+#   BASE_PATH=/linkml-editor/ docker compose -f deploy/web/docker-compose.yml up --build
 
 FROM nginx:alpine
+ARG BASE_PATH=/
 COPY packages/web/dist /usr/share/nginx/html
 COPY deploy/web/nginx.conf /etc/nginx/conf.d/default.conf
+# Substitute __BASE_PATH__ placeholder; use | as delimiter to handle / safely
+RUN sed -i "s|__BASE_PATH__|${BASE_PATH}|g" /etc/nginx/conf.d/default.conf
 EXPOSE 80
