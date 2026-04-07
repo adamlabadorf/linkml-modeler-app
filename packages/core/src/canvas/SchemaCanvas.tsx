@@ -274,6 +274,8 @@ function SchemaCanvasInner() {
     [activeProject, activeSchemaId]
   );
 
+  const isReadOnly = activeSchemaFile?.isReadOnly ?? false;
+
   // Collect only referenced imported entities (not all entities from imported schemas)
   const ghostEntities = useMemo(
     () =>
@@ -463,7 +465,7 @@ function SchemaCanvasInner() {
   // Connect (drag handle-to-handle) → create is_a relationship
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      if (!activeSchemaId || !connection.source || !connection.target) return;
+      if (isReadOnly || !activeSchemaId || !connection.source || !connection.target) return;
       // Ghost node IDs are prefixed with 'ghost__'; strip it to get the real class name
       const targetName = connection.target.startsWith('ghost__')
         ? connection.target.slice('ghost__'.length)
@@ -471,23 +473,25 @@ function SchemaCanvasInner() {
       autoAddImportForRange(activeSchemaId, targetName);
       updateClass(activeSchemaId, connection.source, { isA: targetName });
     },
-    [activeSchemaId, updateClass, autoAddImportForRange]
+    [isReadOnly, activeSchemaId, updateClass, autoAddImportForRange]
   );
 
   // Context menu on canvas (right-click)
   const onPaneContextMenu = useCallback(
     (event: React.MouseEvent) => {
       event.preventDefault();
+      if (isReadOnly) return;
       const canvasPos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
       setContextMenu({ x: event.clientX, y: event.clientY, canvasPos });
     },
-    [screenToFlowPosition]
+    [isReadOnly, screenToFlowPosition]
   );
 
   // Context menu on node
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
       event.preventDefault();
+      if (isReadOnly) return;
       const canvasPos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
       setContextMenu({
         x: event.clientX,
@@ -497,7 +501,7 @@ function SchemaCanvasInner() {
         nodeType: node.type,
       });
     },
-    [screenToFlowPosition]
+    [isReadOnly, screenToFlowPosition]
   );
 
   // Add class at position
@@ -587,10 +591,12 @@ function SchemaCanvasInner() {
 
       // Delete selected entity
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (activeEntity?.type === 'class') {
-          setDeleteTarget({ name: activeEntity.className, type: 'class' });
-        } else if (activeEntity?.type === 'enum') {
-          setDeleteTarget({ name: activeEntity.enumName, type: 'enum' });
+        if (!isReadOnly) {
+          if (activeEntity?.type === 'class') {
+            setDeleteTarget({ name: activeEntity.className, type: 'class' });
+          } else if (activeEntity?.type === 'enum') {
+            setDeleteTarget({ name: activeEntity.enumName, type: 'enum' });
+          }
         }
         return;
       }
@@ -702,24 +708,35 @@ function SchemaCanvasInner() {
 
       {/* Toolbar */}
       <div style={styles.toolbar}>
-        <button
-          style={styles.toolbarBtn}
-          onClick={() => handleAddClass({ x: 100, y: 100 })}
-          title="Add Class"
-        >
-          ⬡ + Class
-        </button>
-        <button
-          style={styles.toolbarBtn}
-          onClick={() => handleAddEnum({ x: 400, y: 100 })}
-          title="Add Enum"
-        >
-          ◈ + Enum
-        </button>
+        {!isReadOnly && (
+          <>
+            <button
+              style={styles.toolbarBtn}
+              onClick={() => handleAddClass({ x: 100, y: 100 })}
+              title="Add Class"
+            >
+              ⬡ + Class
+            </button>
+            <button
+              style={styles.toolbarBtn}
+              onClick={() => handleAddEnum({ x: 400, y: 100 })}
+              title="Add Enum"
+            >
+              ◈ + Enum
+            </button>
+          </>
+        )}
         <button style={styles.toolbarBtn} onClick={handleAutoLayout} title="Auto Layout (Ctrl+Shift+L)">
           ⬡ Layout
         </button>
       </div>
+
+      {/* Read-only banner */}
+      {isReadOnly && (
+        <div style={styles.readOnlyBanner}>
+          Read Only — imported schema
+        </div>
+      )}
 
       {/* Focus mode banner */}
       {focusMode && (
@@ -820,6 +837,22 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'monospace',
     cursor: 'pointer',
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+  },
+  readOnlyBanner: {
+    position: 'absolute',
+    top: 12,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: '#1a1a2e',
+    border: '1px solid #475569',
+    borderRadius: 6,
+    padding: '5px 14px',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: '#64748b',
+    zIndex: 10,
+    pointerEvents: 'none' as const,
+    letterSpacing: 0.5,
   },
   focusBanner: {
     position: 'absolute',

@@ -1,12 +1,9 @@
 /**
- * ProjectPanel — tree view of schema files in the active project.
+ * ProjectPanel — two-section tree view of the active project.
  *
- * Shows each schema file with:
- * - File name (basename of filePath)
- * - Class count / enum count
- * - Dirty indicator (●)
- * - Read-only badge for imported schemas
- * - Click to switch active schema
+ * Top section:    Local schema files editable in this project.
+ * Bottom section: External schemas transitively imported by the project
+ *                 (isReadOnly). Clicking them opens them in read-only canvas view.
  */
 import React, { useState } from 'react';
 import { useAppStore } from '../store/index.js';
@@ -15,7 +12,20 @@ import { buildManifestData, writeEditorManifest } from '../io/editorManifest.js'
 import { EntitySearchPanel } from './EntitySearchPanel.js';
 
 function basename(filePath: string): string {
-  return filePath.split('/').pop() ?? filePath;
+  // Handle both / and \ separators, and strip trailing slashes
+  return filePath.replace(/\\/g, '/').split('/').filter(Boolean).pop() ?? filePath;
+}
+
+function shortSource(sf: { filePath: string; sourceUrl?: string }): string {
+  const src = sf.sourceUrl ?? sf.filePath;
+  // Shorten URLs: just show host + last path segment
+  try {
+    const url = new URL(src);
+    const last = url.pathname.split('/').filter(Boolean).pop() ?? '';
+    return `${url.hostname}/…/${last}`;
+  } catch {
+    return basename(src);
+  }
 }
 
 export function ProjectPanel() {
@@ -27,18 +37,23 @@ export function ProjectPanel() {
   const hiddenSchemaIds = useAppStore((s) => s.hiddenSchemaIds);
   const setSchemaVisible = useAppStore((s) => s.setSchemaVisible);
   const [searchMode, setSearchMode] = useState(false);
+  const [importsCollapsed, setImportsCollapsed] = useState(false);
 
   const handleToggleVisibility = (e: React.MouseEvent, schemaId: string) => {
     e.stopPropagation();
     const isCurrentlyHidden = hiddenSchemaIds.has(schemaId);
     setSchemaVisible(schemaId, isCurrentlyHidden);
     if (!activeProject) return;
-    // Write manifest immediately — visibility change is low-frequency
     const nextHidden = new Set(hiddenSchemaIds);
     if (isCurrentlyHidden) nextHidden.delete(schemaId);
     else nextHidden.add(schemaId);
     const manifest = buildManifestData(activeProject, null, null, nextHidden);
     writeEditorManifest(platform, activeProject.rootPath, manifest);
+  };
+
+  const handleSelectSchema = (schemaId: string) => {
+    clearActiveEntity();
+    setActiveSchema(schemaId);
   };
 
   if (!activeProject) {
@@ -52,20 +67,17 @@ export function ProjectPanel() {
     );
   }
 
+  const localSchemas = activeProject.schemas.filter((s) => !s.isReadOnly);
+  const importedSchemas = activeProject.schemas.filter((s) => s.isReadOnly);
+
   return (
     <div style={styles.panel}>
       {/* Panel header */}
-      <div style={{ ...styles.header, display: 'flex', alignItems: 'center' }}>
+      <div style={styles.header}>
         {searchMode ? (
-          <>
-            <button
-              style={styles.searchToggleBtn}
-              onClick={() => setSearchMode(false)}
-              title="Back to file list"
-            >
-              ← Files
-            </button>
-          </>
+          <button style={styles.searchToggleBtn} onClick={() => setSearchMode(false)}>
+            ← Files
+          </button>
         ) : (
           <>
             <span style={{ ...styles.title, flex: 1 }}>⬡ {activeProject.name}</span>
@@ -80,93 +92,128 @@ export function ProjectPanel() {
         )}
       </div>
 
-      {/* Search mode: show entity search panel */}
+      {/* Search mode */}
       {searchMode && <EntitySearchPanel />}
 
       {/* File list mode */}
-      {!searchMode && <div style={styles.fileList}>
-        {activeProject.schemas.map((sf) => {
-          const isActive = sf.id === activeSchemaId;
-          const isHidden = hiddenSchemaIds.has(sf.id);
-          const classCount = Object.keys(sf.schema.classes).length;
-          const enumCount = Object.keys(sf.schema.enums).length;
-          const name = basename(sf.filePath);
+      {!searchMode && (
+        <>
+          {/* ── Local schema files ─────────────────────────────────────────── */}
+          <div style={styles.sectionHeader}>
+            <span style={styles.sectionLabel}>Project Files</span>
+            <span style={styles.sectionCount}>{localSchemas.length}</span>
+          </div>
 
-          return (
-            <div
-              key={sf.id}
-              style={{
-                ...styles.fileRow,
-                ...(isActive ? styles.fileRowActive : {}),
-                ...(sf.isReadOnly ? styles.fileRowReadOnly : {}),
-                ...(isHidden ? styles.fileRowHidden : {}),
-              }}
-              onClick={() => { clearActiveEntity(); if (!sf.isReadOnly) setActiveSchema(sf.id); }}
-              title={sf.filePath}
-            >
-              {/* File icon + name */}
-              <div style={styles.fileNameRow}>
-                <span style={styles.fileIcon}>{sf.isReadOnly ? '◻' : '◼'}</span>
-                <span
+          <div style={styles.fileList}>
+            {localSchemas.map((sf) => {
+              const isActive = sf.id === activeSchemaId;
+              const isHidden = hiddenSchemaIds.has(sf.id);
+              const classCount = Object.keys(sf.schema.classes).length;
+              const enumCount = Object.keys(sf.schema.enums).length;
+              const name = basename(sf.filePath);
+
+              return (
+                <div
+                  key={sf.id}
                   style={{
-                    ...styles.fileName,
-                    ...(sf.isReadOnly ? styles.fileNameReadOnly : {}),
+                    ...styles.fileRow,
+                    ...(isActive ? styles.fileRowActive : {}),
+                    ...(isHidden ? styles.fileRowHidden : {}),
                   }}
+                  onClick={() => handleSelectSchema(sf.id)}
+                  title={sf.filePath}
                 >
-                  {name}
-                </span>
-                {sf.isDirty && <span style={styles.dirtyDot} title="Unsaved changes">●</span>}
-                {sf.isReadOnly && <span style={styles.readOnlyBadge}>imported</span>}
-                <button
-                  style={styles.visibilityBtn}
-                  onClick={(e) => handleToggleVisibility(e, sf.id)}
-                  title={isHidden ? 'Show schema' : 'Hide schema'}
-                >
-                  {isHidden ? '○' : '●'}
-                </button>
+                  <div style={styles.fileNameRow}>
+                    <span style={styles.fileIcon}>◼</span>
+                    <span style={styles.fileName}>{name}</span>
+                    {sf.isDirty && (
+                      <span style={styles.dirtyDot} title="Unsaved changes">●</span>
+                    )}
+                    <button
+                      style={styles.visibilityBtn}
+                      onClick={(e) => handleToggleVisibility(e, sf.id)}
+                      title={isHidden ? 'Show schema' : 'Hide schema'}
+                    >
+                      {isHidden ? '○' : '●'}
+                    </button>
+                  </div>
+                  {sf.schema.name && (
+                    <div style={styles.schemaNameRow}>
+                      <span style={styles.schemaName} title={sf.schema.id}>
+                        {sf.schema.name}
+                      </span>
+                    </div>
+                  )}
+                  <div style={styles.statsRow}>
+                    <span style={styles.stat} title={`${classCount} class(es)`}>⬡ {classCount}</span>
+                    <span style={styles.stat} title={`${enumCount} enum(s)`}>◈ {enumCount}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Imported schemas ──────────────────────────────────────────── */}
+          {importedSchemas.length > 0 && (
+            <>
+              <div
+                style={styles.importsSectionHeader}
+                onClick={() => setImportsCollapsed((c) => !c)}
+                title={importsCollapsed ? 'Expand imports' : 'Collapse imports'}
+              >
+                <span style={styles.chevron}>{importsCollapsed ? '▶' : '▼'}</span>
+                <span style={styles.sectionLabel}>Imports</span>
+                <span style={styles.sectionCount}>{importedSchemas.length}</span>
               </div>
 
-              {/* Schema name subtitle */}
-              {sf.schema.name && (
-                <div style={styles.schemaNameRow}>
-                  <span style={styles.schemaName} title={sf.schema.id}>
-                    {sf.schema.name}
-                  </span>
+              {!importsCollapsed && (
+                <div style={styles.importsList}>
+                  {importedSchemas.map((sf) => {
+                    const isActive = sf.id === activeSchemaId;
+                    const classCount = Object.keys(sf.schema.classes).length;
+                    const enumCount = Object.keys(sf.schema.enums).length;
+                    const displayName = sf.schema.name || basename(sf.filePath);
+                    const source = shortSource(sf);
+
+                    return (
+                      <div
+                        key={sf.id}
+                        style={{
+                          ...styles.fileRow,
+                          ...styles.importRow,
+                          ...(isActive ? styles.importRowActive : {}),
+                        }}
+                        onClick={() => handleSelectSchema(sf.id)}
+                        title={sf.sourceUrl ?? sf.filePath}
+                      >
+                        <div style={styles.fileNameRow}>
+                          <span style={styles.fileIcon}>◻</span>
+                          <span style={styles.importName}>{displayName}</span>
+                          <span style={styles.readOnlyBadge}>ro</span>
+                        </div>
+                        <div style={styles.importSourceRow}>
+                          <span style={styles.importSource}>{source}</span>
+                        </div>
+                        <div style={styles.statsRow}>
+                          <span style={styles.stat} title={`${classCount} class(es)`}>⬡ {classCount}</span>
+                          <span style={styles.stat} title={`${enumCount} enum(s)`}>◈ {enumCount}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+            </>
+          )}
+        </>
+      )}
 
-              {/* Stats */}
-              <div style={styles.statsRow}>
-                <span style={styles.stat} title={`${classCount} class(es)`}>
-                  ⬡ {classCount}
-                </span>
-                <span style={styles.stat} title={`${enumCount} enum(s)`}>
-                  ◈ {enumCount}
-                </span>
-              </div>
-
-              {/* Import paths */}
-              {sf.schema.imports.length > 0 && (
-                <div style={styles.importsRow}>
-                  <span style={styles.importsLabel}>imports:</span>
-                  <span style={styles.importsValue}>
-                    {sf.schema.imports.slice(0, 3).join(', ')}
-                    {sf.schema.imports.length > 3 && ` +${sf.schema.imports.length - 3}`}
-                  </span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>}
-
-      {/* Footer: total counts (file mode only) */}
+      {/* Footer */}
       {!searchMode && (
         <div style={styles.footer}>
           <span style={styles.footerText}>
-            {activeProject.schemas.filter((s) => !s.isReadOnly).length} schema(s)
-            {activeProject.schemas.some((s) => s.isReadOnly) &&
-              ` · ${activeProject.schemas.filter((s) => s.isReadOnly).length} imported`}
+            {localSchemas.length} file{localSchemas.length !== 1 ? 's' : ''}
+            {importedSchemas.length > 0 && ` · ${importedSchemas.length} imported`}
           </span>
         </div>
       )}
@@ -188,6 +235,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '8px 10px',
     borderBottom: '1px solid #1e293b',
     flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
   },
   title: {
     fontWeight: 700,
@@ -195,7 +244,8 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#60a5fa',
     fontFamily: 'monospace',
     letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
+    flex: 1,
   },
   empty: {
     padding: 12,
@@ -204,28 +254,80 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'monospace',
     fontStyle: 'italic',
   },
+  sectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '4px 10px',
+    borderBottom: '1px solid #0d1627',
+    flexShrink: 0,
+  },
+  importsSectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '4px 10px',
+    borderTop: '1px solid #1e293b',
+    borderBottom: '1px solid #0d1627',
+    flexShrink: 0,
+    cursor: 'pointer',
+    userSelect: 'none' as const,
+  },
+  chevron: {
+    fontSize: 8,
+    color: '#475569',
+    flexShrink: 0,
+  },
+  sectionLabel: {
+    fontSize: 9,
+    fontFamily: 'monospace',
+    color: '#475569',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  sectionCount: {
+    fontSize: 9,
+    fontFamily: 'monospace',
+    color: '#334155',
+    background: '#0d1627',
+    borderRadius: 8,
+    padding: '0 5px',
+  },
   fileList: {
     flex: 1,
-    overflowY: 'auto',
+    overflowY: 'auto' as const,
     padding: '4px 0',
+    minHeight: 0,
+  },
+  importsList: {
+    overflowY: 'auto' as const,
+    padding: '4px 0',
+    maxHeight: 220,
+    borderBottom: '1px solid #1e293b',
   },
   fileRow: {
     padding: '6px 10px',
     cursor: 'pointer',
     borderBottom: '1px solid #0d1627',
-    transition: 'background 0.1s',
-    userSelect: 'none',
+    userSelect: 'none' as const,
   },
   fileRowActive: {
     background: '#172033',
     borderLeft: '2px solid #60a5fa',
     paddingLeft: 8,
   },
-  fileRowReadOnly: {
-    opacity: 0.6,
-  },
   fileRowHidden: {
     opacity: 0.35,
+  },
+  importRow: {
+    opacity: 0.85,
+  },
+  importRowActive: {
+    background: '#141f2e',
+    borderLeft: '2px solid #7c9cbf',
+    paddingLeft: 8,
   },
   visibilityBtn: {
     background: 'transparent',
@@ -256,13 +358,31 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    whiteSpace: 'nowrap' as const,
     fontWeight: 600,
   },
-  fileNameReadOnly: {
-    color: '#64748b',
-    fontWeight: 400,
-    fontStyle: 'italic',
+  importName: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: '#94a3b8',
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+    fontWeight: 500,
+    fontStyle: 'italic' as const,
+  },
+  importSourceRow: {
+    marginBottom: 3,
+  },
+  importSource: {
+    fontSize: 9,
+    fontFamily: 'monospace',
+    color: '#334155',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+    display: 'block',
   },
   dirtyDot: {
     color: '#f59e0b',
@@ -270,12 +390,14 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   readOnlyBadge: {
-    fontSize: 9,
-    background: '#1e293b',
+    fontSize: 8,
+    background: '#1a2535',
     borderRadius: 3,
     padding: '1px 4px',
-    color: '#64748b',
+    color: '#475569',
     flexShrink: 0,
+    fontFamily: 'monospace',
+    letterSpacing: 0.5,
   },
   schemaNameRow: {
     display: 'flex',
@@ -288,7 +410,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#7c9cbf',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    whiteSpace: 'nowrap' as const,
   },
   statsRow: {
     display: 'flex',
@@ -300,30 +422,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'monospace',
     color: '#475569',
   },
-  importsRow: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: 4,
-    marginTop: 3,
-  },
-  importsLabel: {
-    fontSize: 9,
-    fontFamily: 'monospace',
-    color: '#334155',
-    flexShrink: 0,
-  },
-  importsValue: {
-    fontSize: 9,
-    fontFamily: 'monospace',
-    color: '#3b4f6b',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
   footer: {
     padding: '6px 10px',
     borderTop: '1px solid #1e293b',
     flexShrink: 0,
+    marginTop: 'auto',
   },
   footerText: {
     fontSize: 10,

@@ -1159,6 +1159,13 @@ export function PropertiesPanel() {
         </div>
       )}
 
+      {/* Read-only notice */}
+      {activeSchemaFile?.isReadOnly && (
+        <div style={styles.readOnlyNotice}>
+          Read Only — imported schema
+        </div>
+      )}
+
       {/* Content */}
       <div style={styles.panelBody}>{renderContent()}</div>
     </div>
@@ -1230,6 +1237,16 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  readOnlyNotice: {
+    padding: '5px 12px',
+    background: '#0f1a2e',
+    borderBottom: '1px solid #334155',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    color: '#64748b',
+    letterSpacing: 0.4,
+    flexShrink: 0,
   },
   panelBody: {
     flex: 1,
