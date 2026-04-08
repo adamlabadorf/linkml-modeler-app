@@ -1,5 +1,3 @@
-import '@testing-library/jest-dom';
-
 // Provide a minimal localStorage mock for test environments where jsdom's
 // implementation is unavailable (e.g. when --localstorage-file is missing).
 if (typeof localStorage === 'undefined' || typeof localStorage.setItem !== 'function') {
