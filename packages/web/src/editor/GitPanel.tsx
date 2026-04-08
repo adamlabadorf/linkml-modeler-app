@@ -147,6 +147,20 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     }
   }, [gitPanelOpen, gitStatus, commitMessage, setCommitMessage]);
 
+  const handleRevert = useCallback(async (paths: string[]) => {
+    if (paths.length === 0) return;
+    const label = paths.length === 1 ? `"${paths[0]}"` : `${paths.length} files`;
+    if (!window.confirm(`Discard changes to ${label}? This cannot be undone.`)) return;
+    setLastGitError(null);
+    try {
+      await platform.gitCheckout(repoPath, paths);
+      pushToast({ message: `Reverted ${label}`, severity: 'success' });
+      await refreshStatus();
+    } catch (e: unknown) {
+      setLastGitError(e instanceof Error ? e.message : String(e));
+    }
+  }, [repoPath, platform, setLastGitError, pushToast, refreshStatus]);
+
   const handleCommit = useCallback(async () => {
     if (!commitMessage.trim() || stagedPaths.size === 0) return;
     setIsCommitting(true);
@@ -413,7 +427,22 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
             <>
               <div style={styles.sectionHeader}>
                 Unstaged
-                <button style={styles.sectionBtn} onClick={stageAll}>Stage all</button>
+                <div style={styles.sectionBtnGroup}>
+                  <button
+                    style={styles.sectionBtn}
+                    onClick={() => {
+                      const revertable = [
+                        ...(gitStatus?.unstagedFiles ?? []),
+                        ...(gitStatus?.untrackedFiles ?? []),
+                      ];
+                      handleRevert(revertable);
+                    }}
+                    title="Discard all unstaged changes"
+                  >
+                    Revert all
+                  </button>
+                  <button style={styles.sectionBtn} onClick={stageAll}>Stage all</button>
+                </div>
               </div>
               {[...(gitStatus?.unstagedFiles ?? []), ...(gitStatus?.untrackedFiles ?? [])].map((f) => (
                 <FileRow
@@ -422,6 +451,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
                   staged={stagedPaths.has(f)}
                   onStage={() => stageFile(f)}
                   onUnstage={() => unstageFile(f)}
+                  onRevert={() => handleRevert([f])}
                 />
               ))}
             </>
@@ -635,11 +665,13 @@ function FileRow({
   staged,
   onStage,
   onUnstage,
+  onRevert,
 }: {
   path: string;
   staged: boolean;
   onStage: () => void;
   onUnstage: () => void;
+  onRevert?: () => void;
 }) {
   return (
     <div style={styles.fileRow}>
@@ -650,6 +682,15 @@ function FileRow({
         style={styles.fileCheckbox}
       />
       <span style={styles.filePath}>{path}</span>
+      {onRevert && (
+        <button
+          style={styles.revertBtn}
+          onClick={onRevert}
+          title="Discard changes to this file"
+        >
+          ↺
+        </button>
+      )}
     </div>
   );
 }
@@ -834,6 +875,11 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid #1e293b',
     flexShrink: 0,
   },
+  sectionBtnGroup: {
+    display: 'flex',
+    gap: 4,
+    alignItems: 'center',
+  },
   sectionBtn: {
     background: 'transparent',
     border: '1px solid #334155',
@@ -843,6 +889,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 9,
     cursor: 'pointer',
     fontFamily: 'monospace',
+  },
+  revertBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#64748b',
+    cursor: 'pointer',
+    fontSize: 12,
+    padding: '0 2px',
+    flexShrink: 0,
+    lineHeight: 1,
   },
   noChanges: {
     padding: '12px 10px',

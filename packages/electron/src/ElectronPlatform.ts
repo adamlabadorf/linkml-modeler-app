@@ -34,6 +34,7 @@ type ElectronBridge = {
   gitPush(repoPath: string): Promise<GitPushResult | null>;
   gitPull(repoPath: string): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
+  gitCheckout(repoPath: string, paths: string[]): Promise<void>;
   gitClone(url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }): Promise<GitCloneResult>;
   storeCredential(key: string, value: string): Promise<void>;
   getCredential(key: string): Promise<string | null>;
@@ -127,6 +128,10 @@ export class ElectronPlatform implements PlatformAPI {
 
   async gitLog(repoPath: string, limit: number): Promise<GitCommit[]> {
     return bridge().gitLog(repoPath, limit);
+  }
+
+  async gitCheckout(repoPath: string, paths: string[]): Promise<void> {
+    return bridge().gitCheckout(repoPath, paths);
   }
 
   async gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult> {

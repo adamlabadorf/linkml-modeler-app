@@ -90,6 +90,8 @@ export interface PlatformAPI {
   gitPull(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
   gitLog(repoPath: string, limit: number): Promise<GitCommit[]>;
   gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult>;
+  /** Discard local changes to the given paths, restoring tracked files to HEAD and deleting untracked files. */
+  gitCheckout(repoPath: string, paths: string[]): Promise<void>;
 
   // Credential storage (secure, per-environment)
   storeCredential(key: string, value: string): Promise<void>;

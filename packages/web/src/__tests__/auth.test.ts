@@ -40,6 +40,7 @@ function makeMockPlatform() {
     gitPush: vi.fn(),
     gitPull: vi.fn(),
     gitLog: vi.fn(),
+    gitCheckout: vi.fn(),
     gitClone: vi.fn(),
   };
 }

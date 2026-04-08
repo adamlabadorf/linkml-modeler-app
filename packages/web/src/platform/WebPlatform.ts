@@ -408,6 +408,22 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
+  async gitCheckout(repoPath: string, paths: string[]): Promise<void> {
+    if (!this.gitAvailable) return;
+    for (const p of paths) {
+      try {
+        await git.checkout({ fs, dir: repoPath, filepaths: [p], force: true });
+      } catch {
+        // File not in HEAD (untracked) — delete it from the filesystem
+        try {
+          await (pfs as unknown as { unlink: (p: string) => Promise<void> }).unlink(`${repoPath}/${p}`);
+        } catch {
+          // ignore — file may already be gone
+        }
+      }
+    }
+  }
+
   // ── Credential storage (localStorage) ──────────────────────────────────────
 
   async storeCredential(key: string, value: string): Promise<void> {

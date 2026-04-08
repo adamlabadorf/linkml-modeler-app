@@ -480,6 +480,10 @@ export class CloudPlatform implements PlatformAPI {
     return this.local.gitLog(repoPath, limit);
   }
 
+  async gitCheckout(repoPath: string, paths: string[]): Promise<void> {
+    return this.local.gitCheckout(repoPath, paths);
+  }
+
   async gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult> {
     // Inject token if no credentials provided
     const opts: GitCloneOptions = {

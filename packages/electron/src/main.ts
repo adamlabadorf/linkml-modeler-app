@@ -442,6 +442,26 @@ function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('platform:gitCheckout', async (_event, repoPath: string, paths: string[]) => {
+    const fs = await getFs();
+    const git = await getGit();
+    const g = git as {
+      checkout: (opts: object) => Promise<void>;
+    };
+    for (const p of paths) {
+      try {
+        await g.checkout({ fs: { promises: fs }, dir: repoPath, filepaths: [p], force: true });
+      } catch {
+        // File not in HEAD (untracked) — delete it
+        try {
+          await fs.unlink(`${repoPath}/${p}`);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  });
+
   // ── Credentials (keytar) ─────────────────────────────────────────────────────
 
   ipcMain.handle('credential:store', async (_event, key: string, value: string) => {

@@ -94,6 +94,10 @@ export class StubWebPlatform implements PlatformAPI {
     return { ok: false, destPath, error: 'StubWebPlatform: gitClone not implemented' };
   }
 
+  async gitCheckout(_repoPath: string, _paths: string[]): Promise<void> {
+    // no-op in stub
+  }
+
   async storeCredential(_key: string, _value: string): Promise<void> {
     // no-op in stub
   }
