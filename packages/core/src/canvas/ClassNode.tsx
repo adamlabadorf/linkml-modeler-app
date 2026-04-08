@@ -7,6 +7,8 @@ export interface ResolvedSlot {
   slot: SlotDefinition;
   kind: 'attribute' | 'schema'; // A = inline attribute, S = schema-level slot reference
   hasUsageOverride?: boolean;   // true when slot_usage overrides exist for this slot
+  inherited?: boolean;          // true when slot comes from is_a / mixin ancestor
+  inheritedFrom?: string;       // name of the immediate ancestor that contributes this slot
 }
 
 export interface ClassNodeData extends CanvasNodeData {
@@ -20,7 +22,7 @@ export interface ClassNodeData extends CanvasNodeData {
 const SLOT_LIMIT_EXPANDED = 20;
 
 function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
-  const { slot, kind, hasUsageOverride } = resolved;
+  const { slot, kind, hasUsageOverride, inherited, inheritedFrom } = resolved;
   const badges: string[] = [];
   if (slot.required) badges.push('R');
   if (slot.multivalued) badges.push('M');
@@ -28,21 +30,32 @@ function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
 
   const kindBadgeStyle: React.CSSProperties = {
     ...styles.badge,
-    background: kind === 'schema' ? '#1e3a5f' : '#1e293b',
-    color: kind === 'schema' ? '#7dd3fc' : '#94a3b8',
+    background: inherited
+      ? '#1a2435'
+      : kind === 'schema' ? '#1e3a5f' : '#1e293b',
+    color: inherited
+      ? '#4a6080'
+      : kind === 'schema' ? '#7dd3fc' : '#94a3b8',
   };
 
+  const rowStyle = inherited
+    ? { ...styles.slotRow, opacity: 0.55 }
+    : styles.slotRow;
+
   return (
-    <div style={styles.slotRow}>
+    <div style={rowStyle} title={inherited && inheritedFrom ? `Inherited from ${inheritedFrom}` : undefined}>
       <span style={styles.slotPlus}>+</span>
-      <span style={styles.slotName}>{slot.name}</span>
+      <span style={inherited ? styles.slotNameInherited : styles.slotName}>{slot.name}</span>
       {slot.range && (
         <>
           <span style={styles.slotColon}> : </span>
-          <span style={styles.slotRange}>{slot.range}</span>
+          <span style={inherited ? styles.slotRangeInherited : styles.slotRange}>{slot.range}</span>
         </>
       )}
       <span style={styles.badgeGroup}>
+        {inherited && (
+          <span style={{ ...styles.badge, background: '#1a2435', color: '#4a6080' }} title={inheritedFrom ? `from ${inheritedFrom}` : 'inherited'}>↑</span>
+        )}
         <span style={kindBadgeStyle}>{kind === 'schema' ? 'S' : 'A'}</span>
         {hasUsageOverride && <span style={{ ...styles.badge, color: '#fbbf24' }}>~</span>}
         {badges.map((b) => (
@@ -217,12 +230,26 @@ const styles: Record<string, React.CSSProperties> = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
+  slotNameInherited: {
+    color: '#64748b',
+    flex: '0 1 auto',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   slotColon: {
     color: '#64748b',
     flexShrink: 0,
   },
   slotRange: {
     color: '#86efac',
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  slotRangeInherited: {
+    color: '#3d6b4a',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',

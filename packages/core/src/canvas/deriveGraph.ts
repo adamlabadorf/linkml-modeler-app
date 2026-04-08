@@ -59,6 +59,66 @@ export interface DerivedGraph {
   edges: Edge[];
 }
 
+/**
+ * Recursively collects slots from all ancestors of a class (is_a + mixins),
+ * returning them as a Map keyed by slot name. First-encountered ancestor wins
+ * when the same slot appears in multiple ancestors. Does NOT include the class's
+ * own direct slots — call the loop below for those.
+ */
+function gatherAncestorSlots(
+  className: string,
+  schema: LinkMLSchema,
+  allSchemaSlots: Record<string, SlotDefinition>,
+  visited: Set<string> = new Set()
+): Map<string, ResolvedSlot> {
+  const classDef = schema.classes[className];
+  if (!classDef) return new Map();
+
+  const result = new Map<string, ResolvedSlot>();
+
+  const addOwnSlots = (ancName: string, ancDef: typeof classDef) => {
+    for (const slot of Object.values(ancDef.attributes)) {
+      if (!result.has(slot.name)) {
+        result.set(slot.name, { slot, kind: 'attribute', inherited: true, inheritedFrom: ancName });
+      }
+    }
+    for (const slotName of ancDef.slots) {
+      if (result.has(slotName)) continue;
+      const schemaSlot = allSchemaSlots[slotName] ?? schema.slots?.[slotName];
+      if (!schemaSlot) continue;
+      const usage = ancDef.slotUsage[slotName];
+      const effectiveSlot = usage ? { ...schemaSlot, ...usage, name: slotName } : schemaSlot;
+      result.set(slotName, { slot: effectiveSlot, kind: 'schema', inherited: true, inheritedFrom: ancName });
+    }
+  };
+
+  // is_a parent
+  if (classDef.isA && !visited.has(classDef.isA)) {
+    const parentDef = schema.classes[classDef.isA];
+    if (parentDef) {
+      visited.add(classDef.isA);
+      addOwnSlots(classDef.isA, parentDef);
+      for (const [k, v] of gatherAncestorSlots(classDef.isA, schema, allSchemaSlots, visited)) {
+        if (!result.has(k)) result.set(k, v);
+      }
+    }
+  }
+
+  // mixins
+  for (const mixinName of classDef.mixins) {
+    if (visited.has(mixinName)) continue;
+    const mixinDef = schema.classes[mixinName];
+    if (!mixinDef) continue;
+    visited.add(mixinName);
+    addOwnSlots(mixinName, mixinDef);
+    for (const [k, v] of gatherAncestorSlots(mixinName, schema, allSchemaSlots, visited)) {
+      if (!result.has(k)) result.set(k, v);
+    }
+  }
+
+  return result;
+}
+
 export function deriveGraph(
   schema: LinkMLSchema,
   layout: CanvasLayout,
@@ -76,14 +136,17 @@ export function deriveGraph(
     const pos = layout.nodes[className] ?? gridPosition(gridIndex++);
     const isCollapsed = collapsed[className] ?? false;
 
-    // Build resolved slot list: attributes + schema-level refs, alphabetically sorted
+    // Build resolved slot list: own slots first, then inherited from is_a / mixins
     const resolvedSlots: ResolvedSlot[] = [];
+    const ownSlotNames = new Set<string>();
+
     for (const slot of Object.values(classDef.attributes)) {
       resolvedSlots.push({
         slot,
         kind: 'attribute',
         hasUsageOverride: !!classDef.slotUsage[slot.name],
       });
+      ownSlotNames.add(slot.name);
     }
     for (const slotName of classDef.slots) {
       const schemaSlot = allSchemaSlots[slotName] ?? schema.slots?.[slotName];
@@ -91,7 +154,16 @@ export function deriveGraph(
       const usage = classDef.slotUsage[slotName];
       const effectiveSlot = usage ? { ...schemaSlot, ...usage, name: slotName } : schemaSlot;
       resolvedSlots.push({ slot: effectiveSlot, kind: 'schema', hasUsageOverride: !!usage });
+      ownSlotNames.add(slotName);
     }
+
+    // Add inherited slots (from is_a ancestors and mixins) that aren't overridden locally
+    for (const [name, resolved] of gatherAncestorSlots(className, schema, allSchemaSlots)) {
+      if (!ownSlotNames.has(name)) {
+        resolvedSlots.push(resolved);
+      }
+    }
+
     resolvedSlots.sort((a, b) => a.slot.name.localeCompare(b.slot.name));
 
     const nodeData: ClassNodeData = {
