@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAppStore, useTemporalStore } from '../store/index.js';
 import { startTour, type TourId } from '../tours/index.js';
+import { version } from '../../package.json';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MenuItem {
@@ -282,6 +283,7 @@ export function MenuBar({
         <div style={dialogStyles.overlay} onClick={() => setAboutOpen(false)}>
           <div style={dialogStyles.dialog} onClick={(e) => e.stopPropagation()}>
             <h2 style={dialogStyles.title}>LinkML Visual Schema Editor</h2>
+            <p style={dialogStyles.text}>Version {version}</p>
             <p style={dialogStyles.text}>
               A cross-platform graphical tool for authoring LinkML schemas on an ERD-style canvas.
             </p>

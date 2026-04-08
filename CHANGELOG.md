@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1] - 2026-04-08
+
+### Added
+
+- **Help**: App version number now displayed in the Help > About dialog
+
 ## [0.4.0] - 2026-04-08
 
 ### Added
