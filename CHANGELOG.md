@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0] - 2026-04-08
+
+### Added
+
+- **Editor**: Schema-level slot definitions with full UI — create, edit, and delete slots at the schema level; slots display in a dedicated panel with badge indicators on class nodes
+- **Editor**: Attribute and slot names are now editable inline after creation
+- **Editor**: Prefixes section in the schema properties panel for managing namespace prefix declarations
+- **Help**: Driver.js guided tours accessible from the Help menu to walk users through key editor workflows
+
+### Fixed
+
+- **Deployment**: nginx `try_files` fallback now uses a `BASE_PATH`-relative path for correct SPA routing when deployed under a sub-path
+- **Tests**: Restored passing test suite after driver.js and localStorage regressions
+
 ## [0.2.0] - 2026-04-07
 
 ### Added
