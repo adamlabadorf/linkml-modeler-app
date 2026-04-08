@@ -285,11 +285,20 @@ function SchemaCanvasInner() {
     [activeSchemaFile, activeProject]
   );
 
+  // Merge schema-level slots from all loaded schemas for cross-schema slot resolution
+  const allSchemaSlots = useMemo(() => {
+    const merged: Record<string, import('../model/index.js').SlotDefinition> = {};
+    for (const sf of activeProject?.schemas ?? []) {
+      Object.assign(merged, sf.schema.slots ?? {});
+    }
+    return merged;
+  }, [activeProject?.schemas]);
+
   // Derive graph (with ghost nodes grouped by source schema)
   const { nodes: derivedNodes, edges: derivedEdges } = useMemo(() => {
     if (!activeSchemaFile) return { nodes: [], edges: [] };
-    return deriveGraph(activeSchemaFile.schema, localLayout, {}, ghostEntities, collapsedGroups);
-  }, [activeSchemaFile, ghostEntities, localLayout, collapsedGroups]);
+    return deriveGraph(activeSchemaFile.schema, localLayout, {}, ghostEntities, collapsedGroups, allSchemaSlots);
+  }, [activeSchemaFile, ghostEntities, localLayout, collapsedGroups, allSchemaSlots]);
 
   useEffect(() => {
     setNodes(derivedNodes);

@@ -33,7 +33,15 @@ export function validateSchema(schema: LinkMLSchema): ValidationError[] {
     if (cls.isA && !(cls.isA in schema.classes)) {
       errors.push({ path: `classes.${className}.is_a`, message: `Parent class '${cls.isA}' not found in schema`, severity: 'warning' });
     }
-    // Schema-level slots (v1.x) are not modeled yet; skip slot reference validation
+    for (const slotRef of cls.slots) {
+      if (!(slotRef in schema.slots)) {
+        errors.push({
+          path: `classes.${className}.slots`,
+          message: `Slot reference '${slotRef}' not found in schema slots`,
+          severity: 'warning',
+        });
+      }
+    }
   }
 
   for (const [enumName, enm] of Object.entries(schema.enums)) {
@@ -48,7 +56,7 @@ export function validateSchema(schema: LinkMLSchema): ValidationError[] {
 const KNOWN_SCHEMA_KEYS = new Set([
   'id', 'name', 'title', 'description', 'version', 'license',
   'prefixes', 'default_prefix', 'default_range',
-  'imports', 'subsets', 'types', 'enums', 'classes',
+  'imports', 'subsets', 'types', 'slots', 'enums', 'classes',
   'see_also', 'source_file', 'generation_date',
   // legacy / common
   'status', 'keywords', 'contributors', 'creators', 'notes',
@@ -251,6 +259,7 @@ export function parseYaml(rawYaml: string): LinkMLSchema {
     imports: (raw['imports'] as string[]) ?? [],
     subsets: {},
     types: {},
+    slots: {},
     enums: {},
     classes: {},
   };
@@ -270,6 +279,12 @@ export function parseYaml(rawYaml: string): LinkMLSchema {
   if (raw['types'] && typeof raw['types'] === 'object') {
     for (const [typeName, typeRaw] of Object.entries(raw['types'] as Record<string, unknown>)) {
       schema.types[typeName] = parseType(typeRaw as Record<string, unknown> | null, typeName);
+    }
+  }
+
+  if (raw['slots'] && typeof raw['slots'] === 'object') {
+    for (const [slotName, slotRaw] of Object.entries(raw['slots'] as Record<string, unknown>)) {
+      schema.slots[slotName] = parseSlot((slotRaw as Record<string, unknown>) ?? {}, slotName);
     }
   }
 
@@ -431,6 +446,14 @@ export function serializeYaml(schema: LinkMLSchema): string {
       typesOut[name] = serializeType(type);
     }
     out['types'] = typesOut;
+  }
+
+  if (isDefined(schema.slots)) {
+    const slotsOut: Record<string, unknown> = {};
+    for (const [name, slot] of Object.entries(schema.slots)) {
+      slotsOut[name] = serializeSlot(slot) ?? {};
+    }
+    out['slots'] = slotsOut;
   }
 
   if (isDefined(schema.enums)) {

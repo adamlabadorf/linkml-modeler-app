@@ -3,20 +3,34 @@ import { Handle, Position, NodeProps } from 'reactflow';
 import type { CanvasNodeData } from '../store/slices/canvasSlice.js';
 import type { ClassDefinition, SlotDefinition } from '../model/index.js';
 
+export interface ResolvedSlot {
+  slot: SlotDefinition;
+  kind: 'attribute' | 'schema'; // A = inline attribute, S = schema-level slot reference
+  hasUsageOverride?: boolean;   // true when slot_usage overrides exist for this slot
+}
+
 export interface ClassNodeData extends CanvasNodeData {
   entityType: 'class';
   classDef: ClassDefinition;
   collapsed: boolean;
   ghost?: boolean; // True for read-only imported classes
+  resolvedSlots?: ResolvedSlot[]; // Pre-merged, alphabetically sorted for display
 }
 
 const SLOT_LIMIT_EXPANDED = 20;
 
-function SlotRow({ slot }: { slot: SlotDefinition }) {
+function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
+  const { slot, kind, hasUsageOverride } = resolved;
   const badges: string[] = [];
   if (slot.required) badges.push('R');
   if (slot.multivalued) badges.push('M');
   if (slot.identifier) badges.push('id');
+
+  const kindBadgeStyle: React.CSSProperties = {
+    ...styles.badge,
+    background: kind === 'schema' ? '#1e3a5f' : '#1e293b',
+    color: kind === 'schema' ? '#7dd3fc' : '#94a3b8',
+  };
 
   return (
     <div style={styles.slotRow}>
@@ -28,19 +42,19 @@ function SlotRow({ slot }: { slot: SlotDefinition }) {
           <span style={styles.slotRange}>{slot.range}</span>
         </>
       )}
-      {badges.length > 0 && (
-        <span style={styles.badgeGroup}>
-          {badges.map((b) => (
-            <span key={b} style={styles.badge}>{b}</span>
-          ))}
-        </span>
-      )}
+      <span style={styles.badgeGroup}>
+        <span style={kindBadgeStyle}>{kind === 'schema' ? 'S' : 'A'}</span>
+        {hasUsageOverride && <span style={{ ...styles.badge, color: '#fbbf24' }}>~</span>}
+        {badges.map((b) => (
+          <span key={b} style={styles.badge}>{b}</span>
+        ))}
+      </span>
     </div>
   );
 }
 
 function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
-  const { classDef, collapsed, ghost } = data;
+  const { classDef, collapsed, ghost, resolvedSlots: resolvedSlotsProp } = data;
 
   const isAbstract = classDef.abstract === true;
   const isMixin = classDef.mixin === true;
@@ -55,9 +69,11 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
 
   const typeLabel = ghost ? 'imported' : isMixin ? 'mixin' : isAbstract ? 'abstract' : null;
 
-  const slots = Object.values(classDef.attributes);
-  const visibleSlots = collapsed ? [] : slots.slice(0, SLOT_LIMIT_EXPANDED);
-  const hiddenCount = collapsed ? 0 : Math.max(0, slots.length - SLOT_LIMIT_EXPANDED);
+  // Fall back to plain attributes if resolvedSlots not provided (e.g. ghost nodes)
+  const resolvedSlots: ResolvedSlot[] = resolvedSlotsProp ??
+    Object.values(classDef.attributes).map((s) => ({ slot: s, kind: 'attribute' as const }));
+  const visibleSlots = collapsed ? [] : resolvedSlots.slice(0, SLOT_LIMIT_EXPANDED);
+  const hiddenCount = collapsed ? 0 : Math.max(0, resolvedSlots.length - SLOT_LIMIT_EXPANDED);
 
   return (
     <div
@@ -94,14 +110,14 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
       {/* Slots */}
       {!collapsed && (
         <div style={styles.body}>
-          {visibleSlots.map((s) => (
-            <SlotRow key={s.name} slot={s} />
+          {visibleSlots.map((r) => (
+            <SlotRow key={r.slot.name} resolved={r} />
           ))}
           {hiddenCount > 0 && (
             <div style={styles.moreRow}>+{hiddenCount} more…</div>
           )}
-          {visibleSlots.length === 0 && slots.length === 0 && (
-            <div style={styles.emptyRow}>no attributes</div>
+          {visibleSlots.length === 0 && resolvedSlots.length === 0 && (
+            <div style={styles.emptyRow}>no slots</div>
           )}
         </div>
       )}

@@ -28,7 +28,22 @@ export interface ProjectSlice {
   deleteClass(schemaId: string, className: string): void;
   renameClass(schemaId: string, oldName: string, newName: string): void;
 
-  // ── Slot / attribute mutations ───────────────────────────────────────────────
+  // ── Schema-level slot mutations ──────────────────────────────────────────────
+  addSchemaSlot(schemaId: string, slot: SlotDefinition): void;
+  updateSchemaSlot(schemaId: string, slotName: string, partial: Partial<SlotDefinition>): void;
+  /** Delete a schema-level slot and auto-remove all class slot[] references and slotUsage entries. */
+  deleteSchemaSlot(schemaId: string, slotName: string): void;
+  renameSchemaSlot(schemaId: string, oldName: string, newName: string): void;
+
+  // ── Class slot-reference mutations (cls.slots[] array) ───────────────────────
+  addSlotReferenceToClass(schemaId: string, className: string, slotName: string): void;
+  removeSlotReferenceFromClass(schemaId: string, className: string, slotName: string): void;
+
+  // ── Slot usage mutations (cls.slotUsage overrides) ───────────────────────────
+  updateSlotUsage(schemaId: string, className: string, slotName: string, partial: Partial<SlotDefinition>): void;
+  deleteSlotUsage(schemaId: string, className: string, slotName: string): void;
+
+  // ── Attribute mutations (cls.attributes inline slots) ────────────────────────
   addAttribute(schemaId: string, className: string, slot: SlotDefinition): void;
   updateAttribute(schemaId: string, className: string, slotName: string, partial: Partial<SlotDefinition>): void;
   deleteAttribute(schemaId: string, className: string, slotName: string): void;
@@ -237,7 +252,169 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
     });
   },
 
-  // ── Slot / attribute mutations ───────────────────────────────────────────────
+  // ── Schema-level slot mutations ──────────────────────────────────────────────
+
+  addSchemaSlot(schemaId, slot) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => ({
+          ...s,
+          slots: { ...(s.slots ?? {}), [slot.name]: slot },
+        })),
+      };
+    });
+  },
+
+  updateSchemaSlot(schemaId, slotName, partial) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const existing = s.slots?.[slotName];
+          if (!existing) return s;
+          return {
+            ...s,
+            slots: { ...s.slots, [slotName]: { ...existing, ...partial } },
+          };
+        }),
+      };
+    });
+  },
+
+  deleteSchemaSlot(schemaId, slotName) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const { [slotName]: _removed, ...restSlots } = s.slots ?? {};
+          // Cascade: remove from cls.slots[] and cls.slotUsage in all classes
+          const updatedClasses: typeof s.classes = {};
+          for (const [name, cls] of Object.entries(s.classes)) {
+            let updated = cls;
+            if (cls.slots.includes(slotName)) {
+              updated = { ...updated, slots: cls.slots.filter((n) => n !== slotName) };
+            }
+            if (slotName in (cls.slotUsage ?? {})) {
+              const { [slotName]: _u, ...restUsage } = cls.slotUsage;
+              updated = { ...updated, slotUsage: restUsage };
+            }
+            updatedClasses[name] = updated;
+          }
+          return { ...s, slots: restSlots, classes: updatedClasses };
+        }),
+      };
+    });
+  },
+
+  renameSchemaSlot(schemaId, oldName, newName) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const existing = s.slots?.[oldName];
+          if (!existing || (s.slots ?? {})[newName]) return s;
+          const { [oldName]: _removed, ...restSlots } = s.slots ?? {};
+          const renamedSlot = { ...existing, name: newName };
+          // Cascade: update cls.slots[] and cls.slotUsage keys in all classes
+          const updatedClasses: typeof s.classes = {};
+          for (const [name, cls] of Object.entries(s.classes)) {
+            let updated = cls;
+            if (cls.slots.includes(oldName)) {
+              updated = { ...updated, slots: cls.slots.map((n) => (n === oldName ? newName : n)) };
+            }
+            if (oldName in (cls.slotUsage ?? {})) {
+              const { [oldName]: usageEntry, ...restUsage } = cls.slotUsage;
+              updated = { ...updated, slotUsage: { ...restUsage, [newName]: usageEntry } };
+            }
+            updatedClasses[name] = updated;
+          }
+          return { ...s, slots: { ...restSlots, [newName]: renamedSlot }, classes: updatedClasses };
+        }),
+      };
+    });
+  },
+
+  // ── Class slot-reference mutations ───────────────────────────────────────────
+
+  addSlotReferenceToClass(schemaId, className, slotName) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const cls = s.classes[className];
+          if (!cls || cls.slots.includes(slotName)) return s;
+          return {
+            ...s,
+            classes: { ...s.classes, [className]: { ...cls, slots: [...cls.slots, slotName] } },
+          };
+        }),
+      };
+    });
+  },
+
+  removeSlotReferenceFromClass(schemaId, className, slotName) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const cls = s.classes[className];
+          if (!cls) return s;
+          return {
+            ...s,
+            classes: {
+              ...s.classes,
+              [className]: { ...cls, slots: cls.slots.filter((n) => n !== slotName) },
+            },
+          };
+        }),
+      };
+    });
+  },
+
+  // ── Slot usage mutations ──────────────────────────────────────────────────────
+
+  updateSlotUsage(schemaId, className, slotName, partial) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const cls = s.classes[className];
+          if (!cls) return s;
+          const existing = cls.slotUsage[slotName] ?? { name: slotName };
+          return {
+            ...s,
+            classes: {
+              ...s.classes,
+              [className]: {
+                ...cls,
+                slotUsage: { ...cls.slotUsage, [slotName]: { ...existing, ...partial } },
+              },
+            },
+          };
+        }),
+      };
+    });
+  },
+
+  deleteSlotUsage(schemaId, className, slotName) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const cls = s.classes[className];
+          if (!cls) return s;
+          const { [slotName]: _removed, ...rest } = cls.slotUsage;
+          return {
+            ...s,
+            classes: { ...s.classes, [className]: { ...cls, slotUsage: rest } },
+          };
+        }),
+      };
+    });
+  },
+
+  // ── Attribute mutations (cls.attributes inline slots) ────────────────────────
 
   addAttribute(schemaId, className, slot) {
     set((state) => {
@@ -538,17 +715,19 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
       ...Object.keys(importedSchema.schema.enums),
     ]);
 
-    // Check if any attribute range in the active schema references an imported entity
+    // Check if any attribute or schema-level slot range references an imported entity
     const schema = sf.schema;
     let stillUsed = false;
-    for (const cls of Object.values(schema.classes)) {
-      for (const slot of Object.values(cls.attributes)) {
-        if (slot.range && importedNames.has(slot.range)) {
-          stillUsed = true;
-          break;
+    for (const slot of Object.values(schema.slots ?? {})) {
+      if (slot.range && importedNames.has(slot.range)) { stillUsed = true; break; }
+    }
+    if (!stillUsed) {
+      for (const cls of Object.values(schema.classes)) {
+        for (const slot of Object.values(cls.attributes)) {
+          if (slot.range && importedNames.has(slot.range)) { stillUsed = true; break; }
         }
+        if (stillUsed) break;
       }
-      if (stillUsed) break;
     }
 
     if (!stillUsed) {

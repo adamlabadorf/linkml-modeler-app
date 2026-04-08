@@ -70,6 +70,7 @@ export interface LinkMLSchema {
   imports: string[]; // e.g. ["linkml:types", "../other-schema"]
   subsets: Record<string, SubsetDefinition>;
   types: Record<string, TypeDefinition>;
+  slots: Record<string, SlotDefinition>; // Schema-level reusable slot definitions
   enums: Record<string, EnumDefinition>;
   classes: Record<string, ClassDefinition>;
   extras?: Record<string, unknown>; // Unknown top-level keys preserved for round-trip
@@ -193,6 +194,7 @@ export function emptySchema(name: string, id: string, defaultPrefix: string): Li
     imports: ['linkml:types'],
     subsets: {},
     types: {},
+    slots: {},
     enums: {},
     classes: {},
   };

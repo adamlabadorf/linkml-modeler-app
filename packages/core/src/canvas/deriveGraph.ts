@@ -5,9 +5,9 @@
  * or useMemo hook whenever the schema or layout changes.
  */
 import type { Node, Edge } from 'reactflow';
-import type { LinkMLSchema, CanvasLayout } from '../model/index.js';
+import type { LinkMLSchema, CanvasLayout, SlotDefinition } from '../model/index.js';
 import type { CanvasNodeData } from '../store/slices/canvasSlice.js';
-import type { ClassNodeData } from './ClassNode.js';
+import type { ClassNodeData, ResolvedSlot } from './ClassNode.js';
 import type { EnumNodeData } from './EnumNode.js';
 import type { ImportGroupNodeData } from './ImportGroupNode.js';
 import type { LinkMLEdgeType } from './edges.js';
@@ -64,7 +64,8 @@ export function deriveGraph(
   layout: CanvasLayout,
   collapsed: Record<string, boolean> = {},
   ghostEntities: ImportedEntity[] = [],
-  collapsedGroups: Record<string, boolean> = {}
+  collapsedGroups: Record<string, boolean> = {},
+  allSchemaSlots: Record<string, SlotDefinition> = {}
 ): DerivedGraph {
   const nodes: Node<CanvasNodeData>[] = [];
   const edges: Edge[] = [];
@@ -75,11 +76,30 @@ export function deriveGraph(
     const pos = layout.nodes[className] ?? gridPosition(gridIndex++);
     const isCollapsed = collapsed[className] ?? false;
 
+    // Build resolved slot list: attributes + schema-level refs, alphabetically sorted
+    const resolvedSlots: ResolvedSlot[] = [];
+    for (const slot of Object.values(classDef.attributes)) {
+      resolvedSlots.push({
+        slot,
+        kind: 'attribute',
+        hasUsageOverride: !!classDef.slotUsage[slot.name],
+      });
+    }
+    for (const slotName of classDef.slots) {
+      const schemaSlot = allSchemaSlots[slotName] ?? schema.slots?.[slotName];
+      if (!schemaSlot) continue;
+      const usage = classDef.slotUsage[slotName];
+      const effectiveSlot = usage ? { ...schemaSlot, ...usage, name: slotName } : schemaSlot;
+      resolvedSlots.push({ slot: effectiveSlot, kind: 'schema', hasUsageOverride: !!usage });
+    }
+    resolvedSlots.sort((a, b) => a.slot.name.localeCompare(b.slot.name));
+
     const nodeData: ClassNodeData = {
       entityId: className,
       entityType: 'class',
       classDef,
       collapsed: isCollapsed,
+      resolvedSlots,
     };
 
     nodes.push({
@@ -148,6 +168,37 @@ export function deriveGraph(
             required: slot.required ?? false,
             multivalued: slot.multivalued ?? false,
             identifier: slot.identifier ?? false,
+          },
+          animated: false,
+        });
+      }
+    }
+
+    // ── range edges (from schema-level slot references) ────────────────────
+    for (const slotName of classDef.slots) {
+      const schemaSlot = allSchemaSlots[slotName] ?? schema.slots?.[slotName];
+      if (!schemaSlot) continue;
+      const usage = classDef.slotUsage[slotName];
+      const effectiveRange = usage?.range ?? schemaSlot.range;
+      if (!effectiveRange) continue;
+      const edgeId = `range__${className}__${slotName}__${effectiveRange}`;
+      if (edges.find((e) => e.id === edgeId)) continue; // avoid duplicates with attribute edges
+      const rangeIsClass = effectiveRange in schema.classes;
+      const rangeIsEnum = effectiveRange in schema.enums;
+      if (rangeIsClass || rangeIsEnum) {
+        const effectiveSlot = usage ? { ...schemaSlot, ...usage } : schemaSlot;
+        edges.push({
+          id: edgeId,
+          type: 'range' as LinkMLEdgeType,
+          source: className,
+          target: effectiveRange,
+          label: slotName,
+          data: {
+            slotName,
+            range: effectiveRange,
+            required: effectiveSlot.required ?? false,
+            multivalued: effectiveSlot.multivalued ?? false,
+            identifier: effectiveSlot.identifier ?? false,
           },
           animated: false,
         });
@@ -310,7 +361,7 @@ export function deriveGraph(
 
   // ── Range / is_a / mixin edges to ghost nodes ──────────────────────────────
   for (const [className, classDef] of Object.entries(schema.classes)) {
-    // Range edges
+    // Range edges (attributes)
     for (const [slotName, slot] of Object.entries(classDef.attributes)) {
       if (!slot.range) continue;
       const ghostId = `ghost__${slot.range}`;
@@ -330,6 +381,35 @@ export function deriveGraph(
             required: slot.required ?? false,
             multivalued: slot.multivalued ?? false,
             identifier: slot.identifier ?? false,
+          },
+          animated: false,
+        });
+      }
+    }
+
+    // Range edges (schema-level slot references to ghost nodes)
+    for (const slotName of classDef.slots) {
+      const schemaSlot = allSchemaSlots[slotName] ?? schema.slots?.[slotName];
+      if (!schemaSlot) continue;
+      const usage = classDef.slotUsage[slotName];
+      const effectiveRange = usage?.range ?? schemaSlot.range;
+      if (!effectiveRange) continue;
+      const ghostId = `ghost__${effectiveRange}`;
+      const edgeId = `range__${className}__${slotName}__${effectiveRange}`;
+      if (allGhostIds.has(ghostId) && !edges.find((e) => e.id === edgeId)) {
+        const effectiveSlot = usage ? { ...schemaSlot, ...usage } : schemaSlot;
+        edges.push({
+          id: edgeId,
+          type: 'range' as LinkMLEdgeType,
+          source: className,
+          target: ghostId,
+          label: slotName,
+          data: {
+            slotName,
+            range: effectiveRange,
+            required: effectiveSlot.required ?? false,
+            multivalued: effectiveSlot.multivalued ?? false,
+            identifier: effectiveSlot.identifier ?? false,
           },
           animated: false,
         });

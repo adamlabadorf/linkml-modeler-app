@@ -4,7 +4,7 @@
  */
 import React, { useCallback, useMemo, useState } from 'react';
 import { useAppStore } from '../store/index.js';
-import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, SchemaFile } from '../model/index.js';
+import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, SchemaFile, LinkMLSchema } from '../model/index.js';
 import { emptyCanvasLayout } from '../model/index.js';
 import { usePlatform } from '../platform/PlatformContext.js';
 import { parseYaml } from '../io/yaml.js';
@@ -409,6 +409,42 @@ function useIsAOptionGroups(excludeClassName?: string) {
   }, [allSchemas, excludeClassName]);
 }
 
+/** Returns grouped schema-level slot names from every schema in the project. */
+function useSchemaSlotOptionGroups() {
+  const allSchemas = useAppStore((s) => s.activeProject?.schemas ?? []);
+
+  return useMemo(() => {
+    const groups: OptionGroup[] = [];
+    for (const sf of allSchemas) {
+      const slotNames = Object.keys(sf.schema.slots ?? {}).sort();
+      if (slotNames.length > 0) {
+        groups.push({ label: sf.filePath.replace(/\.ya?ml$/, ''), options: slotNames });
+      }
+    }
+    return groups;
+  }, [allSchemas]);
+}
+
+/**
+ * Walks the is_a + mixin inheritance chain for a class and collects all
+ * schema-level slot names (cls.slots[]) accessible via inheritance.
+ */
+function collectInheritedSlotNames(
+  className: string,
+  schema: LinkMLSchema,
+  visited: Set<string> = new Set()
+): string[] {
+  if (visited.has(className)) return [];
+  visited.add(className);
+  const cls = schema.classes[className];
+  if (!cls) return [];
+
+  const names: string[] = [...cls.slots];
+  if (cls.isA) names.push(...collectInheritedSlotNames(cls.isA, schema, visited));
+  for (const mixin of cls.mixins) names.push(...collectInheritedSlotNames(mixin, schema, visited));
+  return [...new Set(names)];
+}
+
 function ClassPanel({ schemaId, className }: { schemaId: string; className: string }) {
   const schema = useAppStore((s) => s.getActiveSchema())?.schema;
   const updateClass = useAppStore((s) => s.updateClass);
@@ -419,10 +455,18 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
   const deleteClass = useAppStore((s) => s.deleteClass);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
   const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
+  const addSlotReferenceToClass = useAppStore((s) => s.addSlotReferenceToClass);
+  const removeSlotReferenceFromClass = useAppStore((s) => s.removeSlotReferenceFromClass);
+  const updateSlotUsage = useAppStore((s) => s.updateSlotUsage);
+  const deleteSlotUsage = useAppStore((s) => s.deleteSlotUsage);
+  const allSchemas = useAppStore((s) => s.activeProject?.schemas ?? []);
 
   const rangeOptionGroups = useRangeOptionGroups(schemaId, className);
   const isAOptionGroups = useIsAOptionGroups(className);
+  const schemaSlotOptionGroups = useSchemaSlotOptionGroups();
   const [newSlotName, setNewSlotName] = useState('');
+  const [newSlotRefName, setNewSlotRefName] = useState('');
+  const [newUsageSlotName, setNewUsageSlotName] = useState('');
 
   const classDef = schema?.classes[className] as ClassDefinition | undefined;
   if (!classDef) return <EmptyPanel message="Class not found" />;
@@ -430,11 +474,43 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
 
   const update = (partial: Partial<ClassDefinition>) => updateClass(schemaId, className, partial);
 
+  // Merge all schema-level slots across all loaded schemas
+  const allSchemaSlots = useMemo(() => {
+    const merged: Record<string, SlotDefinition> = {};
+    for (const sf of allSchemas) Object.assign(merged, sf.schema.slots ?? {});
+    return merged;
+  }, [allSchemas]);
+
+  // All slot names accessible via inheritance (for slot_usage candidates)
+  const inheritedSlotNames = useMemo(
+    () => schema ? collectInheritedSlotNames(className, schema, new Set()) : [],
+    [schema, className]
+  );
+  // Slot names that are eligible to add as slot_usage (inherited but not yet overridden)
+  const availableForUsage = useMemo(
+    () => inheritedSlotNames.filter((n) => !(n in cls.slotUsage)),
+    [inheritedSlotNames, cls.slotUsage]
+  );
+
   function handleAddSlot() {
     const name = newSlotName.trim();
     if (!name || cls.attributes[name]) return;
     addAttribute(schemaId, className, { name });
     setNewSlotName('');
+  }
+
+  function handleAddSlotRef() {
+    const name = newSlotRefName.trim();
+    if (!name || cls.slots.includes(name)) return;
+    addSlotReferenceToClass(schemaId, className, name);
+    setNewSlotRefName('');
+  }
+
+  function handleAddSlotUsage() {
+    const name = newUsageSlotName.trim();
+    if (!name || name in cls.slotUsage) return;
+    updateSlotUsage(schemaId, className, name, { name });
+    setNewUsageSlotName('');
   }
 
   return (
@@ -526,6 +602,77 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
         </button>
       </div>
 
+      <SectionHeader title="Referenced Slots" />
+
+      {cls.slots.map((slotName) => {
+        const schemaSlot = allSchemaSlots[slotName];
+        return (
+          <div key={slotName} style={styles.slotRefRow}>
+            <span style={styles.slotRefName}>{slotName}</span>
+            {schemaSlot?.range && (
+              <span style={styles.slotRefRange}>: {schemaSlot.range}</span>
+            )}
+            {!schemaSlot && (
+              <span style={styles.slotRefMissing}>⚠ not found</span>
+            )}
+            <button
+              style={styles.slotRefRemoveBtn}
+              onClick={() => removeSlotReferenceFromClass(schemaId, className, slotName)}
+              title="Remove slot reference"
+            >
+              ✕
+            </button>
+          </div>
+        );
+      })}
+
+      <div style={styles.addRow}>
+        <div style={{ flex: 1 }}>
+          <FilteredGroupedSelect
+            value={newSlotRefName}
+            onChange={(v) => setNewSlotRefName(v)}
+            groups={schemaSlotOptionGroups}
+            placeholder="add schema slot reference…"
+          />
+        </div>
+        <button style={styles.btnPrimary} onClick={handleAddSlotRef} disabled={!newSlotRefName.trim()}>
+          + Add
+        </button>
+      </div>
+
+      <SectionHeader title="Slot Usage" />
+
+      {Object.entries(cls.slotUsage).map(([slotName, usage]) => (
+        <SlotInlineEditor
+          key={slotName}
+          slot={{ ...usage, name: slotName } as SlotDefinition}
+          rangeOptionGroups={rangeOptionGroups}
+          onUpdate={(partial) => {
+            if (partial.range) autoAddImportForRange(schemaId, partial.range);
+            updateSlotUsage(schemaId, className, slotName, partial);
+          }}
+          onDelete={() => deleteSlotUsage(schemaId, className, slotName)}
+          deleteLabel="override"
+          mode="override"
+        />
+      ))}
+
+      {availableForUsage.length > 0 && (
+        <div style={styles.addRow}>
+          <div style={{ flex: 1 }}>
+            <FilteredGroupedSelect
+              value={newUsageSlotName}
+              onChange={(v) => setNewUsageSlotName(v)}
+              groups={[{ label: 'Inherited slots', options: availableForUsage }]}
+              placeholder="add slot_usage override…"
+            />
+          </div>
+          <button style={styles.btnPrimary} onClick={handleAddSlotUsage} disabled={!newUsageSlotName.trim()}>
+            + Add
+          </button>
+        </div>
+      )}
+
       <SectionHeader title="Actions" />
       <div style={styles.actionsRow}>
         <DeleteButton
@@ -545,11 +692,17 @@ function SlotInlineEditor({
   rangeOptionGroups,
   onUpdate,
   onDelete,
+  deleteLabel = 'slot',
+  mode = 'full',
 }: {
   slot: SlotDefinition;
   rangeOptionGroups: OptionGroup[];
   onUpdate: (partial: Partial<SlotDefinition>) => void;
   onDelete: () => void;
+  /** Label for the delete button, e.g. "attribute", "slot", "override" */
+  deleteLabel?: string;
+  /** "full" shows all fields; "override" shows only fields valid for slot_usage */
+  mode?: 'full' | 'override';
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -587,13 +740,17 @@ function SlotInlineEditor({
             <div>
               <Checkbox label="required" checked={!!slot.required} onChange={(v) => onUpdate({ required: v || undefined })} />
               <Checkbox label="multivalued" checked={!!slot.multivalued} onChange={(v) => onUpdate({ multivalued: v || undefined })} />
-              <Checkbox label="identifier" checked={!!slot.identifier} onChange={(v) => onUpdate({ identifier: v || undefined })} />
+              {mode === 'full' && (
+                <Checkbox label="identifier" checked={!!slot.identifier} onChange={(v) => onUpdate({ identifier: v || undefined })} />
+              )}
             </div>
           </FieldRow>
           <FieldRow label="Tier 2 flags">
             <div>
               <Checkbox label="recommended" checked={!!slot.recommended} onChange={(v) => onUpdate({ recommended: v || undefined })} />
-              <Checkbox label="inlined" checked={!!slot.inlined} onChange={(v) => onUpdate({ inlined: v || undefined })} />
+              {mode === 'full' && (
+                <Checkbox label="inlined" checked={!!slot.inlined} onChange={(v) => onUpdate({ inlined: v || undefined })} />
+              )}
             </div>
           </FieldRow>
           <FieldRow label="pattern">
@@ -604,16 +761,18 @@ function SlotInlineEditor({
               monospace
             />
           </FieldRow>
-          <FieldRow label="slot_uri">
-            <TextInput
-              value={slot.slotUri ?? ''}
-              onChange={(v) => onUpdate({ slotUri: v || undefined })}
-              placeholder="e.g. schema:name"
-              monospace
-            />
-          </FieldRow>
+          {mode === 'full' && (
+            <FieldRow label="slot_uri">
+              <TextInput
+                value={slot.slotUri ?? ''}
+                onChange={(v) => onUpdate({ slotUri: v || undefined })}
+                placeholder="e.g. schema:name"
+                monospace
+              />
+            </FieldRow>
+          )}
           <div style={styles.slotEditorActions}>
-            <DeleteButton label="attribute" onConfirm={onDelete} />
+            <DeleteButton label={deleteLabel} onConfirm={onDelete} />
           </div>
         </div>
       )}
@@ -857,6 +1016,102 @@ function EdgePanel({ edgeId }: { edgeId: string }) {
   );
 }
 
+function SchemaSlotInlineEditor({
+  slot,
+  schemaSlots,
+  rangeOptionGroups,
+  onUpdate,
+  onDelete,
+  onRename,
+}: {
+  slot: SlotDefinition;
+  schemaSlots: Record<string, SlotDefinition>;
+  rangeOptionGroups: OptionGroup[];
+  onUpdate: (partial: Partial<SlotDefinition>) => void;
+  onDelete: () => void;
+  onRename: (newName: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div style={styles.slotEditor}>
+      <div style={styles.slotEditorHeader} onClick={() => setExpanded((v) => !v)}>
+        <span style={styles.slotEditorToggle}>{expanded ? '▾' : '▸'}</span>
+        <span style={styles.slotEditorName}>{slot.name}</span>
+        {slot.range && <span style={styles.slotEditorRange}>: {slot.range}</span>}
+        <div style={styles.slotEditorBadges}>
+          {slot.required && <span style={styles.slotBadge}>R</span>}
+          {slot.multivalued && <span style={styles.slotBadge}>M</span>}
+          {slot.identifier && <span style={styles.slotBadge}>id</span>}
+        </div>
+      </div>
+
+      {expanded && (
+        <div style={styles.slotEditorBody}>
+          <FieldRow label="Name">
+            <TextInput
+              value={slot.name}
+              onChange={() => {}}
+              onCommit={(v) => {
+                const newName = v.trim();
+                if (newName && newName !== slot.name && !schemaSlots[newName]) onRename(newName);
+              }}
+              monospace
+            />
+          </FieldRow>
+          <FieldRow label="Description">
+            <TextArea
+              value={slot.description ?? ''}
+              onChange={(v) => onUpdate({ description: v || undefined })}
+              placeholder="Optional…"
+            />
+          </FieldRow>
+          <FieldRow label="Range">
+            <FilteredGroupedSelect
+              value={slot.range ?? ''}
+              onChange={(v) => onUpdate({ range: v || undefined })}
+              groups={rangeOptionGroups}
+              placeholder="(none)"
+            />
+          </FieldRow>
+          <FieldRow label="Tier 1 flags">
+            <div>
+              <Checkbox label="required" checked={!!slot.required} onChange={(v) => onUpdate({ required: v || undefined })} />
+              <Checkbox label="multivalued" checked={!!slot.multivalued} onChange={(v) => onUpdate({ multivalued: v || undefined })} />
+              <Checkbox label="identifier" checked={!!slot.identifier} onChange={(v) => onUpdate({ identifier: v || undefined })} />
+            </div>
+          </FieldRow>
+          <FieldRow label="Tier 2 flags">
+            <div>
+              <Checkbox label="recommended" checked={!!slot.recommended} onChange={(v) => onUpdate({ recommended: v || undefined })} />
+              <Checkbox label="inlined" checked={!!slot.inlined} onChange={(v) => onUpdate({ inlined: v || undefined })} />
+            </div>
+          </FieldRow>
+          <FieldRow label="pattern">
+            <TextInput
+              value={(slot.extras?.['pattern'] as string) ?? ''}
+              onChange={(v) => onUpdate({ extras: { ...(slot.extras ?? {}), pattern: v || undefined } })}
+              placeholder="regex pattern"
+              monospace
+            />
+          </FieldRow>
+          <FieldRow label="slot_uri">
+            <TextInput
+              value={slot.slotUri ?? ''}
+              onChange={(v) => onUpdate({ slotUri: v || undefined })}
+              placeholder="e.g. schema:name"
+              monospace
+            />
+          </FieldRow>
+          <div style={styles.slotEditorActions}>
+            <DeleteButton label="slot" onConfirm={onDelete} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
   const activeSchemaFile = useAppStore((s) => s.getActiveSchema());
   const schema = activeSchemaFile?.schema;
@@ -866,9 +1121,15 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
   const removeSchemaFile = useAppStore((s) => s.removeSchemaFile);
   const activeProject = useAppStore((s) => s.activeProject);
   const platform = usePlatform();
+  const addSchemaSlot = useAppStore((s) => s.addSchemaSlot);
+  const updateSchemaSlot = useAppStore((s) => s.updateSchemaSlot);
+  const deleteSchemaSlot = useAppStore((s) => s.deleteSchemaSlot);
+  const renameSchemaSlot = useAppStore((s) => s.renameSchemaSlot);
 
   const [newImport, setNewImport] = React.useState('');
   const [resolving, setResolving] = React.useState(false);
+  const [newSchemaSlotName, setNewSchemaSlotName] = React.useState('');
+  const rangeOptionGroups = useRangeOptionGroups(schemaId);
 
   if (!schema) return <EmptyPanel message="No schema loaded" />;
 
@@ -1030,6 +1291,50 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
           monospace
         />
       </FieldRow>
+
+      <SectionHeader title="Schema Slots" />
+
+      {Object.values(schema.slots ?? {}).map((slot) => (
+        <SchemaSlotInlineEditor
+          key={slot.name}
+          slot={slot}
+          schemaSlots={schema.slots ?? {}}
+          rangeOptionGroups={rangeOptionGroups}
+          onUpdate={(partial) => updateSchemaSlot(schemaId, slot.name, partial)}
+          onDelete={() => deleteSchemaSlot(schemaId, slot.name)}
+          onRename={(newName) => renameSchemaSlot(schemaId, slot.name, newName)}
+        />
+      ))}
+
+      <div style={styles.addRow}>
+        <input
+          style={{ ...styles.input, flex: 1 }}
+          placeholder="new slot name…"
+          value={newSchemaSlotName}
+          onChange={(e) => setNewSchemaSlotName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              const name = newSchemaSlotName.trim();
+              if (name && !(schema.slots ?? {})[name]) {
+                addSchemaSlot(schemaId, { name });
+                setNewSchemaSlotName('');
+              }
+            }
+          }}
+        />
+        <button
+          style={styles.btnPrimary}
+          onClick={() => {
+            const name = newSchemaSlotName.trim();
+            if (name && !(schema.slots ?? {})[name]) {
+              addSchemaSlot(schemaId, { name });
+              setNewSchemaSlotName('');
+            }
+          }}
+        >
+          + Add
+        </button>
+      </div>
 
       <SectionHeader title="Imports" />
 
@@ -1508,5 +1813,46 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 11,
     margin: 0,
     lineHeight: 1.5,
+  },
+  slotRefRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '3px 12px',
+    borderBottom: '1px solid #1e293b',
+  },
+  slotRefName: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    color: '#7dd3fc',
+    flex: '0 1 auto',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  slotRefRange: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#86efac',
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  slotRefMissing: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#fbbf24',
+    flex: 1,
+  },
+  slotRefRemoveBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#475569',
+    cursor: 'pointer',
+    padding: '1px 4px',
+    fontSize: 11,
+    borderRadius: 3,
+    flexShrink: 0,
   },
 };
