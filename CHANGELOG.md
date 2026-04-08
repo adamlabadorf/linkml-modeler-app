@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1] - 2026-04-08
+
+### Added
+
+- **Editor**: Mixins field in the class properties panel for assigning mixin classes
+
+### Fixed
+
+- **Editor**: Restored "Delete attribute" label in the attributes panel (was previously blank)
+
 ## [0.3.0] - 2026-04-08
 
 ### Added
