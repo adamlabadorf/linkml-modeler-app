@@ -452,6 +452,7 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
   const addAttribute = useAppStore((s) => s.addAttribute);
   const updateAttribute = useAppStore((s) => s.updateAttribute);
   const deleteAttribute = useAppStore((s) => s.deleteAttribute);
+  const renameAttribute = useAppStore((s) => s.renameAttribute);
   const deleteClass = useAppStore((s) => s.deleteClass);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
   const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
@@ -586,6 +587,7 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
           onDelete={() => {
             deleteAttribute(schemaId, className, slot.name);
           }}
+          onRename={(newName) => renameAttribute(schemaId, className, slot.name, newName)}
         />
       ))}
 
@@ -692,6 +694,7 @@ function SlotInlineEditor({
   rangeOptionGroups,
   onUpdate,
   onDelete,
+  onRename,
   deleteLabel = 'slot',
   mode = 'full',
 }: {
@@ -699,6 +702,7 @@ function SlotInlineEditor({
   rangeOptionGroups: OptionGroup[];
   onUpdate: (partial: Partial<SlotDefinition>) => void;
   onDelete: () => void;
+  onRename?: (newName: string) => void;
   /** Label for the delete button, e.g. "attribute", "slot", "override" */
   deleteLabel?: string;
   /** "full" shows all fields; "override" shows only fields valid for slot_usage */
@@ -721,6 +725,19 @@ function SlotInlineEditor({
 
       {expanded && (
         <div style={styles.slotEditorBody}>
+          {onRename && (
+            <FieldRow label="Name">
+              <TextInput
+                value={slot.name}
+                onChange={() => {}}
+                onCommit={(v) => {
+                  const newName = v.trim();
+                  if (newName && newName !== slot.name) onRename(newName);
+                }}
+                monospace
+              />
+            </FieldRow>
+          )}
           <FieldRow label="Description">
             <TextArea
               value={slot.description ?? ''}
