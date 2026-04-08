@@ -35,6 +35,10 @@ export interface ProjectSlice {
   deleteSchemaSlot(schemaId: string, slotName: string): void;
   renameSchemaSlot(schemaId: string, oldName: string, newName: string): void;
 
+  // ── Class mixin mutations (cls.mixins[] array) ───────────────────────────────
+  addMixinToClass(schemaId: string, className: string, mixinName: string): void;
+  removeMixinFromClass(schemaId: string, className: string, mixinName: string): void;
+
   // ── Class slot-reference mutations (cls.slots[] array) ───────────────────────
   addSlotReferenceToClass(schemaId: string, className: string, slotName: string): void;
   removeSlotReferenceFromClass(schemaId: string, className: string, slotName: string): void;
@@ -330,6 +334,43 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
             updatedClasses[name] = updated;
           }
           return { ...s, slots: { ...restSlots, [newName]: renamedSlot }, classes: updatedClasses };
+        }),
+      };
+    });
+  },
+
+  // ── Class mixin mutations ────────────────────────────────────────────────────
+
+  addMixinToClass(schemaId, className, mixinName) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const cls = s.classes[className];
+          if (!cls || cls.mixins.includes(mixinName)) return s;
+          return {
+            ...s,
+            classes: { ...s.classes, [className]: { ...cls, mixins: [...cls.mixins, mixinName] } },
+          };
+        }),
+      };
+    });
+  },
+
+  removeMixinFromClass(schemaId, className, mixinName) {
+    set((state) => {
+      if (!state.activeProject) return state;
+      return {
+        activeProject: patchSchema(state.activeProject, schemaId, (s) => {
+          const cls = s.classes[className];
+          if (!cls) return s;
+          return {
+            ...s,
+            classes: {
+              ...s.classes,
+              [className]: { ...cls, mixins: cls.mixins.filter((m) => m !== mixinName) },
+            },
+          };
         }),
       };
     });

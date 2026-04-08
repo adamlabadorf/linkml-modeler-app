@@ -456,6 +456,8 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
   const deleteClass = useAppStore((s) => s.deleteClass);
   const setActiveEntity = useAppStore((s) => s.setActiveEntity);
   const autoAddImportForRange = useAppStore((s) => s.autoAddImportForRange);
+  const addMixinToClass = useAppStore((s) => s.addMixinToClass);
+  const removeMixinFromClass = useAppStore((s) => s.removeMixinFromClass);
   const addSlotReferenceToClass = useAppStore((s) => s.addSlotReferenceToClass);
   const removeSlotReferenceFromClass = useAppStore((s) => s.removeSlotReferenceFromClass);
   const updateSlotUsage = useAppStore((s) => s.updateSlotUsage);
@@ -465,6 +467,7 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
   const rangeOptionGroups = useRangeOptionGroups(schemaId, className);
   const isAOptionGroups = useIsAOptionGroups(className);
   const schemaSlotOptionGroups = useSchemaSlotOptionGroups();
+  const [newMixinName, setNewMixinName] = useState('');
   const [newSlotName, setNewSlotName] = useState('');
   const [newSlotRefName, setNewSlotRefName] = useState('');
   const [newUsageSlotName, setNewUsageSlotName] = useState('');
@@ -498,6 +501,13 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
     if (!name || cls.attributes[name]) return;
     addAttribute(schemaId, className, { name });
     setNewSlotName('');
+  }
+
+  function handleAddMixin() {
+    const name = newMixinName.trim();
+    if (!name || cls.mixins.includes(name)) return;
+    addMixinToClass(schemaId, className, name);
+    setNewMixinName('');
   }
 
   function handleAddSlotRef() {
@@ -552,6 +562,36 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
           groups={isAOptionGroups}
           placeholder="(none)"
         />
+      </FieldRow>
+
+      <FieldRow label="mixins">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {cls.mixins.map((mixinName) => (
+            <div key={mixinName} style={styles.slotRefRow}>
+              <span style={styles.slotRefName}>{mixinName}</span>
+              <button
+                style={styles.slotRefRemoveBtn}
+                onClick={() => removeMixinFromClass(schemaId, className, mixinName)}
+                title="Remove mixin"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <div style={styles.addRow}>
+            <div style={{ flex: 1 }}>
+              <FilteredGroupedSelect
+                value={newMixinName}
+                onChange={(v) => setNewMixinName(v)}
+                groups={isAOptionGroups}
+                placeholder="add mixin…"
+              />
+            </div>
+            <button style={styles.btnPrimary} onClick={handleAddMixin} disabled={!newMixinName.trim()}>
+              + Add
+            </button>
+          </div>
+        </div>
       </FieldRow>
 
       <FieldRow label="Flags">
