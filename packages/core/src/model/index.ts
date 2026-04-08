@@ -93,7 +93,54 @@ export interface ClassDefinition {
   unionOf?: string[]; // Class union
   uriAnnotation?: string; // class_uri
   fromSchema?: string;
+  rules?: ClassRule[];
   extras?: Record<string, unknown>;
+}
+
+// ─── 4.3a Class Rules ────────────────────────────────────────────────────────
+
+export interface SlotCondition {
+  equalsString?: string;
+  equalsStringIn?: string[];
+  equalsNumber?: number;
+  pattern?: string;
+  minimumValue?: number;
+  maximumValue?: number;
+  required?: boolean;
+  recommended?: boolean;
+  multivalued?: boolean;
+  minimumCardinality?: number;
+  maximumCardinality?: number;
+  range?: string;
+  valuePresence?: 'PRESENT' | 'ABSENT';
+  anyOf?: SlotCondition[];
+  allOf?: SlotCondition[];
+  exactlyOneOf?: SlotCondition[];
+  noneOf?: SlotCondition[];
+  hasMember?: SlotCondition;
+  allMembers?: SlotCondition;
+}
+
+export interface AnonymousClassExpression {
+  slotConditions?: Record<string, SlotCondition>;
+  anyOf?: AnonymousClassExpression[];
+  allOf?: AnonymousClassExpression[];
+  exactlyOneOf?: AnonymousClassExpression[];
+  noneOf?: AnonymousClassExpression[];
+  isA?: string;
+  description?: string;
+}
+
+export interface ClassRule {
+  title?: string;
+  description?: string;
+  preconditions?: AnonymousClassExpression;
+  postconditions?: AnonymousClassExpression;
+  elseconditions?: AnonymousClassExpression;
+  bidirectional?: boolean;
+  openWorld?: boolean;
+  deactivated?: boolean;
+  rank?: number;
 }
 
 // ─── 4.4 Slots / Attributes ──────────────────────────────────────────────────

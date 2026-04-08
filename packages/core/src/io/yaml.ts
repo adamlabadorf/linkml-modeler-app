@@ -11,6 +11,9 @@ import type {
   ReachableFrom,
   SubsetDefinition,
   TypeDefinition,
+  ClassRule,
+  AnonymousClassExpression,
+  SlotCondition,
 } from '../model/index.js';
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -70,7 +73,7 @@ const KNOWN_CLASS_KEYS = new Set([
   'status', 'notes', 'comments', 'deprecated', 'aliases',
   'alt_descriptions', 'local_names', 'mappings',
   'exact_mappings', 'close_mappings', 'broad_mappings', 'narrow_mappings',
-  'related_mappings',
+  'related_mappings', 'rules',
 ]);
 
 const KNOWN_SLOT_KEYS = new Set([
@@ -142,6 +145,61 @@ function parseSlot(raw: Record<string, unknown>, name: string): SlotDefinition {
   return slot;
 }
 
+function parseSlotCondition(raw: Record<string, unknown>): SlotCondition {
+  const sc: SlotCondition = {};
+  if (raw['equals_string'] !== undefined) sc.equalsString = String(raw['equals_string']);
+  if (Array.isArray(raw['equals_string_in'])) sc.equalsStringIn = raw['equals_string_in'] as string[];
+  if (raw['equals_number'] !== undefined) sc.equalsNumber = Number(raw['equals_number']);
+  if (raw['pattern']) sc.pattern = String(raw['pattern']);
+  if (raw['minimum_value'] !== undefined) sc.minimumValue = Number(raw['minimum_value']);
+  if (raw['maximum_value'] !== undefined) sc.maximumValue = Number(raw['maximum_value']);
+  if (raw['required'] !== undefined) sc.required = Boolean(raw['required']);
+  if (raw['recommended'] !== undefined) sc.recommended = Boolean(raw['recommended']);
+  if (raw['multivalued'] !== undefined) sc.multivalued = Boolean(raw['multivalued']);
+  if (raw['minimum_cardinality'] !== undefined) sc.minimumCardinality = Number(raw['minimum_cardinality']);
+  if (raw['maximum_cardinality'] !== undefined) sc.maximumCardinality = Number(raw['maximum_cardinality']);
+  if (raw['range']) sc.range = String(raw['range']);
+  if (raw['value_presence']) sc.valuePresence = raw['value_presence'] as 'PRESENT' | 'ABSENT';
+  if (Array.isArray(raw['any_of'])) sc.anyOf = (raw['any_of'] as Record<string, unknown>[]).map(parseSlotCondition);
+  if (Array.isArray(raw['all_of'])) sc.allOf = (raw['all_of'] as Record<string, unknown>[]).map(parseSlotCondition);
+  if (Array.isArray(raw['exactly_one_of'])) sc.exactlyOneOf = (raw['exactly_one_of'] as Record<string, unknown>[]).map(parseSlotCondition);
+  if (Array.isArray(raw['none_of'])) sc.noneOf = (raw['none_of'] as Record<string, unknown>[]).map(parseSlotCondition);
+  if (raw['has_member'] && typeof raw['has_member'] === 'object') sc.hasMember = parseSlotCondition(raw['has_member'] as Record<string, unknown>);
+  if (raw['all_members'] && typeof raw['all_members'] === 'object') sc.allMembers = parseSlotCondition(raw['all_members'] as Record<string, unknown>);
+  return sc;
+}
+
+function parseAnonymousClassExpression(raw: Record<string, unknown>): AnonymousClassExpression {
+  const ace: AnonymousClassExpression = {};
+  if (raw['description']) ace.description = String(raw['description']);
+  if (raw['is_a']) ace.isA = String(raw['is_a']);
+  if (raw['slot_conditions'] && typeof raw['slot_conditions'] === 'object' && !Array.isArray(raw['slot_conditions'])) {
+    ace.slotConditions = {};
+    for (const [slotName, scRaw] of Object.entries(raw['slot_conditions'] as Record<string, unknown>)) {
+      ace.slotConditions[slotName] = parseSlotCondition((scRaw as Record<string, unknown>) ?? {});
+    }
+  }
+  if (Array.isArray(raw['any_of'])) ace.anyOf = (raw['any_of'] as Record<string, unknown>[]).map(parseAnonymousClassExpression);
+  if (Array.isArray(raw['all_of'])) ace.allOf = (raw['all_of'] as Record<string, unknown>[]).map(parseAnonymousClassExpression);
+  if (Array.isArray(raw['exactly_one_of'])) ace.exactlyOneOf = (raw['exactly_one_of'] as Record<string, unknown>[]).map(parseAnonymousClassExpression);
+  if (Array.isArray(raw['none_of'])) ace.noneOf = (raw['none_of'] as Record<string, unknown>[]).map(parseAnonymousClassExpression);
+  return ace;
+}
+
+function parseClassRule(raw: Record<string, unknown>): ClassRule {
+  const rule: ClassRule = {};
+  if (raw['title']) rule.title = String(raw['title']);
+  if (raw['description']) rule.description = String(raw['description']);
+  if (raw['bidirectional'] !== undefined) rule.bidirectional = Boolean(raw['bidirectional']);
+  if (raw['open_world'] !== undefined) rule.openWorld = Boolean(raw['open_world']);
+  if (raw['deactivated'] !== undefined) rule.deactivated = Boolean(raw['deactivated']);
+  if (raw['rank'] !== undefined) rule.rank = Number(raw['rank']);
+  if (raw['preconditions'] && typeof raw['preconditions'] === 'object') rule.preconditions = parseAnonymousClassExpression(raw['preconditions'] as Record<string, unknown>);
+  if (raw['postconditions'] && typeof raw['postconditions'] === 'object') rule.postconditions = parseAnonymousClassExpression(raw['postconditions'] as Record<string, unknown>);
+  if (raw['elseconditions'] && typeof raw['elseconditions'] === 'object') rule.elseconditions = parseAnonymousClassExpression(raw['elseconditions'] as Record<string, unknown>);
+  return rule;
+}
+
 function parseClass(raw: Record<string, unknown>, name: string): ClassDefinition {
   const cls: ClassDefinition = {
     name,
@@ -178,6 +236,10 @@ function parseClass(raw: Record<string, unknown>, name: string): ClassDefinition
         slotName,
       );
     }
+  }
+
+  if (raw['rules'] && Array.isArray(raw['rules'])) {
+    cls.rules = (raw['rules'] as Record<string, unknown>[]).map(parseClassRule);
   }
 
   const extras = collectExtras(raw, KNOWN_CLASS_KEYS);
@@ -342,6 +404,71 @@ function serializeSlot(slot: SlotDefinition): Record<string, unknown> | null {
   return Object.keys(out).length > 0 ? out : null;
 }
 
+function serializeSlotCondition(sc: SlotCondition): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (sc.equalsString !== undefined) out['equals_string'] = sc.equalsString;
+  if (isDefined(sc.equalsStringIn)) out['equals_string_in'] = sc.equalsStringIn;
+  if (sc.equalsNumber !== undefined) out['equals_number'] = sc.equalsNumber;
+  if (isDefined(sc.pattern)) out['pattern'] = sc.pattern;
+  if (sc.minimumValue !== undefined) out['minimum_value'] = sc.minimumValue;
+  if (sc.maximumValue !== undefined) out['maximum_value'] = sc.maximumValue;
+  if (sc.required !== undefined) out['required'] = sc.required;
+  if (sc.recommended !== undefined) out['recommended'] = sc.recommended;
+  if (sc.multivalued !== undefined) out['multivalued'] = sc.multivalued;
+  if (sc.minimumCardinality !== undefined) out['minimum_cardinality'] = sc.minimumCardinality;
+  if (sc.maximumCardinality !== undefined) out['maximum_cardinality'] = sc.maximumCardinality;
+  if (isDefined(sc.range)) out['range'] = sc.range;
+  if (isDefined(sc.valuePresence)) out['value_presence'] = sc.valuePresence;
+  if (isDefined(sc.anyOf)) out['any_of'] = sc.anyOf!.map(serializeSlotCondition);
+  if (isDefined(sc.allOf)) out['all_of'] = sc.allOf!.map(serializeSlotCondition);
+  if (isDefined(sc.exactlyOneOf)) out['exactly_one_of'] = sc.exactlyOneOf!.map(serializeSlotCondition);
+  if (isDefined(sc.noneOf)) out['none_of'] = sc.noneOf!.map(serializeSlotCondition);
+  if (sc.hasMember) out['has_member'] = serializeSlotCondition(sc.hasMember);
+  if (sc.allMembers) out['all_members'] = serializeSlotCondition(sc.allMembers);
+  return out;
+}
+
+function serializeAnonymousClassExpression(ace: AnonymousClassExpression): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (isDefined(ace.description)) out['description'] = ace.description;
+  if (isDefined(ace.isA)) out['is_a'] = ace.isA;
+  if (ace.slotConditions && Object.keys(ace.slotConditions).length > 0) {
+    const sc: Record<string, unknown> = {};
+    for (const [slotName, cond] of Object.entries(ace.slotConditions)) {
+      sc[slotName] = serializeSlotCondition(cond);
+    }
+    out['slot_conditions'] = sc;
+  }
+  if (isDefined(ace.anyOf)) out['any_of'] = ace.anyOf!.map(serializeAnonymousClassExpression);
+  if (isDefined(ace.allOf)) out['all_of'] = ace.allOf!.map(serializeAnonymousClassExpression);
+  if (isDefined(ace.exactlyOneOf)) out['exactly_one_of'] = ace.exactlyOneOf!.map(serializeAnonymousClassExpression);
+  if (isDefined(ace.noneOf)) out['none_of'] = ace.noneOf!.map(serializeAnonymousClassExpression);
+  return out;
+}
+
+function serializeClassRule(rule: ClassRule): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (isDefined(rule.title)) out['title'] = rule.title;
+  if (isDefined(rule.description)) out['description'] = rule.description;
+  if (rule.preconditions) {
+    const s = serializeAnonymousClassExpression(rule.preconditions);
+    if (Object.keys(s).length > 0) out['preconditions'] = s;
+  }
+  if (rule.postconditions) {
+    const s = serializeAnonymousClassExpression(rule.postconditions);
+    if (Object.keys(s).length > 0) out['postconditions'] = s;
+  }
+  if (rule.elseconditions) {
+    const s = serializeAnonymousClassExpression(rule.elseconditions);
+    if (Object.keys(s).length > 0) out['elseconditions'] = s;
+  }
+  if (rule.bidirectional !== undefined) out['bidirectional'] = rule.bidirectional;
+  if (rule.openWorld !== undefined) out['open_world'] = rule.openWorld;
+  if (rule.deactivated !== undefined) out['deactivated'] = rule.deactivated;
+  if (rule.rank !== undefined) out['rank'] = rule.rank;
+  return out;
+}
+
 function serializeClass(cls: ClassDefinition): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (isDefined(cls.description)) out['description'] = cls.description;
@@ -371,6 +498,7 @@ function serializeClass(cls: ClassDefinition): Record<string, unknown> {
     }
     out['slot_usage'] = usage;
   }
+  if (isDefined(cls.rules)) out['rules'] = cls.rules!.map(serializeClassRule);
   if (cls.extras) Object.assign(out, cls.extras);
   return out;
 }

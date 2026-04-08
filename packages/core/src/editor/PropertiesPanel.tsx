@@ -4,7 +4,7 @@
  */
 import React, { useCallback, useMemo, useState } from 'react';
 import { useAppStore } from '../store/index.js';
-import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, SchemaFile, LinkMLSchema } from '../model/index.js';
+import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue, SchemaFile, LinkMLSchema, ClassRule, SlotCondition, AnonymousClassExpression } from '../model/index.js';
 import { emptyCanvasLayout } from '../model/index.js';
 import { usePlatform } from '../platform/PlatformContext.js';
 import { parseYaml } from '../io/yaml.js';
@@ -445,6 +445,194 @@ function collectInheritedSlotNames(
   return [...new Set(names)];
 }
 
+// ─── Rule editor components ───────────────────────────────────────────────────
+
+function SlotConditionEditor({
+  slotName,
+  cond,
+  onChange,
+  onRemove,
+}: {
+  slotName: string;
+  cond: SlotCondition;
+  onChange: (c: SlotCondition) => void;
+  onRemove: () => void;
+}) {
+  const upd = (p: Partial<SlotCondition>) => onChange({ ...cond, ...p });
+  return (
+    <div style={{ borderLeft: '2px solid #1e3a5f', marginLeft: 8, paddingLeft: 8, paddingBottom: 4, marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#86efac', flex: 1 }}>{slotName}</span>
+        <button style={styles.slotRefRemoveBtn} onClick={onRemove} title="Remove slot condition">✕</button>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <input
+          style={{ ...styles.input, fontSize: 11 }}
+          placeholder="equals_string…"
+          value={cond.equalsString ?? ''}
+          onChange={e => upd({ equalsString: e.target.value || undefined })}
+        />
+        <input
+          style={{ ...styles.input, fontSize: 11, fontFamily: 'monospace' }}
+          placeholder="pattern (regex)…"
+          value={cond.pattern ?? ''}
+          onChange={e => upd({ pattern: e.target.value || undefined })}
+        />
+        <select
+          style={{ ...styles.select, fontSize: 11 }}
+          value={cond.valuePresence ?? ''}
+          onChange={e => upd({ valuePresence: (e.target.value as 'PRESENT' | 'ABSENT') || undefined })}
+        >
+          <option value="">value_presence: —</option>
+          <option value="PRESENT">PRESENT</option>
+          <option value="ABSENT">ABSENT</option>
+        </select>
+        <Checkbox label="required" checked={!!cond.required} onChange={v => upd({ required: v || undefined })} />
+      </div>
+    </div>
+  );
+}
+
+function ClassExpressionEditor({
+  label,
+  expr,
+  onChange,
+}: {
+  label: string;
+  expr: AnonymousClassExpression;
+  onChange: (e: AnonymousClassExpression) => void;
+}) {
+  const [newSlotName, setNewSlotName] = useState('');
+  const slotConds = expr.slotConditions ?? {};
+
+  const updateSlotConditions = (sc: Record<string, SlotCondition>) => {
+    onChange({ ...expr, slotConditions: Object.keys(sc).length > 0 ? sc : undefined });
+  };
+
+  const handleAddSlot = () => {
+    const name = newSlotName.trim();
+    if (!name || slotConds[name]) return;
+    updateSlotConditions({ ...slotConds, [name]: {} });
+    setNewSlotName('');
+  };
+
+  return (
+    <div style={{ paddingBottom: 4 }}>
+      <div style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace', padding: '4px 12px',
+        textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        {label}
+      </div>
+      <div style={{ paddingLeft: 8, paddingRight: 8 }}>
+        {Object.entries(slotConds).map(([slotName, cond]) => (
+          <SlotConditionEditor
+            key={slotName}
+            slotName={slotName}
+            cond={cond}
+            onChange={c => updateSlotConditions({ ...slotConds, [slotName]: c })}
+            onRemove={() => {
+              const { [slotName]: _removed, ...rest } = slotConds;
+              updateSlotConditions(rest);
+            }}
+          />
+        ))}
+        <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+          <input
+            style={{ ...styles.input, fontSize: 11, flex: 1 }}
+            placeholder="slot name…"
+            value={newSlotName}
+            onChange={e => setNewSlotName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddSlot()}
+          />
+          <button
+            style={styles.btnPrimary}
+            onClick={handleAddSlot}
+            disabled={!newSlotName.trim() || !!slotConds[newSlotName.trim()]}
+          >
+            + Add
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RuleEditor({
+  rule,
+  ruleIndex,
+  onChange,
+  onDelete,
+}: {
+  rule: ClassRule;
+  ruleIndex: number;
+  onChange: (r: ClassRule) => void;
+  onDelete: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const upd = (p: Partial<ClassRule>) => onChange({ ...rule, ...p });
+  const label = rule.title || rule.description || `Rule ${ruleIndex + 1}`;
+
+  const exprHasContent = (e: AnonymousClassExpression) =>
+    (e.slotConditions && Object.keys(e.slotConditions).length > 0) ||
+    e.anyOf?.length || e.allOf?.length || e.exactlyOneOf?.length || e.noneOf?.length || e.isA;
+
+  return (
+    <div style={styles.slotEditor}>
+      <div style={styles.slotEditorHeader} onClick={() => setExpanded(x => !x)}>
+        <span style={styles.slotEditorToggle}>{expanded ? '▾' : '▸'}</span>
+        <span style={{ ...styles.slotEditorName, flex: 1 }} title={label}>{label}</span>
+        <div style={styles.slotEditorBadges}>
+          {rule.deactivated && <span style={styles.slotBadge}>off</span>}
+          {rule.bidirectional && <span style={styles.slotBadge}>bidir</span>}
+        </div>
+      </div>
+      {expanded && (
+        <div style={styles.slotEditorBody}>
+          <FieldRow label="Title">
+            <TextInput value={rule.title ?? ''} onChange={v => upd({ title: v || undefined })} placeholder="rule title…" />
+          </FieldRow>
+          <FieldRow label="Description">
+            <TextArea value={rule.description ?? ''} onChange={v => upd({ description: v || undefined })} placeholder="rule description…" />
+          </FieldRow>
+          <FieldRow label="Rank">
+            <input
+              style={{ ...styles.input, width: 80 }}
+              type="number"
+              value={rule.rank ?? ''}
+              placeholder="—"
+              onChange={e => upd({ rank: e.target.value !== '' ? parseInt(e.target.value) : undefined })}
+            />
+          </FieldRow>
+          <FieldRow label="Flags">
+            <div>
+              <Checkbox label="bidirectional" checked={!!rule.bidirectional} onChange={v => upd({ bidirectional: v || undefined })} />
+              <Checkbox label="open_world" checked={!!rule.openWorld} onChange={v => upd({ openWorld: v || undefined })} />
+              <Checkbox label="deactivated" checked={!!rule.deactivated} onChange={v => upd({ deactivated: v || undefined })} />
+            </div>
+          </FieldRow>
+          <ClassExpressionEditor
+            label="IF (preconditions)"
+            expr={rule.preconditions ?? {}}
+            onChange={e => upd({ preconditions: exprHasContent(e) ? e : undefined })}
+          />
+          <ClassExpressionEditor
+            label="THEN (postconditions)"
+            expr={rule.postconditions ?? {}}
+            onChange={e => upd({ postconditions: exprHasContent(e) ? e : undefined })}
+          />
+          <ClassExpressionEditor
+            label="ELSE (else-conditions)"
+            expr={rule.elseconditions ?? {}}
+            onChange={e => upd({ elseconditions: exprHasContent(e) ? e : undefined })}
+          />
+          <div style={styles.slotEditorActions}>
+            <DeleteButton label="rule" onConfirm={onDelete} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ClassPanel({ schemaId, className }: { schemaId: string; className: string }) {
   const schema = useAppStore((s) => s.getActiveSchema())?.schema;
   const updateClass = useAppStore((s) => s.updateClass);
@@ -715,6 +903,34 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
           </button>
         </div>
       )}
+
+      <SectionHeader title="Rules" />
+
+      {(cls.rules ?? []).map((rule, idx) => (
+        <RuleEditor
+          key={idx}
+          rule={rule}
+          ruleIndex={idx}
+          onChange={updated => {
+            const newRules = [...(cls.rules ?? [])];
+            newRules[idx] = updated;
+            update({ rules: newRules });
+          }}
+          onDelete={() => {
+            const newRules = (cls.rules ?? []).filter((_, i) => i !== idx);
+            update({ rules: newRules.length > 0 ? newRules : undefined });
+          }}
+        />
+      ))}
+
+      <div style={styles.addRow}>
+        <button
+          style={styles.btnPrimary}
+          onClick={() => update({ rules: [...(cls.rules ?? []), {}] })}
+        >
+          + Add Rule
+        </button>
+      </div>
 
       <SectionHeader title="Actions" />
       <div style={styles.actionsRow}>
