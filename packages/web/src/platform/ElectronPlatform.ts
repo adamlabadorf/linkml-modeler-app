@@ -29,6 +29,7 @@ type ElectronBridge = {
   gitReadConfig(repoPath: string): Promise<{ remoteUrl?: string; userName?: string; userEmail?: string }>;
   gitStatus(repoPath: string): Promise<GitStatus | null>;
   gitStage(repoPath: string, paths: string[]): Promise<void>;
+  gitUnstage(repoPath: string, paths: string[]): Promise<void>;
   gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null>;
   gitPush(repoPath: string): Promise<GitPushResult | null>;
   gitPull(repoPath: string): Promise<GitPushResult | null>;
@@ -113,6 +114,10 @@ export class ElectronPlatform implements PlatformAPI {
 
   async gitStage(repoPath: string, paths: string[]): Promise<void> {
     return bridge().gitStage(repoPath, paths);
+  }
+
+  async gitUnstage(repoPath: string, paths: string[]): Promise<void> {
+    return bridge().gitUnstage(repoPath, paths);
   }
 
   async gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null> {

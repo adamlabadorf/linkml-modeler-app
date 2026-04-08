@@ -74,6 +74,10 @@ export class StubWebPlatform implements PlatformAPI {
     // no-op
   }
 
+  async gitUnstage(_repoPath: string, _paths: string[]): Promise<void> {
+    // no-op
+  }
+
   async gitCommit(_repoPath: string, _message: string, _author?: { name: string; email: string }): Promise<string | null> {
     return null;
   }

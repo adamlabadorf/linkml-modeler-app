@@ -44,6 +44,7 @@ function makeMockLocal() {
       stagedFiles: [], unstagedFiles: [], untrackedFiles: ['file.yaml'],
     })),
     gitStage: vi.fn(async () => {}),
+    gitUnstage: vi.fn(async () => {}),
     gitCommit: vi.fn(async () => 'abc1234'),
     gitPush: vi.fn<Parameters<PlatformAPI['gitPush']>, ReturnType<PlatformAPI['gitPush']>>(async () => ({ ok: true })),
     gitPull: vi.fn<Parameters<PlatformAPI['gitPull']>, ReturnType<PlatformAPI['gitPull']>>(async () => ({ ok: true })),

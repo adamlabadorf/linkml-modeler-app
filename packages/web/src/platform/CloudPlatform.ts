@@ -450,6 +450,10 @@ export class CloudPlatform implements PlatformAPI {
     return this.local.gitStage(repoPath, paths);
   }
 
+  async gitUnstage(repoPath: string, paths: string[]): Promise<void> {
+    return this.local.gitUnstage(repoPath, paths);
+  }
+
   async gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null> {
     return this.local.gitCommit(repoPath, message, author);
   }

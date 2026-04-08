@@ -85,6 +85,8 @@ export interface PlatformAPI {
   gitReadConfig(repoPath: string): Promise<{ remoteUrl?: string; userName?: string; userEmail?: string }>;
   gitStatus(repoPath: string): Promise<GitStatus | null>;
   gitStage(repoPath: string, paths: string[]): Promise<void>;
+  /** Remove files from the git index (unstage), leaving the working directory unchanged. */
+  gitUnstage(repoPath: string, paths: string[]): Promise<void>;
   gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null>;
   gitPush(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;
   gitPull(repoPath: string, onAuth?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null>;

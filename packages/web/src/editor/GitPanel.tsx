@@ -147,6 +147,17 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     }
   }, [gitPanelOpen, gitStatus, commitMessage, setCommitMessage]);
 
+  const handleUnstage = useCallback(async (paths: string[]) => {
+    if (paths.length === 0) return;
+    setLastGitError(null);
+    try {
+      await platform.gitUnstage(repoPath, paths);
+      await refreshStatus();
+    } catch (e: unknown) {
+      setLastGitError(e instanceof Error ? e.message : String(e));
+    }
+  }, [repoPath, platform, setLastGitError, refreshStatus]);
+
   const handleRevert = useCallback(async (paths: string[]) => {
     if (paths.length === 0) return;
     const label = paths.length === 1 ? `"${paths[0]}"` : `${paths.length} files`;
@@ -408,15 +419,16 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
             <>
               <div style={styles.sectionHeader}>
                 Staged ({gitStatus.stagedFiles.length})
-                <button style={styles.sectionBtn} onClick={clearStaged}>Unstage all</button>
+                <button style={styles.sectionBtn} onClick={() => handleUnstage(gitStatus.stagedFiles)}>Unstage all</button>
               </div>
               {gitStatus.stagedFiles.map((f) => (
                 <FileRow
                   key={f}
                   path={f}
                   staged={true}
-                  onUnstage={() => unstageFile(f)}
+                  onUnstage={() => handleUnstage([f])}
                   onStage={() => stageFile(f)}
+                  onRevert={() => handleRevert([f])}
                 />
               ))}
             </>

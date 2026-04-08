@@ -304,6 +304,23 @@ function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('platform:gitUnstage', async (_event, repoPath: string, paths: string[]) => {
+    const fs = await getFs();
+    const git = await getGit();
+    const g = git as {
+      resetIndex: (opts: object) => Promise<void>;
+      remove: (opts: object) => Promise<void>;
+    };
+    for (const p of paths) {
+      try {
+        await g.resetIndex({ fs: { promises: fs }, dir: repoPath, filepath: p });
+      } catch {
+        // File not in HEAD (new file) — just remove from index
+        await g.remove({ fs: { promises: fs }, dir: repoPath, filepath: p }).catch(() => {});
+      }
+    }
+  });
+
   ipcMain.handle('platform:gitCommit', async (_event, repoPath: string, message: string, author?: { name: string; email: string }) => {
     try {
       const fs = await getFs();

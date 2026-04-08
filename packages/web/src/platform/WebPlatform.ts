@@ -307,6 +307,18 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
+  async gitUnstage(repoPath: string, paths: string[]): Promise<void> {
+    if (!this.gitAvailable) return;
+    for (const p of paths) {
+      try {
+        await git.resetIndex({ fs, dir: repoPath, filepath: p });
+      } catch {
+        // File not in HEAD (new file) — just remove from index
+        await git.remove({ fs, dir: repoPath, filepath: p }).catch(() => {});
+      }
+    }
+  }
+
   async gitCommit(repoPath: string, message: string, author?: { name: string; email: string }): Promise<string | null> {
     if (!this.gitAvailable) return null;
     try {

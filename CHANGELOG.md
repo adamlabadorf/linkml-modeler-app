@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.2] - 2026-04-08
+
+### Fixed
+
+- **Git Panel**: "Unstage" checkbox and "Unstage all" button now actually remove files from the git index (previously only cleared in-memory state, leaving staged files unchanged)
+- **Git Panel**: Revert button (↺) now also appears on staged files, allowing discard of both staged and working-directory changes in one click
+- **Git Panel**: Added `gitUnstage` operation across all platforms (web, electron, cloud) using `git.resetIndex`
+
 ## [0.4.1] - 2026-04-08
 
 ### Added

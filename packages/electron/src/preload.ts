@@ -43,6 +43,9 @@ const electronAPI = {
   gitStage: (repoPath: string, paths: string[]) =>
     ipcRenderer.invoke('platform:gitStage', repoPath, paths),
 
+  gitUnstage: (repoPath: string, paths: string[]) =>
+    ipcRenderer.invoke('platform:gitUnstage', repoPath, paths),
+
   gitCommit: (repoPath: string, message: string, author?: { name: string; email: string }) =>
     ipcRenderer.invoke('platform:gitCommit', repoPath, message, author),
 
