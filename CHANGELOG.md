@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2] - 2026-04-08
+
+### Added
+
+- **Editor**: Rules block support for classes in the properties panel
+- **Canvas**: Inherited slots now displayed on class nodes
+
 ## [0.3.1] - 2026-04-08
 
 ### Added

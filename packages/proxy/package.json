@@ -1,6 +1,6 @@
 {
   "name": "@linkml-editor/cors-proxy",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "CORS proxy for isomorphic-git browser git operations",
   "scripts": {
