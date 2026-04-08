@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.3] - 2026-04-08
+
+### Fixed
+
+- Allow clearing is_a relationship (by @clandaverde)
+
 ## [0.4.2] - 2026-04-08
 
 ### Fixed
