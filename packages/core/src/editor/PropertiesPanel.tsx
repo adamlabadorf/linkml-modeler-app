@@ -1146,6 +1146,8 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
   const [newImport, setNewImport] = React.useState('');
   const [resolving, setResolving] = React.useState(false);
   const [newSchemaSlotName, setNewSchemaSlotName] = React.useState('');
+  const [newPrefixKey, setNewPrefixKey] = React.useState('');
+  const [newPrefixUri, setNewPrefixUri] = React.useState('');
   const rangeOptionGroups = useRangeOptionGroups(schemaId);
 
   if (!schema) return <EmptyPanel message="No schema loaded" />;
@@ -1308,6 +1310,82 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
           monospace
         />
       </FieldRow>
+
+      <SectionHeader title="Prefixes" />
+
+      {Object.entries(schema.prefixes ?? {}).map(([key, uri]) => (
+        <div key={key} style={styles.importRow}>
+          <span style={{ ...styles.importPath, flexShrink: 0, width: 80 }}>{key}</span>
+          <input
+            style={{ ...styles.input, ...styles.inputMono, flex: 1, fontSize: 11 }}
+            value={uri}
+            onChange={(e) => update({ prefixes: { ...schema.prefixes, [key]: e.target.value } })}
+          />
+          <button
+            style={styles.importRemoveBtn}
+            title="Remove prefix"
+            onClick={() => {
+              const next = { ...schema.prefixes };
+              delete next[key];
+              update({ prefixes: next });
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+
+      <div style={styles.addRow}>
+        <input
+          style={{ ...styles.input, ...styles.inputMono, width: 80, flexShrink: 0 }}
+          placeholder="prefix"
+          value={newPrefixKey}
+          onChange={(e) => setNewPrefixKey(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              const k = newPrefixKey.trim();
+              if (k) {
+                update({ prefixes: { ...schema.prefixes, [k]: newPrefixUri.trim() } });
+                setNewPrefixKey('');
+                setNewPrefixUri('');
+              }
+            }
+          }}
+        />
+        <input
+          style={{ ...styles.input, ...styles.inputMono, flex: 1 }}
+          placeholder="https://…"
+          value={newPrefixUri}
+          onChange={(e) => setNewPrefixUri(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              const k = newPrefixKey.trim();
+              if (k) {
+                update({ prefixes: { ...schema.prefixes, [k]: newPrefixUri.trim() } });
+                setNewPrefixKey('');
+                setNewPrefixUri('');
+              }
+            }
+          }}
+        />
+        <button
+          style={{
+            ...styles.btnPrimary,
+            ...(!newPrefixKey.trim() ? { opacity: 0.4, cursor: 'default' } : {}),
+          }}
+          disabled={!newPrefixKey.trim()}
+          onClick={() => {
+            const k = newPrefixKey.trim();
+            if (k) {
+              update({ prefixes: { ...schema.prefixes, [k]: newPrefixUri.trim() } });
+              setNewPrefixKey('');
+              setNewPrefixUri('');
+            }
+          }}
+        >
+          +
+        </button>
+      </div>
 
       <SectionHeader title="Schema Slots" />
 
