@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.0] - 2026-04-08
+
+### Added
+
+- **Git Panel**: Revert (discard) individual file changes directly from the Git panel — each unstaged file now shows a ↺ button, and a "Revert all" button discards all unstaged changes at once; both prompt for confirmation before executing
+
 ## [0.3.2] - 2026-04-08
 
 ### Added
