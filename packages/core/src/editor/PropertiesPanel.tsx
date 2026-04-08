@@ -588,6 +588,7 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
             deleteAttribute(schemaId, className, slot.name);
           }}
           onRename={(newName) => renameAttribute(schemaId, className, slot.name, newName)}
+          deleteLabel="attribute"
         />
       ))}
 
