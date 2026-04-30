@@ -9,6 +9,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useAppStore } from '../store/index.js';
 import { collectImportedEntities } from '../io/importResolver.js';
 import type { ValidationIssue, IssueSeverity } from '../validation/index.js';
+import { X } from '../ui/icons/index.js';
 
 // ── Severity config ───────────────────────────────────────────────────────────
 
@@ -256,7 +257,7 @@ export function ValidationPanel() {
           onClick={() => setValidationPanelOpen(false)}
           title="Close"
         >
-          ✕
+          <X size={12} />
         </button>
       </div>
 

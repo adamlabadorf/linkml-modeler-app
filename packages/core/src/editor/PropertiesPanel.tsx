@@ -8,6 +8,7 @@ import type { ClassDefinition, SlotDefinition, EnumDefinition, PermissibleValue,
 import { emptyCanvasLayout } from '../model/index.js';
 import { usePlatform } from '../platform/PlatformContext.js';
 import { parseYaml } from '../io/yaml.js';
+import { AlertTriangle, X } from '../ui/icons/index.js';
 import { isUrlImport, isLocalImport, resolveImportPath } from '../io/importResolver.js';
 
 // ── Shared field components ───────────────────────────────────────────────────
@@ -308,7 +309,7 @@ function FilteredGroupedSelect({
           }}
           onMouseDown={(e) => e.preventDefault()} // don't steal focus / blur input
         >
-          ✕
+          <X size={12} />
         </button>
       )}
       {isOpen && (
@@ -504,7 +505,7 @@ function SlotConditionEditor({
     <div style={{ borderLeft: '2px solid #1e3a5f', marginLeft: 8, paddingLeft: 8, paddingBottom: 4, marginBottom: 4 }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
         <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: 11, color: '#86efac', flex: 1 }}>{slotName}</span>
-        <button style={styles.slotRefRemoveBtn} onClick={onRemove} title="Remove slot condition">✕</button>
+        <button style={styles.slotRefRemoveBtn} onClick={onRemove} title="Remove slot condition"><X size={12} /></button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <input
@@ -804,7 +805,7 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
                 onClick={() => removeMixinFromClass(schemaId, className, mixinName)}
                 title="Remove mixin"
               >
-                ✕
+                <X size={12} />
               </button>
             </div>
           ))}
@@ -886,14 +887,14 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
               <span style={styles.slotRefRange}>: {schemaSlot.range}</span>
             )}
             {!schemaSlot && (
-              <span style={styles.slotRefMissing}>⚠ not found</span>
+              <span style={{ ...styles.slotRefMissing, display: 'flex', alignItems: 'center', gap: 3 }}><AlertTriangle size={11} /> not found</span>
             )}
             <button
               style={styles.slotRefRemoveBtn}
               onClick={() => removeSlotReferenceFromClass(schemaId, className, slotName)}
               title="Remove slot reference"
             >
-              ✕
+              <X size={12} />
             </button>
           </div>
         );
@@ -1629,7 +1630,7 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
               update({ prefixes: next });
             }}
           >
-            ✕
+            <X size={12} />
           </button>
         </div>
       ))}
@@ -1740,7 +1741,7 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
             onClick={() => handleRemoveImport(imp)}
             title="Remove import"
           >
-            ✕
+            <X size={12} />
           </button>
         </div>
       ))}
@@ -1843,7 +1844,7 @@ export function PropertiesPanel() {
             ↪
           </button>
           <button style={styles.headerBtn} onClick={() => setPropertiesPanelOpen(false)} title="Close panel">
-            ✕
+            <X size={12} />
           </button>
         </div>
       </div>

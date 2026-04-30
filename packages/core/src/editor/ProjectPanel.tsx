@@ -10,6 +10,7 @@ import { useAppStore } from '../store/index.js';
 import { usePlatform } from '../platform/PlatformContext.js';
 import { buildManifestData, writeEditorManifest } from '../io/editorManifest.js';
 import { EntitySearchPanel } from './EntitySearchPanel.js';
+import { Diamond, Hexagon } from '../ui/icons/index.js';
 
 function basename(filePath: string): string {
   // Handle both / and \ separators, and strip trailing slashes
@@ -80,7 +81,7 @@ export function ProjectPanel() {
           </button>
         ) : (
           <>
-            <span style={{ ...styles.title, flex: 1 }}>⬡ {activeProject.name}</span>
+            <span style={{ ...styles.title, flex: 1, display: 'flex', alignItems: 'center', gap: 5 }}><Hexagon size={13} />{activeProject.name}</span>
             <button
               style={styles.searchToggleBtn}
               onClick={() => setSearchMode(true)}
@@ -145,8 +146,8 @@ export function ProjectPanel() {
                     </div>
                   )}
                   <div style={styles.statsRow}>
-                    <span style={styles.stat} title={`${classCount} class(es)`}>⬡ {classCount}</span>
-                    <span style={styles.stat} title={`${enumCount} enum(s)`}>◈ {enumCount}</span>
+                    <span style={{ ...styles.stat, display: 'inline-flex', alignItems: 'center', gap: 3 }} title={`${classCount} class(es)`}><Hexagon size={10} />{classCount}</span>
+                    <span style={{ ...styles.stat, display: 'inline-flex', alignItems: 'center', gap: 3 }} title={`${enumCount} enum(s)`}><Diamond size={10} />{enumCount}</span>
                   </div>
                 </div>
               );

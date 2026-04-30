@@ -9,6 +9,7 @@
  */
 import React, { useCallback, useMemo } from 'react';
 import { useAppStore } from '../store/index.js';
+import { Hexagon, X } from '../ui/icons/index.js';
 
 export function FocusModeToolbar() {
   const activeSchemaFile = useAppStore((s) => s.getActiveSchema());
@@ -85,7 +86,7 @@ export function FocusModeToolbar() {
             : `Focus ${selectedNodeIds.length} selected node(s)`
         }
       >
-        ⬡ Focus Selection
+        <Hexagon size={13} style={{ marginRight: 4 }} />Focus Selection
         {selectedNodeIds.length > 0 && (
           <span style={styles.selCount}>{selectedNodeIds.length}</span>
         )}
@@ -94,7 +95,7 @@ export function FocusModeToolbar() {
       {/* Exit focus */}
       {focusMode && (
         <button style={styles.exitBtn} onClick={handleExit} title="Exit focus mode">
-          ✕ Exit Focus
+          <X size={12} style={{ marginRight: 4 }} />Exit Focus
         </button>
       )}
     </div>
@@ -171,5 +172,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '3px 10px',
     fontSize: 11,
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
   },
 };

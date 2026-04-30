@@ -3,6 +3,7 @@
  */
 import React, { useState } from 'react';
 import { useAppStore } from '../store/index.js';
+import { X } from '../ui/icons/index.js';
 
 interface Props {
   onClose: () => void;
@@ -92,7 +93,7 @@ export function SchemaSettingsDialog({ onClose }: Props) {
         <div style={styles.header}>
           <span style={styles.title}>⚙ Schema Settings</span>
           <button style={styles.closeBtn} onClick={onClose}>
-            ✕
+            <X size={16} />
           </button>
         </div>
 
