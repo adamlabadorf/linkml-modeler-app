@@ -8,6 +8,7 @@ export const styles: Record<string, React.CSSProperties> = {
     borderLeft: '1px solid var(--color-border-subtle)',
     height: '100%',
     flexShrink: 0,
+    minWidth: 260,
     overflow: 'hidden',
   },
   collapsedTab: {

@@ -67,6 +67,9 @@ import { UserMenu } from './components/UserMenu.js';
 import { SyncStatusIndicator } from './components/SyncStatusIndicator.js';
 import { ProjectSwitcherDialog } from './components/ProjectSwitcherDialog.js';
 import { WebProjectRegistry } from './platform/ProjectRegistry.js';
+import { DemoBanner, IS_GITHUB_PAGES } from './components/DemoBanner.js';
+
+const DEMO_URL = 'https://adamlabadorf.github.io/linkml-modeler-app/app/';
 
 // ── Detect Electron ───────────────────────────────────────────────────────────
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
@@ -376,7 +379,8 @@ function App() {
   if (!activeProject) {
     return (
       <div style={styles.app}>
-        <SplashPage />
+        <DemoBanner />
+        <SplashPage demoUrl={IS_GITHUB_PAGES ? undefined : DEMO_URL} />
         <SignInPrompt />
         {cloneDialogOpen && (
           <CloneDialog onClose={() => setCloneDialogOpen(false)} />
@@ -390,6 +394,9 @@ function App() {
     <div style={styles.app}>
       {/* Skip link for keyboard users (AC-B17) */}
       <a href="#lme-canvas-area" className="lme-skip-link">Skip to main content</a>
+
+      {/* Demo banner (GitHub Pages only) */}
+      <DemoBanner />
 
       {/* Header */}
       <header id="lme-header" style={styles.header}>
@@ -553,7 +560,8 @@ const styles: Record<string, React.CSSProperties> = {
   main: {
     flex: 1,
     display: 'flex',
-    overflow: 'hidden',
+    overflowX: 'auto',
+    overflowY: 'hidden',
     minHeight: 0,
   },
   canvasColumn: {
@@ -561,7 +569,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
-    minWidth: 0,
+    minWidth: 320,
   },
   canvasArea: {
     flex: 1,
@@ -587,7 +595,7 @@ async function bootstrap() {
 
   // ── E2E test helper (DEV only) ──────────────────────────────────────────────
   if (import.meta.env.DEV) {
-    (window as Record<string, unknown>).__lme_e2e__ = {
+    (window as unknown as Record<string, unknown>).__lme_e2e__ = {
       /** Parse YAML and inject a project directly into the store. */
       loadSchema(yaml: string, opts?: { filePath?: string; rootPath?: string; dirty?: boolean }) {
         const { filePath = 'schema.yaml', rootPath = '/e2e-test', dirty = false } = opts ?? {};

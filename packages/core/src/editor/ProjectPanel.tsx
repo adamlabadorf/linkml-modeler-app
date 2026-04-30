@@ -227,6 +227,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     width: 220,
+    minWidth: 180,
     borderRight: '1px solid var(--color-border-subtle)',
     background: 'var(--color-bg-deep)',
     flexShrink: 0,
