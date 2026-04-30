@@ -27,11 +27,11 @@ const checkboxRowStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: 6,
   fontSize: 12,
-  color: '#94a3b8',
+  color: 'var(--color-fg-secondary)',
   cursor: 'pointer',
   padding: '2px 0',
 };
 
 const checkboxStyle: React.CSSProperties = {
-  accentColor: '#3b82f6',
+  accentColor: 'var(--color-accent-default)',
 };

@@ -21,10 +21,10 @@ export function TextArea({
 }
 
 const textareaStyle: React.CSSProperties = {
-  background: '#1e293b',
-  border: '1px solid #334155',
+  background: 'var(--color-bg-surface)',
+  border: '1px solid var(--color-border-default)',
   borderRadius: 4,
-  color: '#e2e8f0',
+  color: 'var(--color-fg-primary)',
   fontSize: 12,
   padding: '4px 7px',
   outline: 'none',

@@ -159,9 +159,9 @@ export function FilteredGroupedSelect({
             width: 16,
             height: 16,
             borderRadius: 3,
-            border: '1px solid #334155',
-            background: '#0f172a',
-            color: '#94a3b8',
+            border: '1px solid var(--color-border-default)',
+            background: 'var(--color-bg-canvas)',
+            color: 'var(--color-fg-secondary)',
             cursor: 'pointer',
             fontSize: 11,
             lineHeight: '14px',
@@ -180,8 +180,8 @@ export function FilteredGroupedSelect({
             left: 0,
             right: 0,
             zIndex: 200,
-            background: '#1e293b',
-            border: '1px solid #334155',
+            background: 'var(--color-bg-surface)',
+            border: '1px solid var(--color-border-default)',
             borderRadius: 4,
             maxHeight: 220,
             overflowY: 'auto',
@@ -190,7 +190,7 @@ export function FilteredGroupedSelect({
           onMouseDown={(e) => e.preventDefault()} // prevent blur on option click
         >
           {filteredGroups.length === 0 ? (
-            <div style={{ padding: '6px 10px', fontSize: 11, color: '#475569' }}>
+            <div style={{ padding: '6px 10px', fontSize: 11, color: 'var(--color-border-strong)' }}>
               No options
             </div>
           ) : (
@@ -200,7 +200,7 @@ export function FilteredGroupedSelect({
                   style={{
                     padding: '4px 8px 2px',
                     fontSize: 9,
-                    color: '#475569',
+                    color: 'var(--color-border-strong)',
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
                     fontFamily: 'var(--font-family-mono)',
@@ -219,8 +219,8 @@ export function FilteredGroupedSelect({
                         padding: '4px 10px',
                         fontSize: 12,
                         cursor: 'pointer',
-                        color: '#e2e8f0',
-                        background: isFocused ? '#334155' : 'transparent',
+                        color: 'var(--color-fg-primary)',
+                        background: isFocused ? 'var(--color-border-default)' : 'transparent',
                         fontFamily: 'var(--font-family-mono)',
                       }}
                       onMouseEnter={() => setFocusedIndex(flatIdx)}

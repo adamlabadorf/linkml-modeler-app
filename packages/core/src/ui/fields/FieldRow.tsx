@@ -24,7 +24,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fieldLabel: {
     fontSize: 10,
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
