@@ -11,6 +11,8 @@ import { usePlatform } from '../platform/PlatformContext.js';
 import { useAppStore } from '../store/index.js';
 import { parseYaml } from '../io/yaml.js';
 import { emptyCanvasLayout } from '../model/index.js';
+import { Button } from '../ui/Button.js';
+import { Dialog } from '../ui/Dialog.js';
 
 interface ImportSchemaDialogProps {
   onClose: () => void;
@@ -62,7 +64,7 @@ export function ImportSchemaDialog({ onClose }: ImportSchemaDialogProps) {
       });
       if (!result) {
         setLoading(false);
-        return; // user cancelled
+        return;
       }
 
       const schema = parseYaml(result.content);
@@ -139,107 +141,78 @@ export function ImportSchemaDialog({ onClose }: ImportSchemaDialogProps) {
   };
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <h2 style={styles.title}>Import Schema</h2>
-
-        {/* Mode tabs */}
-        <div style={styles.tabs}>
-          <button
-            style={{ ...styles.tab, ...(mode === 'file' ? styles.tabActive : {}) }}
-            onClick={() => { setMode('file'); setError(''); }}
-          >
-            From File
-          </button>
-          <button
-            style={{ ...styles.tab, ...(mode === 'url' ? styles.tabActive : {}) }}
-            onClick={() => { setMode('url'); setError(''); }}
-          >
-            From URL
-          </button>
-        </div>
-
-        {/* File mode */}
-        {mode === 'file' && (
-          <div style={styles.section}>
-            <p style={styles.hint}>
-              Select a local YAML file containing a LinkML schema. It will be added to the current
-              project as an editable schema file.
-            </p>
-            <button style={styles.primaryBtn} onClick={handleFileImport} disabled={loading}>
-              {loading ? 'Importing…' : 'Browse…'}
-            </button>
-          </div>
-        )}
-
-        {/* URL mode */}
-        {mode === 'url' && (
-          <div style={styles.section}>
-            <label style={styles.label}>Schema URL</label>
-            <input
-              style={styles.input}
-              type="url"
-              placeholder="https://example.org/my-schema.yaml"
-              value={urlValue}
-              onChange={(e) => { setUrlValue(e.target.value); setError(''); }}
-              onKeyDown={(e) => { if (e.key === 'Enter' && isValidUrl) handleUrlImport(); }}
-              autoFocus
-            />
-
-            <p style={styles.hint}>
-              The schema will be fetched and copied into the project as an editable file.
-            </p>
-
-            <button
-              style={{ ...styles.primaryBtn, ...((!isValidUrl || loading) ? styles.btnDisabled : {}) }}
-              onClick={handleUrlImport}
-              disabled={!isValidUrl || loading}
-            >
-              {loading ? 'Fetching…' : 'Import'}
-            </button>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && <div style={styles.error}>{error}</div>}
-
-        {/* Footer */}
-        <div style={styles.footer}>
-          <button style={styles.cancelBtn} onClick={onClose} disabled={loading}>
-            Cancel
-          </button>
-        </div>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Import Schema"
+      size="sm"
+      footer={
+        <Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
+      }
+    >
+      {/* Mode tabs */}
+      <div style={styles.tabs}>
+        <button
+          style={{ ...styles.tab, ...(mode === 'file' ? styles.tabActive : {}) }}
+          onClick={() => { setMode('file'); setError(''); }}
+        >
+          From File
+        </button>
+        <button
+          style={{ ...styles.tab, ...(mode === 'url' ? styles.tabActive : {}) }}
+          onClick={() => { setMode('url'); setError(''); }}
+        >
+          From URL
+        </button>
       </div>
-    </div>
+
+      {mode === 'file' && (
+        <div style={styles.section}>
+          <p style={styles.hint}>
+            Select a local YAML file containing a LinkML schema. It will be added to the current
+            project as an editable schema file.
+          </p>
+          <Button variant="primary" size="sm" onClick={handleFileImport} loading={loading}>
+            {loading ? 'Importing…' : 'Browse…'}
+          </Button>
+        </div>
+      )}
+
+      {mode === 'url' && (
+        <div style={styles.section}>
+          <label style={styles.label}>Schema URL</label>
+          <input
+            style={styles.input}
+            type="url"
+            placeholder="https://example.org/my-schema.yaml"
+            value={urlValue}
+            onChange={(e) => { setUrlValue(e.target.value); setError(''); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && isValidUrl) handleUrlImport(); }}
+            autoFocus
+          />
+
+          <p style={styles.hint}>
+            The schema will be fetched and copied into the project as an editable file.
+          </p>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleUrlImport}
+            disabled={!isValidUrl || loading}
+            loading={loading}
+          >
+            {loading ? 'Fetching…' : 'Import'}
+          </Button>
+        </div>
+      )}
+
+      {error && <div style={styles.error}>{error}</div>}
+    </Dialog>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 3000,
-  },
-  dialog: {
-    background: 'var(--color-bg-surface)',
-    border: '1px solid var(--color-border-default)',
-    borderRadius: 8,
-    padding: '24px',
-    width: 440,
-    maxWidth: '90vw',
-    color: 'var(--color-fg-primary)',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 700,
-    marginTop: 0,
-    marginBottom: 16,
-    color: 'var(--color-accent-hover)',
-  },
   tabs: {
     display: 'flex',
     gap: 4,
@@ -289,20 +262,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     boxSizing: 'border-box',
   },
-  primaryBtn: {
-    background: 'var(--color-accent-active)',
-    border: '1px solid var(--color-border-focus)',
-    color: '#fff',
-    borderRadius: 5,
-    padding: '8px 16px',
-    fontSize: 12,
-    cursor: 'pointer',
-    alignSelf: 'flex-start',
-  },
-  btnDisabled: {
-    opacity: 0.4,
-    cursor: 'default',
-  },
   error: {
     marginTop: 12,
     padding: '8px 10px',
@@ -311,19 +270,5 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     color: 'var(--color-state-error-fg)',
     fontSize: 12,
-  },
-  footer: {
-    marginTop: 20,
-    display: 'flex',
-    justifyContent: 'flex-end',
-  },
-  cancelBtn: {
-    background: 'var(--color-border-default)',
-    border: '1px solid var(--color-border-strong)',
-    color: 'var(--color-fg-primary)',
-    borderRadius: 5,
-    padding: '6px 16px',
-    fontSize: 12,
-    cursor: 'pointer',
   },
 };

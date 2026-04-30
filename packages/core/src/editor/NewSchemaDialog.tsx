@@ -7,6 +7,8 @@
 import React from 'react';
 import { useAppStore } from '../store/index.js';
 import { emptySchema, emptyCanvasLayout } from '../model/index.js';
+import { Button } from '../ui/Button.js';
+import { Dialog } from '../ui/Dialog.js';
 
 interface NewSchemaDialogProps {
   onClose: () => void;
@@ -60,85 +62,52 @@ export function NewSchemaDialog({ onClose }: NewSchemaDialogProps) {
     onClose();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleCreate();
-    if (e.key === 'Escape') onClose();
-  };
-
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <h2 style={styles.title}>New Schema File</h2>
+    <Dialog
+      open
+      onClose={onClose}
+      title="New Schema File"
+      size="sm"
+      bodyStyle={{ padding: '20px 24px' }}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={handleCreate} disabled={!canCreate}>Create</Button>
+        </>
+      }
+    >
+      <div style={styles.section}>
+        <label style={styles.label} htmlFor="schema-name-input">Schema Name</label>
+        <input
+          id="schema-name-input"
+          style={styles.input}
+          type="text"
+          placeholder="my_schema"
+          value={name}
+          onChange={(e) => { setName(e.target.value); setError(''); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
+          autoFocus
+        />
 
-        <div style={styles.section}>
-          <label style={styles.label} htmlFor="schema-name-input">Schema Name</label>
-          <input
-            id="schema-name-input"
-            style={styles.input}
-            type="text"
-            placeholder="my_schema"
-            value={name}
-            onChange={(e) => { setName(e.target.value); setError(''); }}
-            onKeyDown={handleKeyDown}
-            autoFocus
-          />
+        {trimmedName.length > 0 && (
+          <p style={styles.hint}>
+            File: <code style={styles.code}>{filePath}</code>
+          </p>
+        )}
 
-          {trimmedName.length > 0 && (
-            <p style={styles.hint}>
-              File: <code style={styles.code}>{filePath}</code>
-            </p>
-          )}
+        {isDuplicate && (
+          <div style={styles.error}>
+            A schema named &quot;{filePath}&quot; already exists in this project.
+          </div>
+        )}
 
-          {isDuplicate && (
-            <div style={styles.error}>
-              A schema named &quot;{filePath}&quot; already exists in this project.
-            </div>
-          )}
-
-          {error && <div style={styles.error}>{error}</div>}
-        </div>
-
-        <div style={styles.footer}>
-          <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
-          <button
-            style={{ ...styles.primaryBtn, ...(!canCreate ? styles.btnDisabled : {}) }}
-            onClick={handleCreate}
-            disabled={!canCreate}
-          >
-            Create
-          </button>
-        </div>
+        {error && <div style={styles.error}>{error}</div>}
       </div>
-    </div>
+    </Dialog>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 3000,
-  },
-  dialog: {
-    background: 'var(--color-bg-surface)',
-    border: '1px solid var(--color-border-default)',
-    borderRadius: 8,
-    padding: '24px',
-    width: 400,
-    maxWidth: '90vw',
-    color: 'var(--color-fg-primary)',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 700,
-    marginTop: 0,
-    marginBottom: 16,
-    color: 'var(--color-accent-hover)',
-  },
   section: {
     display: 'flex',
     flexDirection: 'column',
@@ -176,33 +145,5 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     color: 'var(--color-state-error-fg)',
     fontSize: 12,
-  },
-  footer: {
-    marginTop: 20,
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  cancelBtn: {
-    background: 'var(--color-border-default)',
-    border: '1px solid var(--color-border-strong)',
-    color: 'var(--color-fg-primary)',
-    borderRadius: 5,
-    padding: '6px 16px',
-    fontSize: 12,
-    cursor: 'pointer',
-  },
-  primaryBtn: {
-    background: 'var(--color-accent-active)',
-    border: '1px solid var(--color-border-focus)',
-    color: '#fff',
-    borderRadius: 5,
-    padding: '6px 16px',
-    fontSize: 12,
-    cursor: 'pointer',
-  },
-  btnDisabled: {
-    opacity: 0.4,
-    cursor: 'default',
   },
 };

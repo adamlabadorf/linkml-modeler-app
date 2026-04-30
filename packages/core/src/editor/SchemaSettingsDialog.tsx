@@ -3,7 +3,8 @@
  */
 import React, { useState } from 'react';
 import { useAppStore } from '../store/index.js';
-import { X } from '../ui/icons/index.js';
+import { Button } from '../ui/Button.js';
+import { Dialog } from '../ui/Dialog.js';
 
 interface Props {
   onClose: () => void;
@@ -16,7 +17,6 @@ export function SchemaSettingsDialog({ onClose }: Props) {
   const schema = schemaFile?.schema;
   const schemaId = schemaFile?.id ?? '';
 
-  // ── Local edit state ──────────────────────────────────────────────────────
   const [id, setId] = useState(schema?.id ?? '');
   const [name, setName] = useState(schema?.name ?? '');
   const [description, setDescription] = useState(schema?.description ?? '');
@@ -24,21 +24,16 @@ export function SchemaSettingsDialog({ onClose }: Props) {
   const [defaultPrefix, setDefaultPrefix] = useState(schema?.defaultPrefix ?? '');
   const [defaultRange, setDefaultRange] = useState(schema?.defaultRange ?? '');
 
-  // Prefixes: local editable array of [prefix, uri] pairs
   const [prefixRows, setPrefixRows] = useState<[string, string][]>(
     Object.entries(schema?.prefixes ?? {})
   );
 
-  // Imports: local editable list
   const [imports, setImports] = useState<string[]>(schema?.imports ?? []);
-
   const [newImport, setNewImport] = useState('');
   const [newPrefixKey, setNewPrefixKey] = useState('');
   const [newPrefixUri, setNewPrefixUri] = useState('');
 
   if (!schema) return null;
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
 
   function handleSave() {
     const prefixes: Record<string, string> = {};
@@ -84,148 +79,119 @@ export function SchemaSettingsDialog({ onClose }: Props) {
     setNewImport('');
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
-    <div style={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div style={styles.dialog}>
-        {/* Header */}
-        <div style={styles.header}>
-          <span style={styles.title}>⚙ Schema Settings</span>
-          <button style={styles.closeBtn} onClick={onClose}>
-            <X size={16} />
-          </button>
-        </div>
+    <Dialog
+      open
+      onClose={onClose}
+      title="⚙ Schema Settings"
+      size="md"
+      bodyStyle={{ padding: 0, paddingBottom: 8 }}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={handleSave}>Save</Button>
+        </>
+      }
+    >
+      {/* Identity */}
+      <div style={styles.sectionHeader}>Identity</div>
 
-        {/* Body */}
-        <div style={styles.body}>
-          {/* Identity */}
-          <div style={styles.sectionHeader}>Identity</div>
+      <SettingsField label="id (URI)">
+        <input style={styles.input} value={id} onChange={(e) => setId(e.target.value)} placeholder="https://example.org/my-schema" />
+      </SettingsField>
 
-          <SettingsField label="id (URI)">
-            <input style={styles.input} value={id} onChange={(e) => setId(e.target.value)} placeholder="https://example.org/my-schema" />
-          </SettingsField>
+      <SettingsField label="name">
+        <input style={styles.inputMono} value={name} onChange={(e) => setName(e.target.value)} />
+      </SettingsField>
 
-          <SettingsField label="name">
-            <input style={styles.inputMono} value={name} onChange={(e) => setName(e.target.value)} />
-          </SettingsField>
+      <SettingsField label="description">
+        <textarea style={styles.textarea} value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+      </SettingsField>
 
-          <SettingsField label="description">
-            <textarea style={styles.textarea} value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          </SettingsField>
+      <SettingsField label="license">
+        <input style={styles.inputMono} value={license} onChange={(e) => setLicense(e.target.value)} placeholder="CC-BY-4.0" />
+      </SettingsField>
 
-          <SettingsField label="license">
-            <input style={styles.inputMono} value={license} onChange={(e) => setLicense(e.target.value)} placeholder="CC-BY-4.0" />
-          </SettingsField>
+      <SettingsField label="default_prefix">
+        <input style={styles.inputMono} value={defaultPrefix} onChange={(e) => setDefaultPrefix(e.target.value)} />
+      </SettingsField>
 
-          <SettingsField label="default_prefix">
-            <input style={styles.inputMono} value={defaultPrefix} onChange={(e) => setDefaultPrefix(e.target.value)} />
-          </SettingsField>
+      <SettingsField label="default_range">
+        <input style={styles.inputMono} value={defaultRange} onChange={(e) => setDefaultRange(e.target.value)} placeholder="string" />
+      </SettingsField>
 
-          <SettingsField label="default_range">
-            <input style={styles.inputMono} value={defaultRange} onChange={(e) => setDefaultRange(e.target.value)} placeholder="string" />
-          </SettingsField>
+      {/* Prefixes */}
+      <div style={styles.sectionHeader}>Prefixes</div>
 
-          {/* Prefixes */}
-          <div style={styles.sectionHeader}>Prefixes</div>
-
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>Prefix</th>
-                <th style={styles.th}>URI</th>
-                <th style={{ ...styles.th, width: 32 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {prefixRows.map(([k, v], i) => (
-                <tr key={i}>
-                  <td style={styles.td}>
-                    <input
-                      style={styles.tableInput}
-                      value={k}
-                      onChange={(e) => updatePrefixRow(i, e.target.value, v)}
-                    />
-                  </td>
-                  <td style={styles.td}>
-                    <input
-                      style={styles.tableInput}
-                      value={v}
-                      onChange={(e) => updatePrefixRow(i, k, e.target.value)}
-                    />
-                  </td>
-                  <td style={styles.td}>
-                    <button style={styles.rowDeleteBtn} onClick={() => deletePrefixRow(i)}>
-                      ×
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              <tr>
-                <td style={styles.td}>
-                  <input
-                    style={styles.tableInput}
-                    placeholder="prefix"
-                    value={newPrefixKey}
-                    onChange={(e) => setNewPrefixKey(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addPrefixRow()}
-                  />
-                </td>
-                <td style={styles.td}>
-                  <input
-                    style={styles.tableInput}
-                    placeholder="https://…"
-                    value={newPrefixUri}
-                    onChange={(e) => setNewPrefixUri(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addPrefixRow()}
-                  />
-                </td>
-                <td style={styles.td}>
-                  <button style={styles.addBtn} onClick={addPrefixRow}>
-                    +
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Imports */}
-          <div style={styles.sectionHeader}>Imports</div>
-
-          {imports.map((imp, i) => (
-            <div key={i} style={styles.importRow}>
-              <span style={styles.importText}>{imp}</span>
-              <button style={styles.rowDeleteBtn} onClick={() => deleteImport(i)}>
-                ×
-              </button>
-            </div>
+      <table style={styles.table}>
+        <thead>
+          <tr>
+            <th style={styles.th}>Prefix</th>
+            <th style={styles.th}>URI</th>
+            <th style={{ ...styles.th, width: 32 }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {prefixRows.map(([k, v], i) => (
+            <tr key={i}>
+              <td style={styles.td}>
+                <input style={styles.tableInput} value={k} onChange={(e) => updatePrefixRow(i, e.target.value, v)} />
+              </td>
+              <td style={styles.td}>
+                <input style={styles.tableInput} value={v} onChange={(e) => updatePrefixRow(i, k, e.target.value)} />
+              </td>
+              <td style={styles.td}>
+                <button style={styles.rowDeleteBtn} onClick={() => deletePrefixRow(i)}>×</button>
+              </td>
+            </tr>
           ))}
+          <tr>
+            <td style={styles.td}>
+              <input
+                style={styles.tableInput}
+                placeholder="prefix"
+                value={newPrefixKey}
+                onChange={(e) => setNewPrefixKey(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addPrefixRow()}
+              />
+            </td>
+            <td style={styles.td}>
+              <input
+                style={styles.tableInput}
+                placeholder="https://…"
+                value={newPrefixUri}
+                onChange={(e) => setNewPrefixUri(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addPrefixRow()}
+              />
+            </td>
+            <td style={styles.td}>
+              <button style={styles.addBtn} onClick={addPrefixRow}>+</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-          <div style={styles.addRow}>
-            <input
-              style={{ ...styles.inputMono, flex: 1 }}
-              placeholder="linkml:types or ../other-schema"
-              value={newImport}
-              onChange={(e) => setNewImport(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addImport()}
-            />
-            <button style={styles.btnPrimary} onClick={addImport}>
-              + Add
-            </button>
-          </div>
-        </div>
+      {/* Imports */}
+      <div style={styles.sectionHeader}>Imports</div>
 
-        {/* Footer */}
-        <div style={styles.footer}>
-          <button style={styles.btnGhost} onClick={onClose}>
-            Cancel
-          </button>
-          <button style={styles.btnSave} onClick={handleSave}>
-            Save
-          </button>
+      {imports.map((imp, i) => (
+        <div key={i} style={styles.importRow}>
+          <span style={styles.importText}>{imp}</span>
+          <button style={styles.rowDeleteBtn} onClick={() => deleteImport(i)}>×</button>
         </div>
+      ))}
+
+      <div style={styles.addRow}>
+        <input
+          style={{ ...styles.inputMono, flex: 1 }}
+          placeholder="linkml:types or ../other-schema"
+          value={newImport}
+          onChange={(e) => setNewImport(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addImport()}
+        />
+        <button style={styles.btnPrimary} onClick={addImport}>+ Add</button>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -254,61 +220,6 @@ const fieldStyles: Record<string, React.CSSProperties> = {
 };
 
 const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  },
-  dialog: {
-    background: 'var(--color-bg-canvas)',
-    border: '1px solid var(--color-border-default)',
-    borderRadius: 8,
-    width: 560,
-    maxWidth: '95vw',
-    maxHeight: '85vh',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '12px 16px',
-    borderBottom: '1px solid var(--color-border-subtle)',
-    flexShrink: 0,
-  },
-  title: {
-    fontWeight: 700,
-    fontSize: 14,
-    color: 'var(--color-fg-secondary)',
-  },
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--color-fg-muted)',
-    cursor: 'pointer',
-    fontSize: 16,
-    padding: '0 4px',
-    lineHeight: 1,
-  },
-  body: {
-    flex: 1,
-    overflowY: 'auto',
-    paddingBottom: 8,
-  },
-  footer: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: 8,
-    padding: '12px 16px',
-    borderTop: '1px solid var(--color-border-subtle)',
-    flexShrink: 0,
-  },
   sectionHeader: {
     padding: '8px 16px 4px',
     fontSize: 10,
@@ -434,24 +345,5 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     cursor: 'pointer',
     flexShrink: 0,
-  },
-  btnGhost: {
-    background: 'transparent',
-    border: '1px solid var(--color-border-default)',
-    color: 'var(--color-fg-secondary)',
-    borderRadius: 4,
-    padding: '6px 14px',
-    fontSize: 13,
-    cursor: 'pointer',
-  },
-  btnSave: {
-    background: 'var(--color-accent-active)',
-    border: '1px solid var(--color-border-focus)',
-    color: '#fff',
-    borderRadius: 4,
-    padding: '6px 20px',
-    fontSize: 13,
-    cursor: 'pointer',
-    fontWeight: 600,
   },
 };
