@@ -18,6 +18,8 @@ prefixes:
   GEO: http://example.org/geoloc/
 default_prefix: personinfo
 default_range: string
+default_curi_maps:
+  - semweb_context
 imports:
   - linkml:types
 subsets:
@@ -351,8 +353,6 @@ classes:
       - persons
       - organizations
       - places
-default_curi_maps:
-  - semweb_context
 emit_prefixes:
   - rdf
   - rdfs

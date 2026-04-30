@@ -26,12 +26,18 @@ prefixes:
   tax: http://example.org/tax/
 default_prefix: ks
 default_range: string
+default_curi_maps:
+  - semweb_context
+see_also:
+  - https://example.org/
 imports:
   - linkml:types
   - core
 subsets:
   subset A:
     description: test subset A
+    comments:
+      - this subset is meaningless, it is just here for testing
     aliases:
       - A
   subset B:
@@ -224,5 +230,3 @@ classes:
         multivalued: true
         inlined: true
         inlined_as_list: true
-default_curi_maps:
-  - semweb_context

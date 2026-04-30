@@ -19,6 +19,7 @@ slots:
     description: Symmetric overlap relationship; unknown keys preserved in extras
     range: string
     slot_uri: RO:0002131
+    symmetric: true
     transitive: false
 classes:
   Component:
