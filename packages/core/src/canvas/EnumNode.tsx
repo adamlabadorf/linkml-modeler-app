@@ -24,7 +24,7 @@ function EnumNode({ data, selected }: NodeProps<EnumNodeData>) {
       style={{
         ...styles.wrapper,
         ...(ghost ? styles.ghostWrapper : {}),
-        outline: selected ? '2px solid #60a5fa' : ghost ? '1px dashed #4a3a1e' : '1px solid #334155',
+        outline: selected ? '2px solid var(--color-accent-hover)' : ghost ? '1px dashed #4a3a1e' : '1px solid var(--color-border-default)',
       }}
     >
       {/* Enum nodes only receive edges (range targets) */}
@@ -65,14 +65,14 @@ function EnumNode({ data, selected }: NodeProps<EnumNodeData>) {
 
 const styles: Record<string, React.CSSProperties> = {
   wrapper: {
-    background: '#1e293b',
+    background: 'var(--color-bg-surface)',
     borderRadius: 6,
     minWidth: 180,
     maxWidth: 280,
     boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     overflow: 'hidden',
   },
   ghostWrapper: {
@@ -83,17 +83,17 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#4a3a1e',
   },
   handle: {
-    background: '#60a5fa',
+    background: 'var(--color-accent-hover)',
     width: 8,
     height: 8,
-    border: '2px solid #1e293b',
+    border: '2px solid var(--color-border-subtle)',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
     padding: '6px 10px',
-    background: '#b45309',
+    background: 'var(--color-enum)',
     color: '#fff',
     fontWeight: 600,
     fontSize: 13,
@@ -118,7 +118,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '2px 10px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     minHeight: 22,
     gap: 4,
   },
@@ -130,7 +130,7 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
   },
   valueMeaning: {
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     fontSize: 10,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -139,13 +139,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   moreRow: {
     padding: '3px 10px',
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     fontStyle: 'italic',
     fontSize: 11,
   },
   emptyRow: {
     padding: '4px 10px',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontStyle: 'italic',
   },
 };

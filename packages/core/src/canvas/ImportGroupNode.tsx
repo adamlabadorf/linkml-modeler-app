@@ -50,7 +50,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(30, 58, 46, 0.85)',
     borderRadius: '6px 6px 0 0',
     borderBottom: '1px solid #2d5a3d',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     color: '#86efac',
     userSelect: 'none',
@@ -69,7 +69,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   count: {
     fontSize: 10,
-    color: '#4ade80',
+    color: 'var(--color-state-success)',
     opacity: 0.7,
     flexShrink: 0,
   },

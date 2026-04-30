@@ -48,13 +48,13 @@ function EdgeLabel({
         style={{
           position: 'absolute',
           transform: `translate(-50%, -50%) translate(${x}px,${y}px)`,
-          background: '#1e293b',
-          border: '1px solid #334155',
+          background: 'var(--color-bg-surface)',
+          border: '1px solid var(--color-border-default)',
           borderRadius: 3,
           padding: '1px 5px',
           fontSize: 10,
-          fontFamily: 'monospace',
-          color: '#94a3b8',
+          fontFamily: 'var(--font-family-mono)',
+          color: 'var(--color-fg-secondary)',
           pointerEvents: 'all',
           cursor: 'default',
         }}
@@ -103,7 +103,7 @@ export const RangeEdge = memo(function RangeEdge(props: EdgeProps) {
         path={path}
         markerEnd={props.markerEnd ?? 'url(#arrow-filled)'}
         style={{
-          stroke: '#4ade80',
+          stroke: 'var(--color-state-success)',
           strokeWidth: hovered ? 2.5 : 1.5,
           filter: hovered ? 'drop-shadow(0 0 4px rgba(74, 222, 128, 0.5))' : undefined,
           transition: 'stroke-width 0.15s, filter 0.15s',
@@ -128,13 +128,13 @@ export const RangeEdge = memo(function RangeEdge(props: EdgeProps) {
           {props.label && (
             <span
               style={{
-                background: '#1e293b',
-                border: '1px solid #334155',
+                background: 'var(--color-bg-surface)',
+                border: '1px solid var(--color-border-default)',
                 borderRadius: 3,
                 padding: '1px 5px',
                 fontSize: 10,
-                fontFamily: 'monospace',
-                color: '#94a3b8',
+                fontFamily: 'var(--font-family-mono)',
+                color: 'var(--color-fg-secondary)',
               }}
             >
               {props.label as string}
@@ -148,12 +148,12 @@ export const RangeEdge = memo(function RangeEdge(props: EdgeProps) {
                   key={b}
                   style={{
                     fontSize: 9,
-                    background: b === 'R' ? '#7f1d1d' : '#334155',
-                    border: b === 'R' ? '1px solid #991b1b' : '1px solid #475569',
+                    background: b === 'R' ? 'var(--color-state-error-border)' : 'var(--color-border-default)',
+                    border: b === 'R' ? '1px solid #991b1b' : '1px solid var(--color-border-strong)',
                     borderRadius: 3,
                     padding: '0 3px',
-                    color: b === 'R' ? '#fca5a5' : '#94a3b8',
-                    fontFamily: 'monospace',
+                    color: b === 'R' ? '#fca5a5' : 'var(--color-fg-secondary)',
+                    fontFamily: 'var(--font-family-mono)',
                     fontWeight: 600,
                   }}
                 >
@@ -171,30 +171,30 @@ export const RangeEdge = memo(function RangeEdge(props: EdgeProps) {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 marginTop: 6,
-                background: '#1e293b',
-                border: '1px solid #475569',
+                background: 'var(--color-bg-surface)',
+                border: '1px solid var(--color-border-strong)',
                 borderRadius: 4,
                 padding: '6px 10px',
                 fontSize: 11,
-                fontFamily: 'monospace',
-                color: '#e2e8f0',
+                fontFamily: 'var(--font-family-mono)',
+                color: 'var(--color-fg-primary)',
                 whiteSpace: 'nowrap',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                zIndex: 100,
+                zIndex: 'var(--z-dropdown)' as unknown as number,
               }}
             >
               <div style={{ marginBottom: 2 }}>
-                <span style={{ color: '#94a3b8' }}>slot: </span>
+                <span style={{ color: 'var(--color-fg-secondary)' }}>slot: </span>
                 <span>{data.slotName}</span>
               </div>
               <div style={{ marginBottom: 2 }}>
-                <span style={{ color: '#94a3b8' }}>range: </span>
+                <span style={{ color: 'var(--color-fg-secondary)' }}>range: </span>
                 <span style={{ color: '#86efac' }}>{data.range}</span>
               </div>
               {badges.length > 0 && (
                 <div>
-                  <span style={{ color: '#94a3b8' }}>flags: </span>
-                  <span style={{ color: '#fbbf24' }}>{badges.join(', ')}</span>
+                  <span style={{ color: 'var(--color-fg-secondary)' }}>flags: </span>
+                  <span style={{ color: 'var(--color-state-warning)' }}>{badges.join(', ')}</span>
                 </div>
               )}
             </div>
@@ -214,7 +214,7 @@ export const IsAEdge = memo(function IsAEdge(props: EdgeProps) {
       <BaseEdge
         path={path}
         markerEnd={props.markerEnd ?? 'url(#arrow-hollow)'}
-        style={{ stroke: '#60a5fa', strokeWidth: 2 }}
+        style={{ stroke: 'var(--color-accent-hover)', strokeWidth: 2 }}
       />
       <EdgeLabel x={labelX} y={labelY} label={props.label as string | undefined} />
     </>
@@ -269,7 +269,7 @@ export function EdgeMarkerDefs() {
           refY="3.5"
           orient="auto"
         >
-          <polygon points="0 0, 10 3.5, 0 7" fill="#4ade80" />
+          <polygon points="0 0, 10 3.5, 0 7" style={{ fill: 'var(--color-state-success)' }} />
         </marker>
 
         {/* Hollow triangle arrowhead for is_a / mixin edges */}
@@ -283,9 +283,7 @@ export function EdgeMarkerDefs() {
         >
           <polygon
             points="0 0, 10 5, 0 10"
-            fill="none"
-            stroke="#60a5fa"
-            strokeWidth="1.5"
+            style={{ fill: 'none', stroke: 'var(--color-accent-hover)', strokeWidth: 1.5 }}
           />
         </marker>
       </defs>

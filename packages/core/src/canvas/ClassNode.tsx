@@ -33,10 +33,10 @@ function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
     ...styles.badge,
     background: inherited
       ? '#1a2435'
-      : kind === 'schema' ? '#1e3a5f' : '#1e293b',
+      : kind === 'schema' ? 'var(--color-state-info-bg)' : 'var(--color-bg-surface)',
     color: inherited
       ? '#4a6080'
-      : kind === 'schema' ? '#7dd3fc' : '#94a3b8',
+      : kind === 'schema' ? '#7dd3fc' : 'var(--color-fg-secondary)',
   };
 
   const rowStyle = inherited
@@ -58,7 +58,7 @@ function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
           <span style={{ ...styles.badge, background: '#1a2435', color: '#4a6080' }} title={inheritedFrom ? `from ${inheritedFrom}` : 'inherited'}><ArrowUp size={10} /></span>
         )}
         <span style={kindBadgeStyle}>{kind === 'schema' ? 'S' : 'A'}</span>
-        {hasUsageOverride && <span style={{ ...styles.badge, color: '#fbbf24' }}>~</span>}
+        {hasUsageOverride && <span style={{ ...styles.badge, color: 'var(--color-state-warning)' }}>~</span>}
         {badges.map((b) => (
           <span key={b} style={styles.badge}>{b}</span>
         ))}
@@ -74,12 +74,12 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
   const isMixin = classDef.mixin === true;
 
   const headerBg = ghost
-    ? '#1e3a2e'
+    ? 'var(--color-class-ghost)'
     : isMixin
-    ? '#7c3aed'
+    ? 'var(--color-class-mixin)'
     : isAbstract
-    ? '#0369a1'
-    : '#1d4ed8';
+    ? 'var(--color-class-abstract)'
+    : 'var(--color-class-concrete)';
 
   const typeLabel = ghost ? 'imported' : isMixin ? 'mixin' : isAbstract ? 'abstract' : null;
 
@@ -94,7 +94,7 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
       style={{
         ...styles.wrapper,
         ...(ghost ? styles.ghostWrapper : {}),
-        outline: selected ? '2px solid #60a5fa' : ghost ? '1px dashed #374f3a' : '1px solid #334155',
+        outline: selected ? '2px solid var(--color-accent-hover)' : ghost ? '1px dashed #374f3a' : '1px solid var(--color-border-default)',
       }}
     >
       {/* Target handle (top) — for edges pointing into this node */}
@@ -148,14 +148,14 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
 
 const styles: Record<string, React.CSSProperties> = {
   wrapper: {
-    background: '#1e293b',
+    background: 'var(--color-bg-surface)',
     borderRadius: 6,
     minWidth: 200,
     maxWidth: 320,
     boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     overflow: 'hidden',
   },
   ghostWrapper: {
@@ -163,10 +163,10 @@ const styles: Record<string, React.CSSProperties> = {
     opacity: 0.72,
   },
   handle: {
-    background: '#60a5fa',
+    background: 'var(--color-accent-hover)',
     width: 8,
     height: 8,
-    border: '2px solid #1e293b',
+    border: '2px solid var(--color-border-subtle)',
   },
   header: {
     display: 'flex',
@@ -198,13 +198,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   isaRow: {
     padding: '3px 10px',
-    borderBottom: '1px solid #334155',
+    borderBottom: '1px solid var(--color-border-default)',
     fontSize: 11,
-    color: '#94a3b8',
-    background: '#253047',
+    color: 'var(--color-fg-secondary)',
+    background: 'var(--color-bg-surface-raised)',
   },
   isaLabel: {
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
   },
   isaValue: {
     color: '#93c5fd',
@@ -217,32 +217,32 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     padding: '2px 10px',
     gap: 2,
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     minHeight: 22,
   },
   slotPlus: {
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     marginRight: 2,
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
   },
   slotName: {
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     flex: '0 1 auto',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
   slotNameInherited: {
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     flex: '0 1 auto',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
   slotColon: {
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     flexShrink: 0,
   },
   slotRange: {
@@ -267,20 +267,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   badge: {
     fontSize: 9,
-    background: '#334155',
+    background: 'var(--color-border-default)',
     borderRadius: 3,
     padding: '0 3px',
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
   },
   moreRow: {
     padding: '3px 10px',
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     fontStyle: 'italic',
     fontSize: 11,
   },
   emptyRow: {
     padding: '4px 10px',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontStyle: 'italic',
   },
 };

@@ -102,20 +102,20 @@ function CanvasContextMenu({
 const ctxStyles: Record<string, React.CSSProperties> = {
   menu: {
     position: 'fixed',
-    background: '#1e293b',
-    border: '1px solid #334155',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border-default)',
     borderRadius: 6,
     boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-    zIndex: 1000,
+    zIndex: 'var(--z-modal)' as unknown as number,
     minWidth: 160,
     overflow: 'hidden',
   },
   item: {
     padding: '8px 14px',
     fontSize: 13,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     cursor: 'pointer',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     userSelect: 'none',
     display: 'flex',
     alignItems: 'center',
@@ -138,7 +138,7 @@ function DeleteConfirmDialog({
     <div style={dlgStyles.overlay}>
       <div style={dlgStyles.dialog}>
         <p style={dlgStyles.message}>
-          Delete {entityType} <strong style={{ color: '#f87171' }}>{entityName}</strong>?
+          Delete {entityType} <strong style={{ color: 'var(--color-state-error)' }}>{entityName}</strong>?
         </p>
         <p style={dlgStyles.hint}>This action cannot be undone after the history limit.</p>
         <div style={dlgStyles.actions}>
@@ -165,8 +165,8 @@ const dlgStyles: Record<string, React.CSSProperties> = {
     zIndex: 2000,
   },
   dialog: {
-    background: '#1e293b',
-    border: '1px solid #334155',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border-default)',
     borderRadius: 8,
     padding: '20px 24px',
     width: 340,
@@ -175,13 +175,13 @@ const dlgStyles: Record<string, React.CSSProperties> = {
   message: {
     margin: '0 0 8px',
     fontSize: 14,
-    color: '#e2e8f0',
-    fontFamily: 'monospace',
+    color: 'var(--color-fg-primary)',
+    fontFamily: 'var(--font-family-mono)',
   },
   hint: {
     margin: '0 0 16px',
     fontSize: 11,
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
   },
   actions: {
     display: 'flex',
@@ -190,23 +190,23 @@ const dlgStyles: Record<string, React.CSSProperties> = {
   },
   cancel: {
     background: 'transparent',
-    border: '1px solid #334155',
-    color: '#94a3b8',
+    border: '1px solid var(--color-border-default)',
+    color: 'var(--color-fg-secondary)',
     borderRadius: 4,
     padding: '6px 14px',
     cursor: 'pointer',
     fontSize: 13,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   confirm: {
-    background: '#7f1d1d',
+    background: 'var(--color-state-error-border)',
     border: '1px solid #991b1b',
     color: '#fca5a5',
     borderRadius: 4,
     padding: '6px 14px',
     cursor: 'pointer',
     fontSize: 13,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontWeight: 600,
   },
 };
@@ -714,7 +714,7 @@ function SchemaCanvasInner() {
             return '#1d4ed8';
           }}
           maskColor="rgba(0,0,0,0.6)"
-          style={{ background: '#0f172a' }}
+          style={{ background: 'var(--color-bg-canvas)' }}
         />
       </ReactFlow>
 
@@ -809,7 +809,7 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'relative',
     width: '100%',
     height: '100%',
-    background: '#0f172a',
+    background: 'var(--color-bg-canvas)',
   },
   emptyState: {
     display: 'flex',
@@ -817,17 +817,17 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     width: '100%',
     height: '100%',
-    background: '#0f172a',
+    background: 'var(--color-bg-canvas)',
   },
   emptyInner: {
     textAlign: 'center',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: 600,
     margin: '0 0 8px',
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
   },
   emptyHint: {
     fontSize: 14,
@@ -842,13 +842,13 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 10,
   },
   toolbarBtn: {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    color: '#94a3b8',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border-default)',
+    color: 'var(--color-fg-secondary)',
     borderRadius: 6,
     padding: '6px 12px',
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     cursor: 'pointer',
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
     display: 'flex',
@@ -860,12 +860,12 @@ const styles: Record<string, React.CSSProperties> = {
     left: '50%',
     transform: 'translateX(-50%)',
     background: '#1a1a2e',
-    border: '1px solid #475569',
+    border: '1px solid var(--color-border-strong)',
     borderRadius: 6,
     padding: '5px 14px',
     fontSize: 12,
-    fontFamily: 'monospace',
-    color: '#64748b',
+    fontFamily: 'var(--font-family-mono)',
+    color: 'var(--color-fg-muted)',
     zIndex: 10,
     pointerEvents: 'none' as const,
     letterSpacing: 0.5,
@@ -875,12 +875,12 @@ const styles: Record<string, React.CSSProperties> = {
     top: 12,
     left: '50%',
     transform: 'translateX(-50%)',
-    background: '#1e3a5f',
-    border: '1px solid #2563eb',
+    background: 'var(--color-state-info-bg)',
+    border: '1px solid var(--color-accent-active)',
     borderRadius: 6,
     padding: '6px 14px',
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#93c5fd',
     display: 'flex',
     alignItems: 'center',
@@ -890,8 +890,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   focusExitBtn: {
     background: 'transparent',
-    border: '1px solid #3b82f6',
-    color: '#60a5fa',
+    border: '1px solid var(--color-border-focus)',
+    color: 'var(--color-accent-hover)',
     borderRadius: 4,
     padding: '2px 8px',
     fontSize: 11,
