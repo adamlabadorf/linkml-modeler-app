@@ -204,6 +204,26 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
   },
 
   updateClass(schemaId, className, partial) {
+    // Guard against circular is_a inheritance chains
+    if (partial.isA) {
+      const schema = get().activeProject?.schemas.find((s) => s.id === schemaId)?.schema;
+      if (schema) {
+        const visited = new Set<string>();
+        let cursor: string | undefined = partial.isA;
+        while (cursor) {
+          if (cursor === className) {
+            (get() as any).pushToast?.({
+              severity: 'error',
+              message: `Circular inheritance: "${className}" cannot inherit from "${partial.isA}"`,
+            });
+            return;
+          }
+          if (visited.has(cursor)) break;
+          visited.add(cursor);
+          cursor = schema.classes[cursor]?.isA;
+        }
+      }
+    }
     set((state) => {
       if (!state.activeProject) return state;
       return {
