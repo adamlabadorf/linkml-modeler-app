@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { create } from 'zustand';
-import { createCanvasSlice, type CanvasSlice } from '../store/slices/canvasSlice.js';
+import { createCanvasSlice, type CanvasSlice } from '../slices/canvasSlice.js';
 import type { Node } from 'reactflow';
-import type { CanvasNodeData } from '../store/slices/canvasSlice.js';
+import type { CanvasNodeData } from '../slices/canvasSlice.js';
 
 function createStore() {
   return create<CanvasSlice>()((...args) => createCanvasSlice(...args));

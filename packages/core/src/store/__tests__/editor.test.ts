@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { create } from 'zustand';
-import { createEditorSlice, type EditorSlice } from '../store/slices/editorSlice.js';
+import { createEditorSlice, type EditorSlice } from '../slices/editorSlice.js';
 
 function createStore() {
   return create<EditorSlice>()((...args) => createEditorSlice(...args));
