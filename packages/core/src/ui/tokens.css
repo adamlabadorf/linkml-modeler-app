@@ -114,8 +114,17 @@
 
   /* State — success */
   --color-state-success:        #4ade80;
+  --color-state-success-fg:     #86efac;
   --color-state-success-bg:     #14532d;
   --color-state-success-border: #166534;
+
+  /* State fg — text on state-colored backgrounds / in state-themed contexts */
+  --color-state-error-fg:   #fca5a5;
+  --color-state-warning-fg: #fde68a;
+  --color-state-info-fg:    #93c5fd;
+
+  /* State — dark text written on bright warning-colored backgrounds */
+  --color-state-warning-on: #1c1400;
 
   /* Domain — class node header categories */
   --color-class-concrete: #1d4ed8;
@@ -129,6 +138,13 @@
   --color-slot-schema:    #7c3aed;
   --color-slot-inherited: #475569;
   --color-slot-range:     #0f766e;
+
+  /* Domain — canvas edge strokes */
+  --color-edge-mixin: #c084fc;
+  --color-edge-union: #fb923c;
+
+  /* Extended background depth */
+  --color-bg-deep: #080f1a;
 
   /* Shadows */
   --shadow-sm:      0 1px 2px rgba(0, 0, 0, 0.3);
@@ -184,8 +200,17 @@
 
   /* State — success */
   --color-state-success:        #16a34a;
+  --color-state-success-fg:     #16a34a;
   --color-state-success-bg:     #f0fdf4;
   --color-state-success-border: #bbf7d0;
+
+  /* State fg */
+  --color-state-error-fg:   #ef4444;
+  --color-state-warning-fg: #b45309;
+  --color-state-info-fg:    #1d4ed8;
+
+  /* State — dark text on bright warning bg */
+  --color-state-warning-on: #1c1400;
 
   /* Domain — class node header categories */
   --color-class-concrete: #2563eb;
@@ -199,6 +224,13 @@
   --color-slot-schema:    #7c3aed;
   --color-slot-inherited: #64748b;
   --color-slot-range:     #0f766e;
+
+  /* Domain — canvas edge strokes */
+  --color-edge-mixin: #7c3aed;
+  --color-edge-union: #ea580c;
+
+  /* Extended background depth */
+  --color-bg-deep: #f1f5f9;
 
   /* Shadows */
   --shadow-sm:      0 1px 2px rgba(0, 0, 0, 0.08);
