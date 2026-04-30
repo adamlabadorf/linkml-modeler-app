@@ -247,7 +247,6 @@ const fieldStyles: Record<string, React.CSSProperties> = {
   label: {
     fontSize: 10,
     color: '#64748b',
-    fontFamily: 'monospace',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -286,7 +285,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 14,
     color: '#94a3b8',
-    fontFamily: 'monospace',
   },
   closeBtn: {
     background: 'transparent',
@@ -315,7 +313,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     fontWeight: 700,
     color: '#475569',
-    fontFamily: 'monospace',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     borderBottom: '1px solid #1e293b',
@@ -342,7 +339,7 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   textarea: {
     background: '#1e293b',
@@ -361,7 +358,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderCollapse: 'collapse',
     margin: '0 0 4px',
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   th: {
     color: '#64748b',
@@ -385,7 +382,7 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   rowDeleteBtn: {
     background: 'transparent',
@@ -404,7 +401,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '2px 8px',
     fontSize: 14,
-    fontFamily: 'monospace',
   },
   importRow: {
     display: 'flex',
@@ -415,7 +411,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   importText: {
     flex: 1,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     color: '#93c5fd',
     overflow: 'hidden',
@@ -436,7 +432,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 10px',
     fontSize: 12,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     flexShrink: 0,
   },
   btnGhost: {
@@ -447,7 +442,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '6px 14px',
     fontSize: 13,
     cursor: 'pointer',
-    fontFamily: 'monospace',
   },
   btnSave: {
     background: '#1d4ed8',
@@ -457,7 +451,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '6px 20px',
     fontSize: 13,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     fontWeight: 600,
   },
 };

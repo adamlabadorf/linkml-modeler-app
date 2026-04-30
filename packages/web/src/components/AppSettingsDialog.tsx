@@ -137,7 +137,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: 440,
     maxWidth: '95vw',
     boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-    fontFamily: 'monospace',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -169,7 +168,6 @@ const styles: Record<string, React.CSSProperties> = {
   loading: {
     fontSize: 12,
     color: '#475569',
-    fontFamily: 'monospace',
   },
   section: {
     display: 'flex',
@@ -187,7 +185,6 @@ const styles: Record<string, React.CSSProperties> = {
   fieldLabel: {
     fontSize: 12,
     color: '#94a3b8',
-    fontFamily: 'monospace',
   },
   inputRow: {
     display: 'flex',
@@ -199,7 +196,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid #1e293b',
     borderRadius: 4,
     color: '#e2e8f0',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     padding: '6px 10px',
     outline: 'none',
@@ -211,7 +208,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '6px 12px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     flexShrink: 0,
   },
@@ -219,12 +215,10 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     color: '#475569',
     lineHeight: 1.5,
-    fontFamily: 'monospace',
   },
   noElectron: {
     fontSize: 12,
     color: '#475569',
-    fontFamily: 'monospace',
   },
   footer: {
     display: 'flex',
@@ -240,7 +234,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '6px 14px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   saveBtn: {
@@ -250,7 +243,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '6px 14px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
 };

@@ -91,7 +91,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: 14,
-    fontFamily: 'monospace',
     boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
   },
   title: {
@@ -119,7 +118,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     letterSpacing: '0.15em',
     color: '#60a5fa',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   copyBtn: {
     background: '#1d4ed8',
@@ -128,7 +127,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '4px 10px',
     fontSize: 11,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   openBtn: {
@@ -138,7 +136,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     padding: '8px 14px',
     fontSize: 13,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     textAlign: 'center',
   },
@@ -170,7 +167,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     padding: '6px 14px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     alignSelf: 'flex-end',
   },

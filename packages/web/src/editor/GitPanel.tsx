@@ -732,7 +732,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   collapsedLabel: {
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#475569',
     fontWeight: 700,
     textTransform: 'uppercase',
@@ -744,7 +744,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 10,
     padding: '0 5px',
     color: '#fff',
-    fontFamily: 'monospace',
     fontWeight: 700,
   },
   changeBadge: {
@@ -753,12 +752,11 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 10,
     padding: '0 5px',
     color: '#fde68a',
-    fontFamily: 'monospace',
     fontWeight: 700,
   },
   lastCommitHint: {
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#334155',
     marginLeft: 4,
     overflow: 'hidden',
@@ -778,7 +776,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 11,
     color: '#60a5fa',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   headerAhead: {
     color: '#4ade80',
@@ -801,7 +799,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '2px 8px',
     fontSize: 11,
     cursor: 'pointer',
-    fontFamily: 'monospace',
   },
   headerBtnDisabled: {
     opacity: 0.5,
@@ -824,7 +821,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid #7f1d1d',
     fontSize: 11,
     color: '#fca5a5',
-    fontFamily: 'monospace',
     flexShrink: 0,
   },
   errorDismiss: {
@@ -846,7 +842,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#64748b',
     padding: '5px 12px',
     fontSize: 11,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -863,7 +858,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 10,
     padding: '0 4px',
     color: '#94a3b8',
-    fontFamily: 'monospace',
     fontWeight: 700,
   },
   tabContent: {
@@ -878,7 +872,6 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     padding: '4px 10px',
     fontSize: 9,
-    fontFamily: 'monospace',
     color: '#475569',
     fontWeight: 700,
     textTransform: 'uppercase',
@@ -900,7 +893,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1px 6px',
     fontSize: 9,
     cursor: 'pointer',
-    fontFamily: 'monospace',
   },
   revertBtn: {
     background: 'transparent',
@@ -916,7 +908,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 10px',
     fontSize: 11,
     color: '#475569',
-    fontFamily: 'monospace',
     fontStyle: 'italic',
     textAlign: 'center',
   },
@@ -924,7 +915,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '16px',
     fontSize: 12,
     color: '#475569',
-    fontFamily: 'monospace',
     textAlign: 'center',
     lineHeight: 1.6,
     display: 'flex',
@@ -940,7 +930,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '6px 16px',
     fontSize: 12,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     fontWeight: 600,
   },
   settingsForm: {
@@ -956,7 +945,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   settingsLabel: {
     fontSize: 10,
-    fontFamily: 'monospace',
     color: '#64748b',
     fontWeight: 700,
     textTransform: 'uppercase' as const,
@@ -969,7 +957,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#e2e8f0',
     fontSize: 11,
     padding: '5px 8px',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box' as const,
@@ -980,7 +968,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   settingsSectionTitle: {
     fontSize: 10,
-    fontFamily: 'monospace',
     color: '#475569',
     fontWeight: 700,
     textTransform: 'uppercase' as const,
@@ -990,7 +977,6 @@ const styles: Record<string, React.CSSProperties> = {
   settingsHint: {
     fontSize: 10,
     color: '#475569',
-    fontFamily: 'monospace',
     fontStyle: 'italic',
     lineHeight: 1.5,
   },
@@ -1001,7 +987,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '3px 10px',
     borderBottom: '1px solid #0a1423',
     fontSize: 11,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   fileCheckbox: {
     accentColor: '#3b82f6',
@@ -1030,7 +1016,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#e2e8f0',
     fontSize: 11,
     padding: '5px 8px',
-    fontFamily: 'monospace',
     resize: 'none',
     outline: 'none',
     width: '100%',
@@ -1044,7 +1029,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '5px 14px',
     fontSize: 12,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     fontWeight: 600,
     alignSelf: 'flex-end',
   },
@@ -1061,14 +1045,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   logOid: {
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#60a5fa',
     fontWeight: 700,
     letterSpacing: 0.5,
   },
   logMessage: {
     fontSize: 11,
-    fontFamily: 'monospace',
     color: '#e2e8f0',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -1076,7 +1059,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   logMeta: {
     fontSize: 10,
-    fontFamily: 'monospace',
     color: '#475569',
   },
   credOverlay: {
@@ -1102,12 +1084,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 13,
     color: '#60a5fa',
-    fontFamily: 'monospace',
   },
   credUrl: {
     fontSize: 10,
     color: '#64748b',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -1119,7 +1100,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#e2e8f0',
     fontSize: 12,
     padding: '6px 8px',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
@@ -1138,7 +1119,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 12px',
     fontSize: 11,
     cursor: 'pointer',
-    fontFamily: 'monospace',
   },
   credSubmitBtn: {
     background: '#1d4ed8',
@@ -1148,7 +1128,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 12px',
     fontSize: 11,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     fontWeight: 600,
   },
 };

@@ -56,7 +56,6 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     fontSize: 12,
-    fontFamily: 'monospace',
     color: '#93c5fd',
   },
   icon: {
@@ -74,7 +73,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '3px 10px',
     fontSize: 11,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   dismissBtn: {

@@ -510,7 +510,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: 460,
     maxWidth: '95vw',
     boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-    fontFamily: 'monospace',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -549,7 +548,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#64748b',
     padding: '8px 12px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     marginBottom: -1,
   },
@@ -573,7 +571,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid #1e293b',
     borderRadius: 4,
     color: '#e2e8f0',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     padding: '6px 10px',
     outline: 'none',
@@ -587,7 +585,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     color: '#4ade80',
     marginTop: 4,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   submitBtn: {
     background: '#1d4ed8',
@@ -596,7 +594,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '8px 16px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     alignSelf: 'flex-start',
     marginTop: 4,
@@ -621,7 +618,6 @@ const fieldStyles: Record<string, React.CSSProperties> = {
   label: {
     fontSize: 11,
     color: '#94a3b8',
-    fontFamily: 'monospace',
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
@@ -632,12 +628,10 @@ const fieldStyles: Record<string, React.CSSProperties> = {
   error: {
     fontSize: 11,
     color: '#f87171',
-    fontFamily: 'monospace',
   },
   hint: {
     fontSize: 10,
     color: '#475569',
-    fontFamily: 'monospace',
     lineHeight: 1.4,
   },
   errorBox: {
@@ -646,7 +640,6 @@ const fieldStyles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     color: '#fca5a5',
     fontSize: 12,
-    fontFamily: 'monospace',
     padding: '8px 12px',
   },
   checkboxRow: {
@@ -657,7 +650,6 @@ const fieldStyles: Record<string, React.CSSProperties> = {
   checkboxLabel: {
     fontSize: 12,
     color: '#e2e8f0',
-    fontFamily: 'monospace',
     display: 'block',
     marginBottom: 2,
   },
@@ -684,6 +676,5 @@ const progressStyles: Record<string, React.CSSProperties> = {
   label: {
     fontSize: 10,
     color: '#475569',
-    fontFamily: 'monospace',
   },
 };

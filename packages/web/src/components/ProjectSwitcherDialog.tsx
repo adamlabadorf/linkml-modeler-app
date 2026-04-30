@@ -199,7 +199,6 @@ const s: Record<string, React.CSSProperties> = {
     maxHeight: '80vh',
     display: 'flex',
     flexDirection: 'column',
-    fontFamily: 'monospace',
     color: '#e2e8f0',
     overflow: 'hidden',
   },
@@ -294,6 +293,7 @@ const s: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    fontFamily: 'var(--font-family-mono)',
   },
   itemPath: {
     fontSize: 10,
@@ -301,6 +301,7 @@ const s: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    fontFamily: 'var(--font-family-mono)',
   },
   itemMeta: {
     display: 'flex',
@@ -344,7 +345,6 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '4px 12px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   cancelBtn: {
@@ -354,7 +354,6 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '4px 12px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
 };

@@ -339,7 +339,6 @@ const menuStyles: Record<string, React.CSSProperties> = {
     color: '#94a3b8',
     padding: '4px 10px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     borderRadius: 3,
   },
@@ -375,7 +374,6 @@ const menuStyles: Record<string, React.CSSProperties> = {
     color: '#e2e8f0',
     padding: '6px 12px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
     textAlign: 'left',
   },
@@ -423,7 +421,6 @@ const dialogStyles: Record<string, React.CSSProperties> = {
     maxWidth: 360,
     width: '90%',
     color: '#e2e8f0',
-    fontFamily: 'monospace',
   },
   title: {
     fontSize: 16,
@@ -446,7 +443,6 @@ const dialogStyles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     padding: '6px 16px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   table: {
@@ -471,7 +467,7 @@ const dialogStyles: Record<string, React.CSSProperties> = {
     borderRadius: 3,
     padding: '2px 6px',
     fontSize: 11,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#e2e8f0',
   },
 };

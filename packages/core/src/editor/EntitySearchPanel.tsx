@@ -181,7 +181,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#e2e8f0',
     fontSize: 11,
     padding: '4px 7px',
-    fontFamily: 'monospace',
     outline: 'none',
   },
   results: {
@@ -192,7 +191,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 12,
     fontSize: 11,
     color: '#475569',
-    fontFamily: 'monospace',
     fontStyle: 'italic',
   },
   groupHeader: {
@@ -205,7 +203,7 @@ const styles: Record<string, React.CSSProperties> = {
   groupLabel: {
     fontSize: 9,
     color: '#475569',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     flex: 1,
@@ -234,7 +232,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 8,
     borderRadius: 3,
     padding: '1px 4px',
-    fontFamily: 'monospace',
     flexShrink: 0,
     fontWeight: 600,
   },
@@ -248,7 +245,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   entityName: {
     fontSize: 11,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#e2e8f0',
     flex: 1,
     overflow: 'hidden',

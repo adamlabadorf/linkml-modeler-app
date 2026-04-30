@@ -242,7 +242,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 11,
     color: '#60a5fa',
-    fontFamily: 'monospace',
     letterSpacing: 0.3,
     textTransform: 'uppercase' as const,
     flex: 1,
@@ -251,7 +250,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 12,
     fontSize: 12,
     color: '#475569',
-    fontFamily: 'monospace',
     fontStyle: 'italic',
   },
   sectionHeader: {
@@ -280,7 +278,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sectionLabel: {
     fontSize: 9,
-    fontFamily: 'monospace',
     color: '#475569',
     fontWeight: 700,
     textTransform: 'uppercase' as const,
@@ -289,7 +286,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sectionCount: {
     fontSize: 9,
-    fontFamily: 'monospace',
     color: '#334155',
     background: '#0d1627',
     borderRadius: 8,
@@ -353,7 +349,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fileName: {
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#e2e8f0',
     flex: 1,
     overflow: 'hidden',
@@ -363,7 +359,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   importName: {
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#94a3b8',
     flex: 1,
     overflow: 'hidden',
@@ -377,7 +373,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   importSource: {
     fontSize: 9,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#334155',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -396,7 +392,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1px 4px',
     color: '#475569',
     flexShrink: 0,
-    fontFamily: 'monospace',
     letterSpacing: 0.5,
   },
   schemaNameRow: {
@@ -406,7 +401,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   schemaName: {
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#7c9cbf',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -419,7 +414,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   stat: {
     fontSize: 10,
-    fontFamily: 'monospace',
     color: '#475569',
   },
   footer: {
@@ -431,7 +425,6 @@ const styles: Record<string, React.CSSProperties> = {
   footerText: {
     fontSize: 10,
     color: '#334155',
-    fontFamily: 'monospace',
   },
   searchToggleBtn: {
     background: 'transparent',
@@ -440,7 +433,6 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     fontSize: 11,
     padding: '0 2px',
-    fontFamily: 'monospace',
     flexShrink: 0,
   },
 };

@@ -324,7 +324,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   collapsedLabel: {
     fontSize: 10,
-    fontFamily: 'monospace',
     color: '#475569',
     fontWeight: 700,
     textTransform: 'uppercase',
@@ -334,7 +333,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 10,
     padding: '0 5px',
     fontSize: 10,
-    fontFamily: 'monospace',
     fontWeight: 700,
     color: '#fff',
   },
@@ -351,7 +349,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 10,
     color: '#94a3b8',
-    fontFamily: 'monospace',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -368,7 +365,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 12px',
     fontSize: 10,
     color: '#334155',
-    fontFamily: 'monospace',
     fontStyle: 'italic',
     borderBottom: '1px solid #1e293b',
     flexShrink: 0,
@@ -391,19 +387,16 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 10,
     padding: '1px 7px',
     fontSize: 10,
-    fontFamily: 'monospace',
     fontWeight: 700,
   },
   allClear: {
     fontSize: 11,
     color: '#4ade80',
-    fontFamily: 'monospace',
     fontWeight: 600,
   },
   notRun: {
     fontSize: 11,
     color: '#475569',
-    fontFamily: 'monospace',
     fontStyle: 'italic',
   },
   summaryRight: {
@@ -414,7 +407,6 @@ const styles: Record<string, React.CSSProperties> = {
   timeAgo: {
     fontSize: 10,
     color: '#334155',
-    fontFamily: 'monospace',
   },
   runBtn: {
     background: '#1d4ed8',
@@ -424,7 +416,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '3px 10px',
     fontSize: 11,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     fontWeight: 600,
   },
   filterBar: {
@@ -440,7 +431,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#64748b',
     padding: '4px 10px',
     fontSize: 10,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   filterBtnActive: {
@@ -465,7 +455,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   severityBadge: {
     fontSize: 9,
-    fontFamily: 'monospace',
     fontWeight: 700,
     borderRadius: 3,
     padding: '1px 4px',
@@ -474,7 +463,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   issueMessage: {
     fontSize: 11,
-    fontFamily: 'monospace',
     color: '#e2e8f0',
     flex: 1,
   },
@@ -486,7 +474,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   issuePath: {
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#475569',
     flex: 1,
     overflow: 'hidden',
@@ -501,14 +489,12 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1px 6px',
     fontSize: 10,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     flexShrink: 0,
   },
   emptyList: {
     padding: '16px 12px',
     fontSize: 12,
     color: '#475569',
-    fontFamily: 'monospace',
     fontStyle: 'italic',
     textAlign: 'center',
   },

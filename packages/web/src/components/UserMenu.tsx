@@ -123,7 +123,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#e2e8f0',
     padding: '3px 8px',
     cursor: 'pointer',
-    fontFamily: 'monospace',
     fontSize: 12,
   },
   avatar: {
@@ -155,7 +154,6 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
     zIndex: 4000,
     overflow: 'hidden',
-    fontFamily: 'monospace',
   },
   userInfo: {
     padding: '10px 14px',
@@ -184,7 +182,6 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'left',
     padding: '8px 14px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   signInBtn: {
@@ -194,7 +191,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '3px 10px',
     fontSize: 11,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
 };

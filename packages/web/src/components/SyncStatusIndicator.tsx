@@ -35,7 +35,6 @@ const STATUS_CONFIG: Record<NonNullable<SyncStatus>, { label: string; color: str
 const styles: Record<string, React.CSSProperties> = {
   badge: {
     fontSize: 11,
-    fontFamily: 'monospace',
     letterSpacing: '0.01em',
   },
 };

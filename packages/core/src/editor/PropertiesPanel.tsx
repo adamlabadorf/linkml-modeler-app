@@ -264,7 +264,7 @@ function FilteredGroupedSelect({
     width: '100%',
     boxSizing: 'border-box',
     outline: 'none',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   };
 
   return (
@@ -302,7 +302,6 @@ function FilteredGroupedSelect({
             background: '#0f172a',
             color: '#94a3b8',
             cursor: 'pointer',
-            fontFamily: 'monospace',
             fontSize: 11,
             lineHeight: '14px',
             padding: 0,
@@ -330,7 +329,7 @@ function FilteredGroupedSelect({
           onMouseDown={(e) => e.preventDefault()} // prevent blur on option click
         >
           {filteredGroups.length === 0 ? (
-            <div style={{ padding: '6px 10px', fontSize: 11, color: '#475569', fontFamily: 'monospace' }}>
+            <div style={{ padding: '6px 10px', fontSize: 11, color: '#475569' }}>
               No options
             </div>
           ) : (
@@ -343,7 +342,7 @@ function FilteredGroupedSelect({
                     color: '#475569',
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
-                    fontFamily: 'monospace',
+                    fontFamily: 'var(--font-family-mono)',
                   }}
                 >
                   {g.label}
@@ -361,7 +360,7 @@ function FilteredGroupedSelect({
                         cursor: 'pointer',
                         color: '#e2e8f0',
                         background: isFocused ? '#334155' : 'transparent',
-                        fontFamily: 'monospace',
+                        fontFamily: 'var(--font-family-mono)',
                       }}
                       onMouseEnter={() => setFocusedIndex(flatIdx)}
                       onMouseLeave={() => setFocusedIndex(-1)}
@@ -504,7 +503,7 @@ function SlotConditionEditor({
   return (
     <div style={{ borderLeft: '2px solid #1e3a5f', marginLeft: 8, paddingLeft: 8, paddingBottom: 4, marginBottom: 4 }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#86efac', flex: 1 }}>{slotName}</span>
+        <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: 11, color: '#86efac', flex: 1 }}>{slotName}</span>
         <button style={styles.slotRefRemoveBtn} onClick={onRemove} title="Remove slot condition">✕</button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -515,7 +514,7 @@ function SlotConditionEditor({
           onChange={e => upd({ equalsString: e.target.value || undefined })}
         />
         <input
-          style={{ ...styles.input, fontSize: 11, fontFamily: 'monospace' }}
+          style={{ ...styles.input, fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
           placeholder="pattern (regex)…"
           value={cond.pattern ?? ''}
           onChange={e => upd({ pattern: e.target.value || undefined })}
@@ -560,7 +559,7 @@ function ClassExpressionEditor({
 
   return (
     <div style={{ paddingBottom: 4 }}>
-      <div style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace', padding: '4px 12px',
+      <div style={{ fontSize: 10, color: '#94a3b8', padding: '4px 12px',
         textTransform: 'uppercase', letterSpacing: 0.5 }}>
         {label}
       </div>
@@ -1893,7 +1892,6 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     padding: '8px 4px',
     fontSize: 11,
-    fontFamily: 'monospace',
     flexShrink: 0,
   },
   panelHeader: {
@@ -1909,7 +1907,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     fontSize: 13,
     color: '#94a3b8',
-    fontFamily: 'monospace',
   },
   panelHeaderActions: {
     display: 'flex',
@@ -1923,14 +1920,13 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     padding: '2px 6px',
     fontSize: 13,
-    fontFamily: 'monospace',
     lineHeight: 1.4,
   },
   breadcrumb: {
     padding: '4px 12px',
     fontSize: 11,
     color: '#60a5fa',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     background: '#0d1b2e',
     borderBottom: '1px solid #1e293b',
     flexShrink: 0,
@@ -1943,7 +1939,6 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#0f1a2e',
     borderBottom: '1px solid #334155',
     fontSize: 11,
-    fontFamily: 'monospace',
     color: '#64748b',
     letterSpacing: 0.4,
     flexShrink: 0,
@@ -1958,7 +1953,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     fontWeight: 700,
     color: '#475569',
-    fontFamily: 'monospace',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     borderBottom: '1px solid #1e293b',
@@ -1973,7 +1967,6 @@ const styles: Record<string, React.CSSProperties> = {
   fieldLabel: {
     fontSize: 10,
     color: '#64748b',
-    fontFamily: 'monospace',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -1990,7 +1983,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'sans-serif',
   },
   inputMono: {
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   textarea: {
     background: '#1e293b',
@@ -2015,7 +2008,7 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
   },
   checkboxRow: {
     display: 'flex',
@@ -2024,7 +2017,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     color: '#94a3b8',
     cursor: 'pointer',
-    fontFamily: 'monospace',
     padding: '2px 0',
   },
   checkbox: {
@@ -2050,13 +2042,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   slotEditorName: {
     color: '#e2e8f0',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     flex: '0 1 auto',
   },
   slotEditorRange: {
     color: '#86efac',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 11,
     flex: 1,
     overflow: 'hidden',
@@ -2074,7 +2066,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 3,
     padding: '0 3px',
     color: '#94a3b8',
-    fontFamily: 'monospace',
   },
   slotEditorBody: {
     background: '#091120',
@@ -2099,7 +2090,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   importPath: {
     flex: 1,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 11,
     color: '#94a3b8',
     overflow: 'hidden',
@@ -2130,7 +2121,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 10px',
     fontSize: 12,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     flexShrink: 0,
   },
   btnDanger: {
@@ -2141,7 +2131,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 10px',
     fontSize: 12,
     cursor: 'pointer',
-    fontFamily: 'monospace',
   },
   btnGhost: {
     background: 'transparent',
@@ -2151,7 +2140,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 10px',
     fontSize: 12,
     cursor: 'pointer',
-    fontFamily: 'monospace',
   },
   deleteConfirm: {
     display: 'flex',
@@ -2162,10 +2150,9 @@ const styles: Record<string, React.CSSProperties> = {
   deleteConfirmText: {
     fontSize: 12,
     color: '#fca5a5',
-    fontFamily: 'monospace',
   },
   readOnlyValue: {
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     color: '#94a3b8',
     padding: '4px 0',
@@ -2175,7 +2162,6 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '4px 12px',
     display: 'inline-block',
     fontSize: 10,
-    fontFamily: 'monospace',
     fontWeight: 600,
     color: '#86efac',
     background: '#064e3b',
@@ -2202,7 +2188,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     color: '#64748b',
     margin: '0 0 8px',
-    fontFamily: 'monospace',
   },
   emptyHint: {
     fontSize: 11,
@@ -2217,7 +2202,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid #1e293b',
   },
   slotRefName: {
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     color: '#7dd3fc',
     flex: '0 1 auto',
@@ -2226,7 +2211,7 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
   },
   slotRefRange: {
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     fontSize: 11,
     color: '#86efac',
     flex: 1,
@@ -2235,7 +2220,6 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
   },
   slotRefMissing: {
-    fontFamily: 'monospace',
     fontSize: 11,
     color: '#fbbf24',
     flex: 1,

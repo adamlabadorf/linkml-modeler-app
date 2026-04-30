@@ -131,7 +131,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: 400,
     maxWidth: '90vw',
     color: '#e2e8f0',
-    fontFamily: 'monospace',
   },
   title: {
     fontSize: 16,
@@ -157,7 +156,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     padding: '8px 10px',
     fontSize: 12,
-    fontFamily: 'monospace',
     color: '#e2e8f0',
     outline: 'none',
     width: '100%',
@@ -192,7 +190,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     padding: '6px 16px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   primaryBtn: {
@@ -202,7 +199,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 5,
     padding: '6px 16px',
     fontSize: 12,
-    fontFamily: 'monospace',
     cursor: 'pointer',
   },
   btnDisabled: {

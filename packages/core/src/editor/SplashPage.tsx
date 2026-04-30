@@ -198,7 +198,6 @@ const s: Record<string, React.CSSProperties> = {
     height: '100%',
     width: '100%',
     background: '#0f172a',
-    fontFamily: 'monospace',
     color: '#e2e8f0',
   },
   container: {
@@ -226,7 +225,6 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     color: '#e2e8f0',
     margin: 0,
-    fontFamily: 'monospace',
     textAlign: 'center',
   },
   version: {
@@ -248,7 +246,6 @@ const s: Record<string, React.CSSProperties> = {
     border: '1px solid #1e293b',
     borderRadius: 8,
     cursor: 'pointer',
-    fontFamily: 'monospace',
     color: '#e2e8f0',
     textAlign: 'left' as const,
     transition: 'background 0.15s, border-color 0.15s',
@@ -277,7 +274,6 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     color: '#64748b',
     margin: '0 0 10px 0',
-    fontFamily: 'monospace',
     textTransform: 'uppercase' as const,
     letterSpacing: 1,
   },
@@ -320,6 +316,7 @@ const s: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    fontFamily: 'var(--font-family-mono)',
   },
   recentMeta: {
     display: 'flex',
