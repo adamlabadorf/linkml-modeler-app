@@ -58,7 +58,7 @@ export function validateSchema(schema: LinkMLSchema): ValidationError[] {
 
 const KNOWN_SCHEMA_KEYS = new Set([
   'id', 'name', 'title', 'description', 'version', 'license',
-  'prefixes', 'default_prefix', 'default_range',
+  'prefixes', 'default_prefix', 'default_range', 'default_curi_maps',
   'imports', 'subsets', 'types', 'slots', 'enums', 'classes',
   'see_also', 'source_file', 'generation_date',
   // legacy / common
@@ -140,6 +140,8 @@ function parseSlot(raw: Record<string, unknown>, name: string): SlotDefinition {
   if (raw['close_mappings']) slot.closeMappings = raw['close_mappings'] as string[];
   if (raw['broad_mappings']) slot.broadMappings = raw['broad_mappings'] as string[];
   if (raw['narrow_mappings']) slot.narrowMappings = raw['narrow_mappings'] as string[];
+  if (raw['related_mappings']) slot.relatedMappings = raw['related_mappings'] as string[];
+  if (raw['symmetric'] !== undefined) slot.symmetric = Boolean(raw['symmetric']);
   const extras = collectExtras(raw, KNOWN_SLOT_KEYS);
   if (extras) slot.extras = extras;
   return slot;
@@ -274,6 +276,7 @@ function parseSubset(raw: Record<string, unknown> | null | undefined, name: stri
   const subset: SubsetDefinition = { name };
   if (raw) {
     if (raw['description']) subset.description = raw['description'] as string;
+    if (raw['comments']) subset.comments = raw['comments'] as string[];
     const extras = collectExtras(raw, KNOWN_SUBSET_KEYS);
     if (extras) subset.extras = extras;
   }
@@ -331,6 +334,8 @@ export function parseYaml(rawYaml: string): LinkMLSchema {
   if (raw['version']) schema.version = raw['version'] as string;
   if (raw['license']) schema.license = raw['license'] as string;
   if (raw['default_range']) schema.defaultRange = raw['default_range'] as string;
+  if (raw['default_curi_maps']) schema.defaultCuriMaps = raw['default_curi_maps'] as string[];
+  if (raw['see_also']) schema.seeAlso = raw['see_also'] as string[];
 
   if (raw['subsets'] && typeof raw['subsets'] === 'object') {
     for (const [subsetName, subsetRaw] of Object.entries(raw['subsets'] as Record<string, unknown>)) {
@@ -399,6 +404,8 @@ function serializeSlot(slot: SlotDefinition): Record<string, unknown> | null {
   if (isDefined(slot.closeMappings)) out['close_mappings'] = slot.closeMappings;
   if (isDefined(slot.broadMappings)) out['broad_mappings'] = slot.broadMappings;
   if (isDefined(slot.narrowMappings)) out['narrow_mappings'] = slot.narrowMappings;
+  if (isDefined(slot.relatedMappings)) out['related_mappings'] = slot.relatedMappings;
+  if (isDefined(slot.symmetric)) out['symmetric'] = slot.symmetric;
   // Restore extras
   if (slot.extras) Object.assign(out, slot.extras);
   return Object.keys(out).length > 0 ? out : null;
@@ -532,6 +539,7 @@ function serializeEnum(enm: EnumDefinition): Record<string, unknown> {
 function serializeSubset(subset: SubsetDefinition): Record<string, unknown> | null {
   const out: Record<string, unknown> = {};
   if (isDefined(subset.description)) out['description'] = subset.description;
+  if (isDefined(subset.comments)) out['comments'] = subset.comments;
   if (subset.extras) Object.assign(out, subset.extras);
   return Object.keys(out).length > 0 ? out : null;
 }
@@ -558,6 +566,8 @@ export function serializeYaml(schema: LinkMLSchema): string {
   if (isDefined(schema.prefixes)) out['prefixes'] = schema.prefixes;
   out['default_prefix'] = schema.defaultPrefix;
   if (isDefined(schema.defaultRange)) out['default_range'] = schema.defaultRange;
+  if (isDefined(schema.defaultCuriMaps)) out['default_curi_maps'] = schema.defaultCuriMaps;
+  if (isDefined(schema.seeAlso)) out['see_also'] = schema.seeAlso;
   if (isDefined(schema.imports)) out['imports'] = schema.imports;
 
   if (isDefined(schema.subsets)) {

@@ -115,6 +115,11 @@ export const arbSlotDefinition: fc.Arbitrary<SlotDefinition> = fc.record({
   multivalued: fc.option(fc.boolean(), { nil: undefined }),
   identifier: fc.option(fc.boolean(), { nil: undefined }),
   inlined: fc.option(fc.boolean(), { nil: undefined }),
+  symmetric: fc.option(fc.boolean(), { nil: undefined }),
+  relatedMappings: fc.option(
+    fc.array(arbCURIE, { minLength: 1, maxLength: 3 }),
+    { nil: undefined },
+  ),
   extras: fc.option(
     fc.constant({ x_test_extra: 'round_trip_value' } as Record<string, unknown>),
     { nil: undefined },
@@ -128,6 +133,8 @@ export const arbSlotDefinition: fc.Arbitrary<SlotDefinition> = fc.record({
   if (raw.multivalued !== undefined) slot.multivalued = raw.multivalued;
   if (raw.identifier !== undefined) slot.identifier = raw.identifier;
   if (raw.inlined !== undefined) slot.inlined = raw.inlined;
+  if (raw.symmetric !== undefined) slot.symmetric = raw.symmetric;
+  if (raw.relatedMappings !== undefined) slot.relatedMappings = raw.relatedMappings;
   if (raw.extras !== undefined) slot.extras = raw.extras;
   return slot;
 });

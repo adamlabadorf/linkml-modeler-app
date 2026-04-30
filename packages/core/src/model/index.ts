@@ -67,6 +67,8 @@ export interface LinkMLSchema {
   prefixes: Record<string, string>; // e.g. { "linkml": "https://w3id.org/linkml/" }
   defaultPrefix: string;
   defaultRange?: string;
+  defaultCuriMaps?: string[]; // CURIE map list (e.g. semweb_context)
+  seeAlso?: string[]; // Schema-level see-also links
   imports: string[]; // e.g. ["linkml:types", "../other-schema"]
   subsets: Record<string, SubsetDefinition>;
   types: Record<string, TypeDefinition>;
@@ -167,6 +169,8 @@ export interface SlotDefinition {
   closeMappings?: string[];
   broadMappings?: string[];
   narrowMappings?: string[];
+  relatedMappings?: string[]; // Fifth SKOS mapping type
+  symmetric?: boolean; // Slot is symmetric
   // Advanced properties (v1.x) stored as opaque `extras` to round-trip without data loss
   extras?: Record<string, unknown>;
 }
@@ -200,6 +204,7 @@ export interface ReachableFrom {
 export interface SubsetDefinition {
   name: string;
   description?: string;
+  comments?: string[];
   extras?: Record<string, unknown>;
 }
 
