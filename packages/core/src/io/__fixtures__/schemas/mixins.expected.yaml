@@ -29,8 +29,8 @@ classes:
     attributes:
       id:
         description: Opaque unique identifier
-        identifier: true
         range: string
+        identifier: true
       label:
         description: Human-readable label
         range: string

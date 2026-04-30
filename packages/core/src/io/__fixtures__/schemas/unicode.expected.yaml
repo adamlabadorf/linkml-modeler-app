@@ -6,20 +6,6 @@ prefixes:
 default_prefix: ex
 imports:
   - linkml:types
-classes:
-  Café:
-    description: Un établissement servant des boissons chaudes et froides (French)
-    attributes:
-      id:
-        description: Identifiant unique / Unique identifier (UTF-8 safe)
-        identifier: true
-        range: string
-      название:
-        description: Наименование на русском языке (Russian name field)
-        range: string
-      bezeichnung:
-        description: Bezeichnung auf Deutsch — supports em-dash and Umlauts (äöüÄÖÜß)
-        range: string
 enums:
   Sprache:
     description: Sprache / Language — demonstrates non-ASCII enum keys
@@ -32,3 +18,17 @@ enums:
         description: 日本語（にほんご）
       العربية:
         description: اللغة العربية
+classes:
+  Café:
+    description: Un établissement servant des boissons chaudes et froides (French)
+    attributes:
+      id:
+        description: Identifiant unique / Unique identifier (UTF-8 safe)
+        range: string
+        identifier: true
+      название:
+        description: Наименование на русском языке (Russian name field)
+        range: string
+      bezeichnung:
+        description: Bezeichnung auf Deutsch — supports em-dash and Umlauts (äöüÄÖÜß)
+        range: string

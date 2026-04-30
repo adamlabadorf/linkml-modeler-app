@@ -19,19 +19,18 @@ slots:
     description: Symmetric overlap relationship; unknown keys preserved in extras
     range: string
     slot_uri: RO:0002131
-    symmetric: true
     transitive: false
 classes:
   Component:
     description: A component that participates in part-of relationships
-    conforms_to: https://example.org/extras/component-spec
+    slots:
+      - part_of
     attributes:
       id:
         description: Unique identifier
-        identifier: true
         range: string
+        identifier: true
       name:
         description: Component name
         range: string
-    slots:
-      - part_of
+    conforms_to: https://example.org/extras/component-spec

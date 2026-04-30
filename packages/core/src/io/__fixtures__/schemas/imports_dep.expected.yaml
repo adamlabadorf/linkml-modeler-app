@@ -12,8 +12,8 @@ classes:
     attributes:
       id:
         description: Unique identifier
-        identifier: true
         range: string
+        identifier: true
       label:
         description: Human-readable label
         range: string

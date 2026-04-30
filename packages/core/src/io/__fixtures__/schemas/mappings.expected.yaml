@@ -24,23 +24,19 @@ slots:
       - skos:prefLabel
     narrow_mappings:
       - foaf:firstName
-    related_mappings:
-      - owl:sameAs
   description:
     description: A textual description; shows broad and related mappings only
     range: string
     broad_mappings:
       - dcterms:description
-    related_mappings:
-      - schema:description
 classes:
   Entity:
     description: An entity with fully mapped name and description slots
-    attributes:
-      id:
-        description: Unique identifier
-        identifier: true
-        range: string
     slots:
       - name
       - description
+    attributes:
+      id:
+        description: Unique identifier
+        range: string
+        identifier: true

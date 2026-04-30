@@ -40,8 +40,8 @@ classes:
     attributes:
       id:
         description: Unique organism identifier
-        identifier: true
         range: string
+        identifier: true
       life_stage:
         description: Current life stage
         range: LifeStage

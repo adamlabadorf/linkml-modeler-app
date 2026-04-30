@@ -21,8 +21,8 @@ classes:
     attributes:
       id:
         description: Primary key
-        identifier: true
         range: string
+        identifier: true
         subset_of:
           - Core
       name:
