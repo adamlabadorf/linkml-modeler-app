@@ -6,9 +6,7 @@
 #   2. 6-char hex color literals in string values — count-based baseline
 #      (catches '#rrggbb' style strings; embedded hex like '1px solid #...' is a known gap)
 #
-# Baseline: 115 known hex violations from incomplete PTS-88/89/90 token migration.
-# These are tracked in the follow-up ticket linked from PTS-91.
-# Reduce BASELINE_HEX as violations are cleaned up and re-run this script locally to verify.
+# Baseline: 0 — all hex violations migrated to CSS tokens in PTS-92.
 #
 # SVG attribute context (e.g. <Background color="#334155">, MiniMap nodeColor returns)
 # uses non-quoted-hex patterns and is not caught by check 2 — this is intentional.
@@ -40,7 +38,7 @@ fi
 # ── 2. 6-char hex color literals — count-based baseline ───────────────────────
 # Pattern matches strings like '#1a2b3c' (quoted standalone hex).
 # When this count drops below BASELINE_HEX, reduce the baseline to lock in progress.
-BASELINE_HEX=115
+BASELINE_HEX=0
 
 HEX_COUNT=$(grep -rn --include='*.ts' --include='*.tsx' \
     -E "'#[0-9a-fA-F]{6}'" "${SOURCES[@]}" 2>/dev/null \
