@@ -71,7 +71,9 @@ docs/
 
 ## Tech Stack
 
-React 18 + TypeScript · ReactFlow · Zustand · js-yaml · shadcn/ui · Vite · isomorphic-git
+React 18 + TypeScript · ReactFlow · Zustand · js-yaml · Lucide · Vite · isomorphic-git
+
+Styling uses CSS custom properties for theming; no CSS framework is bundled.
 
 ## Documentation
 
