@@ -1,0 +1,102 @@
+.lm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-ui);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background 0.1s, opacity 0.1s;
+  outline: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.lm-btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.lm-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.lm-btn--sm {
+  font-size: var(--font-size-sm);
+  padding: 4px 12px;
+  min-height: 26px;
+}
+
+.lm-btn--md {
+  font-size: var(--font-size-base);
+  padding: 6px 16px;
+  min-height: 30px;
+}
+
+.lm-btn--lg {
+  font-size: var(--font-size-md);
+  padding: 8px 20px;
+  min-height: 36px;
+}
+
+/* Variant: primary */
+.lm-btn--primary {
+  background: var(--color-accent-active);
+  border-color: var(--color-border-focus);
+  color: var(--color-fg-on-accent);
+  font-weight: var(--font-weight-semibold);
+}
+.lm-btn--primary:hover:not(:disabled) {
+  background: var(--color-accent-default);
+}
+
+/* Variant: secondary */
+.lm-btn--secondary {
+  background: var(--color-border-default);
+  border-color: var(--color-border-strong);
+  color: var(--color-fg-primary);
+}
+.lm-btn--secondary:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+}
+
+/* Variant: ghost */
+.lm-btn--ghost {
+  background: transparent;
+  border-color: var(--color-border-default);
+  color: var(--color-fg-secondary);
+}
+.lm-btn--ghost:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+}
+
+/* Variant: danger */
+.lm-btn--danger {
+  background: var(--color-state-error-border);
+  border-color: var(--color-state-error-bg);
+  color: var(--color-state-error-fg);
+}
+.lm-btn--danger:hover:not(:disabled) {
+  background: var(--color-state-error-bg);
+}
+
+/* Loading spinner */
+.lm-btn__spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: lm-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes lm-spin {
+  to { transform: rotate(360deg); }
+}
