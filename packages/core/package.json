@@ -22,6 +22,7 @@
   "dependencies": {
     "driver.js": "^1.4.0",
     "js-yaml": "^4.1.0",
+    "lucide-react": "^0.487.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "reactflow": "^11.11.0",
