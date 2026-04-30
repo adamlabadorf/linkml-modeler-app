@@ -29,7 +29,7 @@ export function SyncStatusIndicator() {
 const STATUS_CONFIG: Record<NonNullable<SyncStatus>, { label: React.ReactNode; color: string }> = {
   saved: { label: '✓ Saved', color: 'var(--color-state-success)' },
   syncing: { label: '⟳ Syncing…', color: 'var(--color-state-info)' },
-  unsaved: { label: '● Unsaved changes', color: '#f59e0b' },
+  unsaved: { label: '● Unsaved changes', color: 'var(--color-state-warning)' },
   error: { label: <><AlertTriangle size={11} />Sync error</>, color: 'var(--color-state-error)' },
 };
 

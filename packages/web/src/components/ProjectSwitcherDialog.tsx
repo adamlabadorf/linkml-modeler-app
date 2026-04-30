@@ -260,8 +260,8 @@ const s: Record<string, React.CSSProperties> = {
     gap: 12,
   },
   itemCurrent: {
-    background: '#0f2544',
-    border: '1px solid #1e4080',
+    background: 'var(--color-bg-surface-sunken)',
+    border: '1px solid var(--color-border-strong)',
     cursor: 'default',
   },
   itemInfo: {
@@ -336,13 +336,13 @@ const s: Record<string, React.CSSProperties> = {
   },
   confirmText: {
     fontSize: 12,
-    color: '#fde68a',
+    color: 'var(--color-state-warning-fg)',
     flex: 1,
   },
   confirmBtn: {
     background: 'var(--color-state-error-border)',
-    border: '1px solid #991b1b',
-    color: '#fca5a5',
+    border: '1px solid var(--color-state-error-bg)',
+    color: 'var(--color-state-error-fg)',
     borderRadius: 4,
     padding: '4px 12px',
     fontSize: 12,

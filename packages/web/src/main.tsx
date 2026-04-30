@@ -23,7 +23,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
   render() {
     if (this.state.error) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--color-bg-canvas)', color: '#fca5a5', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--color-bg-canvas)', color: 'var(--color-state-error-fg)', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 24 }}><AlertTriangle size={24} /> Unexpected Error</div>
           <div style={{ fontSize: 13, color: 'var(--color-fg-secondary)', maxWidth: 600, textAlign: 'center' }}>{this.state.error.message}</div>
           <button onClick={() => this.setState({ error: null })} style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-default)', color: 'var(--color-fg-primary)', borderRadius: 5, padding: '6px 14px', cursor: 'pointer' }}>
@@ -136,7 +136,7 @@ const yamlStyles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     width: 300,
     borderLeft: '1px solid var(--color-border-subtle)',
-    background: '#060e1a',
+    background: 'var(--color-bg-deep)',
     flexShrink: 0,
     overflow: 'hidden',
   },
@@ -155,7 +155,7 @@ const yamlStyles: Record<string, React.CSSProperties> = {
   },
   dirty: {
     fontSize: 11,
-    color: '#f59e0b',
+    color: 'var(--color-state-warning)',
   },
   code: {
     flex: 1,
@@ -215,9 +215,9 @@ const toastStyles: Record<string, React.CSSProperties> = {
     color: 'var(--color-fg-primary)',
   },
   info: { background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-default)', color: 'var(--color-fg-primary)' },
-  success: { background: '#14532d', border: '1px solid #166534', color: '#86efac' },
-  warning: { background: 'var(--color-state-warning-bg)', border: '1px solid var(--color-state-warning-border)', color: '#fde68a' },
-  error: { background: 'var(--color-state-error-bg)', border: '1px solid var(--color-state-error-border)', color: '#fca5a5' },
+  success: { background: 'var(--color-state-success-bg)', border: '1px solid var(--color-state-success-border)', color: 'var(--color-state-success-fg)' },
+  warning: { background: 'var(--color-state-warning-bg)', border: '1px solid var(--color-state-warning-border)', color: 'var(--color-state-warning-fg)' },
+  error: { background: 'var(--color-state-error-bg)', border: '1px solid var(--color-state-error-border)', color: 'var(--color-state-error-fg)' },
   dismiss: {
     background: 'transparent',
     border: 'none',
@@ -450,7 +450,7 @@ function App() {
           {validationIssues.length > 0 && (
             <>
               {' · '}
-              <span style={{ color: validationIssues.some(i => i.severity === 'error') ? '#fca5a5' : '#fde68a' }}>
+              <span style={{ color: validationIssues.some(i => i.severity === 'error') ? 'var(--color-state-error-fg)' : 'var(--color-state-warning-fg)' }}>
                 {validationIssues.filter(i => i.severity === 'error').length > 0
                   ? `${validationIssues.filter(i => i.severity === 'error').length} err`
                   : ''}
@@ -541,7 +541,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   dirtyBadge: {
     fontSize: 11,
-    color: '#f59e0b',
+    color: 'var(--color-state-warning)',
   },
   savingBadge: {
     fontSize: 11,

@@ -568,7 +568,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   input: {
     width: '100%',
-    background: '#020c1a',
+    background: 'var(--color-bg-deep)',
     border: '1px solid var(--color-border-subtle)',
     borderRadius: 4,
     color: 'var(--color-fg-primary)',
@@ -591,7 +591,7 @@ const styles: Record<string, React.CSSProperties> = {
   submitBtn: {
     background: 'var(--color-accent-active)',
     border: '1px solid var(--color-border-focus)',
-    color: '#eff6ff',
+    color: 'var(--color-fg-on-accent)',
     borderRadius: 4,
     padding: '8px 16px',
     fontSize: 12,
@@ -602,7 +602,7 @@ const styles: Record<string, React.CSSProperties> = {
   convertInfo: {
     fontSize: 12,
     color: 'var(--color-fg-secondary)',
-    background: '#0c1a30',
+    background: 'var(--color-bg-surface-sunken)',
     border: '1px solid var(--color-border-subtle)',
     borderRadius: 4,
     padding: '8px 12px',
@@ -639,7 +639,7 @@ const fieldStyles: Record<string, React.CSSProperties> = {
     background: 'var(--color-state-error-bg)',
     border: '1px solid var(--color-state-error-border)',
     borderRadius: 4,
-    color: '#fca5a5',
+    color: 'var(--color-state-error-fg)',
     fontSize: 12,
     padding: '8px 12px',
   },

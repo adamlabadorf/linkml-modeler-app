@@ -47,7 +47,7 @@ export function SignInPrompt() {
 
 const styles: Record<string, React.CSSProperties> = {
   banner: {
-    background: '#0f2744',
+    background: 'var(--color-bg-surface-sunken)',
     borderBottom: '1px solid var(--color-accent-active)',
     padding: '6px 16px',
     flexShrink: 0,
@@ -57,7 +57,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     fontSize: 12,
-    color: '#93c5fd',
+    color: 'var(--color-state-info-fg)',
   },
   icon: {
     fontSize: 14,
@@ -65,12 +65,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   message: {
     flex: 1,
-    color: '#bfdbfe',
+    color: 'var(--color-state-info-fg)',
   },
   signInBtn: {
     background: 'var(--color-accent-active)',
     border: '1px solid var(--color-border-focus)',
-    color: '#eff6ff',
+    color: 'var(--color-fg-on-accent)',
     borderRadius: 4,
     padding: '3px 10px',
     fontSize: 11,

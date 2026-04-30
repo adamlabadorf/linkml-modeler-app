@@ -193,7 +193,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   input: {
     flex: 1,
-    background: '#020c1a',
+    background: 'var(--color-bg-deep)',
     border: '1px solid var(--color-border-subtle)',
     borderRadius: 4,
     color: 'var(--color-fg-primary)',
@@ -240,7 +240,7 @@ const styles: Record<string, React.CSSProperties> = {
   saveBtn: {
     background: 'var(--color-accent-active)',
     border: '1px solid var(--color-border-focus)',
-    color: '#eff6ff',
+    color: 'var(--color-fg-on-accent)',
     borderRadius: 4,
     padding: '6px 14px',
     fontSize: 12,
