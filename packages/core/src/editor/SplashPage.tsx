@@ -30,7 +30,7 @@ const THEME_LABEL: Record<Theme, string> = {
   system: 'System',
 };
 
-export function SplashPage() {
+export function SplashPage({ demoUrl }: { demoUrl?: string }) {
   const platform = usePlatform();
   const setProject = useAppStore((s) => s.setProject);
   const setGitAvailable = useAppStore((s) => s.setGitAvailable);
@@ -154,6 +154,16 @@ export function SplashPage() {
             </div>
 
             <div className="splash-footer-links">
+              {demoUrl && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Monitor size={14} />}
+                  onClick={() => window.open(demoUrl, '_blank')}
+                >
+                  Try it live
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
