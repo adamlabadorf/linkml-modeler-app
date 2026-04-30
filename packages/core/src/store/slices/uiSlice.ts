@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
+import type { Theme } from '../../ui/useTheme.js';
 
-export type Theme = 'light' | 'dark' | 'system';
+export type { Theme };
 export type SyncStatus = 'saved' | 'syncing' | 'unsaved' | 'error' | null;
 
 export interface Toast {

@@ -38,7 +38,6 @@ export const useAppStore = create<AppStore>()(
 export const useProject = () => useAppStore((s) => s.activeProject);
 export const useActiveSchema = () => useAppStore((s) => s.getActiveSchema());
 export const useIsDirty = () => useAppStore((s) => s.getIsDirty());
-export const useTheme = () => useAppStore((s) => s.theme);
 export const useGitAvailable = () => useAppStore((s) => s.gitAvailable);
 export const useFocusMode = () => useAppStore((s) => s.focusMode);
 

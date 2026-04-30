@@ -2,6 +2,9 @@
 import { Buffer } from 'buffer';
 globalThis.Buffer = Buffer;
 
+import '@linkml-editor/core/ui/tokens.css';
+import '@linkml-editor/core/ui/globals.css';
+
 import React, { Component, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -19,10 +22,10 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
   render() {
     if (this.state.error) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#fca5a5', fontFamily: 'monospace', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#fca5a5', gap: 16 }}>
           <div style={{ fontSize: 24 }}>⚠ Unexpected Error</div>
           <div style={{ fontSize: 13, color: '#94a3b8', maxWidth: 600, textAlign: 'center' }}>{this.state.error.message}</div>
-          <button onClick={() => this.setState({ error: null })} style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', borderRadius: 5, padding: '6px 14px', cursor: 'pointer', fontFamily: 'monospace' }}>
+          <button onClick={() => this.setState({ error: null })} style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', borderRadius: 5, padding: '6px 14px', cursor: 'pointer' }}>
             Try to recover
           </button>
         </div>
@@ -148,12 +151,10 @@ const yamlStyles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     fontSize: 12,
     color: '#64748b',
-    fontFamily: 'monospace',
   },
   dirty: {
     fontSize: 11,
     color: '#f59e0b',
-    fontFamily: 'monospace',
   },
   code: {
     flex: 1,
@@ -161,7 +162,7 @@ const yamlStyles: Record<string, React.CSSProperties> = {
     margin: 0,
     padding: '8px 12px',
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-family-mono)',
     color: '#94a3b8',
     whiteSpace: 'pre',
     lineHeight: 1.5,
@@ -206,7 +207,6 @@ const toastStyles: Record<string, React.CSSProperties> = {
     padding: '8px 14px',
     borderRadius: 6,
     fontSize: 13,
-    fontFamily: 'monospace',
     boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
     pointerEvents: 'auto',
     background: '#1e293b',
@@ -512,7 +512,6 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100vh',
     background: '#0f172a',
     color: '#e2e8f0',
-    fontFamily: 'monospace',
     overflow: 'hidden',
   },
   header: {
@@ -546,7 +545,6 @@ const styles: Record<string, React.CSSProperties> = {
   savingBadge: {
     fontSize: 11,
     color: '#60a5fa',
-    fontFamily: 'monospace',
   },
   main: {
     flex: 1,

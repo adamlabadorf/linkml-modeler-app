@@ -9,11 +9,13 @@ export default defineConfig(({ mode }) => {
   base: isElectron ? './' : (process.env.VITE_BASE_URL ?? '/'),
   plugins: [react()],
   resolve: {
-    alias: {
-      '@linkml-editor/core': resolve(__dirname, '../core/src/index.ts'),
+    alias: [
+      // More-specific alias first so CSS subpath imports resolve to the source dir
+      { find: '@linkml-editor/core/ui', replacement: resolve(__dirname, '../core/src/ui') },
+      { find: '@linkml-editor/core', replacement: resolve(__dirname, '../core/src/index.ts') },
       // Provide browser-compatible Buffer polyfill for both web and electron builds
-      buffer: resolve(__dirname, 'node_modules/buffer/index.js'),
-    },
+      { find: 'buffer', replacement: resolve(__dirname, 'node_modules/buffer/index.js') },
+    ],
   },
   build: {
     outDir: 'dist',
@@ -24,9 +26,10 @@ export default defineConfig(({ mode }) => {
     environment: 'jsdom',
     setupFiles: ['./src/__tests__/setup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
-    alias: {
-      '@linkml-editor/core': resolve(__dirname, '../core/src/index.ts'),
-    },
+    alias: [
+      { find: '@linkml-editor/core/ui', replacement: resolve(__dirname, '../core/src/ui') },
+      { find: '@linkml-editor/core', replacement: resolve(__dirname, '../core/src/index.ts') },
+    ],
   },
   };
 });

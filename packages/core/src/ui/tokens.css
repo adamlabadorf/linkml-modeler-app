@@ -1,0 +1,209 @@
+/*
+ * Design tokens for LinkML Visual Schema Editor.
+ * Dark mode is the default (:root). Light mode via [data-theme="light"].
+ */
+
+/* ── Font stacks ──────────────────────────────────────────────────────────── */
+:root {
+  --font-family-ui:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+
+  --font-family-mono:
+    ui-monospace, "SF Mono", "Cascadia Code", "Source Code Pro",
+    Menlo, Consolas, monospace;
+
+  /* Typography scale */
+  --font-size-xs:   10px;
+  --font-size-sm:   11px;
+  --font-size-base: 12px;
+  --font-size-md:   13px;
+  --font-size-lg:   16px;
+  --font-size-xl:   20px;
+  --font-size-2xl:  28px;
+
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --line-height-tight:   1.25;
+  --line-height-normal:  1.5;
+  --line-height-relaxed: 1.75;
+
+  /* Spacing (4px base unit) */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 24px;
+  --space-8: 32px;
+  --space-9: 48px;
+
+  /* Border radius */
+  --radius-sm:  3px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+  --radius-xl:  12px;
+  --radius-pill: 999px;
+
+  /* Z-index scale */
+  --z-base:     0;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  900;
+  --z-modal:    1000;
+  --z-toast:    1100;
+  --z-tooltip:  1200;
+
+  /* Icon sizes */
+  --icon-size-xs: 12px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 20px;
+  --icon-size-xl: 32px;
+}
+
+/* ── Dark mode (default) ──────────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  /* Surface */
+  --color-bg-canvas:         #0f172a;
+  --color-bg-surface:        #1e293b;
+  --color-bg-surface-raised: #253047;
+  --color-bg-surface-sunken: #0c1a2e;
+  --color-bg-hover:          #2d3f5a;
+  --color-bg-active:         #334560;
+  --color-bg-selected:       #1d3a6b;
+
+  /* Foreground */
+  --color-fg-primary:   #e2e8f0;
+  --color-fg-secondary: #94a3b8;
+  --color-fg-muted:     #64748b;
+  --color-fg-on-accent: #ffffff;
+
+  /* Border */
+  --color-border-default: #334155;
+  --color-border-subtle:  #1e293b;
+  --color-border-strong:  #475569;
+  --color-border-focus:   #3b82f6;
+
+  /* Accent */
+  --color-accent-default: #3b82f6;
+  --color-accent-hover:   #60a5fa;
+  --color-accent-active:  #2563eb;
+  --color-accent-fg:      #ffffff;
+
+  /* State — error */
+  --color-state-error:        #f87171;
+  --color-state-error-bg:     #450a0a;
+  --color-state-error-border: #7f1d1d;
+
+  /* State — warning */
+  --color-state-warning:        #fbbf24;
+  --color-state-warning-bg:     #451a03;
+  --color-state-warning-border: #78350f;
+
+  /* State — info */
+  --color-state-info:        #60a5fa;
+  --color-state-info-bg:     #1e3a5f;
+  --color-state-info-border: #1e40af;
+
+  /* State — success */
+  --color-state-success:        #4ade80;
+  --color-state-success-bg:     #14532d;
+  --color-state-success-border: #166534;
+
+  /* Domain — class node header categories */
+  --color-class-concrete: #1d4ed8;
+  --color-class-abstract: #0369a1;
+  --color-class-mixin:    #7c3aed;
+  --color-class-ghost:    #1e3a2e;
+  --color-enum:           #b45309;
+
+  /* Domain — slot badges */
+  --color-slot-attribute: #0369a1;
+  --color-slot-schema:    #7c3aed;
+  --color-slot-inherited: #475569;
+  --color-slot-range:     #0f766e;
+
+  /* Shadows */
+  --shadow-sm:      0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:      0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg:      0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-popover: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-modal:   0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Light mode ───────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  /* Surface */
+  --color-bg-canvas:         #f8fafc;
+  --color-bg-surface:        #ffffff;
+  --color-bg-surface-raised: #ffffff;
+  --color-bg-surface-sunken: #f1f5f9;
+  --color-bg-hover:          #f1f5f9;
+  --color-bg-active:         #e2e8f0;
+  --color-bg-selected:       #dbeafe;
+
+  /* Foreground */
+  --color-fg-primary:   #0f172a;
+  --color-fg-secondary: #475569;
+  --color-fg-muted:     #94a3b8;
+  --color-fg-on-accent: #ffffff;
+
+  /* Border */
+  --color-border-default: #cbd5e1;
+  --color-border-subtle:  #e2e8f0;
+  --color-border-strong:  #64748b;
+  --color-border-focus:   #2563eb;
+
+  /* Accent */
+  --color-accent-default: #2563eb;
+  --color-accent-hover:   #1d4ed8;
+  --color-accent-active:  #1e40af;
+  --color-accent-fg:      #ffffff;
+
+  /* State — error */
+  --color-state-error:        #dc2626;
+  --color-state-error-bg:     #fef2f2;
+  --color-state-error-border: #fecaca;
+
+  /* State — warning */
+  --color-state-warning:        #d97706;
+  --color-state-warning-bg:     #fffbeb;
+  --color-state-warning-border: #fde68a;
+
+  /* State — info */
+  --color-state-info:        #2563eb;
+  --color-state-info-bg:     #eff6ff;
+  --color-state-info-border: #bfdbfe;
+
+  /* State — success */
+  --color-state-success:        #16a34a;
+  --color-state-success-bg:     #f0fdf4;
+  --color-state-success-border: #bbf7d0;
+
+  /* Domain — class node header categories */
+  --color-class-concrete: #2563eb;
+  --color-class-abstract: #0284c7;
+  --color-class-mixin:    #7c3aed;
+  --color-class-ghost:    #dcfce7;
+  --color-enum:           #c2410c;
+
+  /* Domain — slot badges */
+  --color-slot-attribute: #0284c7;
+  --color-slot-schema:    #7c3aed;
+  --color-slot-inherited: #64748b;
+  --color-slot-range:     #0f766e;
+
+  /* Shadows */
+  --shadow-sm:      0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md:      0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg:      0 10px 15px rgba(0, 0, 0, 0.12);
+  --shadow-popover: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-modal:   0 20px 60px rgba(0, 0, 0, 0.2);
+}

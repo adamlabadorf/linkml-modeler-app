@@ -1,0 +1,30 @@
+/*
+ * Global resets and defaults.
+ * Imported once from the app entry point after tokens.css.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-base);
+  color: var(--color-fg-primary);
+  background: var(--color-bg-canvas);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}

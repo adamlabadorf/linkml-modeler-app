@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LinkML Visual Schema Editor</title>
     <style>body { margin: 0; }</style>
+    <!-- FOUC prevention: set data-theme before React mounts -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem('linkml-editor-theme');
+        var resolved = stored === 'light' ? 'light'
+          : stored === 'dark' ? 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', resolved);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
