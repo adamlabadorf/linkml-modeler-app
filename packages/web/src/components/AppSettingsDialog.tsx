@@ -8,6 +8,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { usePlatform, useAppStore } from '@linkml-editor/core';
+import { X } from 'lucide-react';
 
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
 
@@ -68,7 +69,7 @@ export function AppSettingsDialog({ onClose }: AppSettingsDialogProps) {
       <div style={styles.dialog} role="dialog" aria-modal="true" aria-label="App Settings">
         <div style={styles.header}>
           <span style={styles.title}>Settings</span>
-          <button style={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button style={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} /></button>
         </div>
 
         <div style={styles.body}>

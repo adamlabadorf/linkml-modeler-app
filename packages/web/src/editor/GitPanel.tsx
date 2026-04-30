@@ -10,6 +10,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAppStore, usePlatform } from '@linkml-editor/core';
+import { GitBranch, X } from 'lucide-react';
 
 type Tab = 'changes' | 'log' | 'settings';
 
@@ -273,7 +274,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     return (
       <div id="lme-git-panel" style={styles.collapsedBar} onClick={() => setGitPanelOpen(true)}>
         <span style={styles.collapsedLabel}>
-          {gitStatus ? `⎇ ${gitStatus.branch}` : '⎇ Git'}
+          <GitBranch size={11} style={{ marginRight: 4 }} />{gitStatus ? gitStatus.branch : 'Git'}
         </span>
         {gitStatus && gitStatus.aheadCount > 0 && (
           <span style={styles.aheadBadge}>↑{gitStatus.aheadCount}</span>
@@ -317,8 +318,8 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     return (
       <div style={styles.panel}>
         <div style={styles.panelHeader}>
-          <span style={styles.panelTitle}>⎇ Git</span>
-          <button style={styles.closeBtn} onClick={() => setGitPanelOpen(false)}>✕</button>
+          <span style={{ ...styles.panelTitle, display: 'flex', alignItems: 'center', gap: 5 }}><GitBranch size={13} />Git</span>
+          <button style={styles.closeBtn} onClick={() => setGitPanelOpen(false)}><X size={14} /></button>
         </div>
         <div style={styles.noGit}>
           <div>No git repository found for this project.</div>
@@ -327,7 +328,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
             onClick={handleInitRepo}
             disabled={isInitializing || !activeProject}
           >
-            {isInitializing ? 'Initializing…' : '⎇ Initialize git repo'}
+            {isInitializing ? 'Initializing…' : <><GitBranch size={13} style={{ marginRight: 5 }} />Initialize git repo</>}
           </button>
         </div>
       </div>
@@ -344,8 +345,8 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
     <div id="lme-git-panel" style={styles.panel}>
       {/* Header */}
       <div style={styles.panelHeader}>
-        <span style={styles.panelTitle}>
-          ⎇ {gitStatus?.branch ?? '…'}
+        <span style={{ ...styles.panelTitle, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <GitBranch size={13} />{gitStatus?.branch ?? '…'}
           {gitStatus && gitStatus.aheadCount > 0 && (
             <span style={styles.headerAhead}> ↑{gitStatus.aheadCount}</span>
           )}
@@ -375,7 +376,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
           >
             {isPushing ? '…' : '↑ Push'}
           </button>
-          <button style={styles.closeBtn} onClick={() => setGitPanelOpen(false)}>✕</button>
+          <button style={styles.closeBtn} onClick={() => setGitPanelOpen(false)}><X size={14} /></button>
         </div>
       </div>
 
@@ -383,7 +384,7 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
       {lastGitError && (
         <div style={styles.errorBar}>
           <span>{lastGitError}</span>
-          <button style={styles.errorDismiss} onClick={() => setLastGitError(null)}>✕</button>
+          <button style={styles.errorDismiss} onClick={() => setLastGitError(null)}><X size={12} /></button>
         </div>
       )}
 
@@ -737,6 +738,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    display: 'flex',
+    alignItems: 'center',
   },
   aheadBadge: {
     fontSize: 10,
@@ -931,6 +934,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     cursor: 'pointer',
     fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
   },
   settingsForm: {
     padding: '12px 10px',

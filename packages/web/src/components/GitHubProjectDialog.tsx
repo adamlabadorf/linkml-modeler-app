@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { usePlatform, useAppStore } from '@linkml-editor/core';
 import { useAuth } from '../auth/AuthContext.js';
 import type { CloudPlatform } from '../platform/CloudPlatform.js';
+import { X } from 'lucide-react';
 
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
@@ -258,7 +259,7 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
         {/* Header */}
         <div style={styles.header}>
           <span style={styles.title}>GitHub Projects</span>
-          <button style={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button style={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} /></button>
         </div>
 
         {/* Tab bar */}

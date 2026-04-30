@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthContext.js';
 import { DeviceFlowModal } from './DeviceFlowModal.js';
+import { X } from 'lucide-react';
 
 const CLIENT_ID = (import.meta as unknown as { env: Record<string, string> }).env?.VITE_GITHUB_CLIENT_ID ?? '';
 
@@ -29,7 +30,7 @@ export function SignInPrompt() {
             Sign In
           </button>
           <button style={styles.dismissBtn} onClick={() => setDismissed(true)} title="Dismiss">
-            ✕
+            <X size={14} />
           </button>
         </div>
       </div>

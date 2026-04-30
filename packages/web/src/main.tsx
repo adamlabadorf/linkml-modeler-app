@@ -7,6 +7,7 @@ import '@linkml-editor/core/ui/globals.css';
 
 import React, { Component, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { AlertTriangle, Hexagon, X } from 'lucide-react';
 
 // ── Error Boundary ────────────────────────────────────────────────────────────
 interface ErrorBoundaryState { error: Error | null }
@@ -23,7 +24,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
     if (this.state.error) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#fca5a5', gap: 16 }}>
-          <div style={{ fontSize: 24 }}>⚠ Unexpected Error</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 24 }}><AlertTriangle size={24} /> Unexpected Error</div>
           <div style={{ fontSize: 13, color: '#94a3b8', maxWidth: 600, textAlign: 'center' }}>{this.state.error.message}</div>
           <button onClick={() => this.setState({ error: null })} style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', borderRadius: 5, padding: '6px 14px', cursor: 'pointer' }}>
             Try to recover
@@ -180,7 +181,7 @@ function ToastList() {
         <div key={t.id} style={{ ...toastStyles.toast, ...toastStyles[t.severity] }}>
           <span>{t.message}</span>
           <button style={toastStyles.dismiss} onClick={() => dismissToast(t.id)}>
-            ✕
+            <X size={14} />
           </button>
         </div>
       ))}
@@ -390,7 +391,7 @@ function App() {
       {/* Header */}
       <header id="lme-header" style={styles.header}>
         <div style={styles.headerLeft}>
-          <span id="lme-logo" style={styles.logo}>⬡ LinkML Visual Schema Editor</span>
+          <span id="lme-logo" style={{ ...styles.logo, display: 'flex', alignItems: 'center', gap: 6 }}><Hexagon size={16} />LinkML Visual Schema Editor</span>
           <MenuBar
             onNewProject={handleNewProject}
             onOpenProject={handleOpenProject}

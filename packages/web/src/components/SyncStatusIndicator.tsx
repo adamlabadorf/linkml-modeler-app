@@ -6,10 +6,11 @@
  *   saved     → "✓ Saved"   (muted green)
  *   syncing   → "⟳ Syncing…" (blue)
  *   unsaved   → "● Unsaved changes" (amber)
- *   error     → "⚠ Sync error" (red) with retry action
+ *   error     → AlertTriangle + "Sync error" (red)
  */
 import React from 'react';
 import { useAppStore, type SyncStatus } from '@linkml-editor/core';
+import { AlertTriangle } from 'lucide-react';
 
 export function SyncStatusIndicator() {
   const syncStatus = useAppStore((s) => s.syncStatus);
@@ -19,17 +20,17 @@ export function SyncStatusIndicator() {
   const { label, color } = STATUS_CONFIG[syncStatus];
 
   return (
-    <span style={{ ...styles.badge, color }}>
+    <span style={{ ...styles.badge, color, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
       {label}
     </span>
   );
 }
 
-const STATUS_CONFIG: Record<NonNullable<SyncStatus>, { label: string; color: string }> = {
+const STATUS_CONFIG: Record<NonNullable<SyncStatus>, { label: React.ReactNode; color: string }> = {
   saved: { label: '✓ Saved', color: '#4ade80' },
   syncing: { label: '⟳ Syncing…', color: '#60a5fa' },
   unsaved: { label: '● Unsaved changes', color: '#f59e0b' },
-  error: { label: '⚠ Sync error', color: '#f87171' },
+  error: { label: <><AlertTriangle size={11} />Sync error</>, color: '#f87171' },
 };
 
 const styles: Record<string, React.CSSProperties> = {

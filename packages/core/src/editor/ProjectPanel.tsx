@@ -196,8 +196,8 @@ export function ProjectPanel() {
                           <span style={styles.importSource}>{source}</span>
                         </div>
                         <div style={styles.statsRow}>
-                          <span style={styles.stat} title={`${classCount} class(es)`}>⬡ {classCount}</span>
-                          <span style={styles.stat} title={`${enumCount} enum(s)`}>◈ {enumCount}</span>
+                          <span style={{ ...styles.stat, display: 'inline-flex', alignItems: 'center', gap: 3 }} title={`${classCount} class(es)`}><Hexagon size={10} />{classCount}</span>
+                          <span style={{ ...styles.stat, display: 'inline-flex', alignItems: 'center', gap: 3 }} title={`${enumCount} enum(s)`}><Diamond size={10} />{enumCount}</span>
                         </div>
                       </div>
                     );

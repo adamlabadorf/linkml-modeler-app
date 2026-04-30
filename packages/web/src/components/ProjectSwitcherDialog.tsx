@@ -4,6 +4,7 @@ import React from 'react';
 import { useAppStore, openProjectFromDirectory } from '@linkml-editor/core';
 import { usePlatform } from '@linkml-editor/core';
 import { WebProjectRegistry, type ProjectRegistryEntry } from '../platform/ProjectRegistry.js';
+import { X } from 'lucide-react';
 
 const registry = new WebProjectRegistry();
 
@@ -107,7 +108,7 @@ export function ProjectSwitcherDialog({ onClose }: ProjectSwitcherDialogProps) {
       <div style={s.dialog} onClick={(e) => e.stopPropagation()}>
         <div style={s.header}>
           <h2 style={s.title}>Switch Project</h2>
-          <button style={s.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+          <button style={s.closeBtn} onClick={onClose} aria-label="Close"><X size={14} /></button>
         </div>
 
         {loading ? (
@@ -157,7 +158,7 @@ export function ProjectSwitcherDialog({ onClose }: ProjectSwitcherDialogProps) {
                         onClick={(e) => handleRemoveRequest(e, entry.repoUrl || entry.localPath)}
                         title="Remove from registry"
                       >
-                        ✕
+                        <X size={14} />
                       </button>
                     )}
                   </div>
