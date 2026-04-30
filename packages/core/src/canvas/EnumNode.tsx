@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import type { CanvasNodeData } from '../store/slices/canvasSlice.js';
 import type { EnumDefinition } from '../model/index.js';
+import { Diamond } from '../ui/icons/index.js';
 
 export interface EnumNodeData extends CanvasNodeData {
   entityType: 'enum';
@@ -31,7 +32,7 @@ function EnumNode({ data, selected }: NodeProps<EnumNodeData>) {
 
       {/* Header */}
       <div style={{ ...styles.header, ...(ghost ? styles.ghostHeader : {}) }}>
-        <span style={styles.nodeIcon}>◈</span>
+        <span style={styles.nodeIcon}><Diamond size={14} /></span>
         <span style={styles.headerTitle}>{enumDef.name}</span>
       </div>
 
@@ -99,8 +100,9 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: 0.2,
   },
   nodeIcon: {
-    fontSize: 14,
     opacity: 0.8,
+    display: 'flex',
+    alignItems: 'center',
   },
   headerTitle: {
     flex: 1,

@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import type { CanvasNodeData } from '../store/slices/canvasSlice.js';
 import type { ClassDefinition, SlotDefinition } from '../model/index.js';
+import { ArrowUp, Hexagon, Plus } from '../ui/icons/index.js';
 
 export interface ResolvedSlot {
   slot: SlotDefinition;
@@ -44,7 +45,7 @@ function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
 
   return (
     <div style={rowStyle} title={inherited && inheritedFrom ? `Inherited from ${inheritedFrom}` : undefined}>
-      <span style={styles.slotPlus}>+</span>
+      <span style={styles.slotPlus}><Plus size={10} /></span>
       <span style={inherited ? styles.slotNameInherited : styles.slotName}>{slot.name}</span>
       {slot.range && (
         <>
@@ -54,7 +55,7 @@ function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
       )}
       <span style={styles.badgeGroup}>
         {inherited && (
-          <span style={{ ...styles.badge, background: '#1a2435', color: '#4a6080' }} title={inheritedFrom ? `from ${inheritedFrom}` : 'inherited'}>↑</span>
+          <span style={{ ...styles.badge, background: '#1a2435', color: '#4a6080' }} title={inheritedFrom ? `from ${inheritedFrom}` : 'inherited'}><ArrowUp size={10} /></span>
         )}
         <span style={kindBadgeStyle}>{kind === 'schema' ? 'S' : 'A'}</span>
         {hasUsageOverride && <span style={{ ...styles.badge, color: '#fbbf24' }}>~</span>}
@@ -105,7 +106,7 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
 
       {/* Header */}
       <div style={{ ...styles.header, background: headerBg }}>
-        <span style={styles.nodeIcon}>⬡</span>
+        <span style={styles.nodeIcon}><Hexagon size={14} /></span>
         <span style={isAbstract ? { ...styles.headerTitle, fontStyle: 'italic' } : styles.headerTitle}>
           {classDef.name}
         </span>
@@ -178,8 +179,9 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: 0.2,
   },
   nodeIcon: {
-    fontSize: 14,
     opacity: 0.8,
+    display: 'flex',
+    alignItems: 'center',
   },
   headerTitle: {
     flex: 1,
@@ -222,6 +224,8 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#64748b',
     marginRight: 2,
     flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
   },
   slotName: {
     color: '#e2e8f0',
