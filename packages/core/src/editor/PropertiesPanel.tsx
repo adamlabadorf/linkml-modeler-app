@@ -10,375 +10,9 @@ import { usePlatform } from '../platform/PlatformContext.js';
 import { parseYaml } from '../io/yaml.js';
 import { AlertTriangle, X } from '../ui/icons/index.js';
 import { isUrlImport, isLocalImport, resolveImportPath } from '../io/importResolver.js';
-
-// ── Shared field components ───────────────────────────────────────────────────
-
-function FieldRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div style={styles.fieldRow}>
-      <label style={styles.fieldLabel}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function TextInput({
-  value,
-  onChange,
-  onCommit,
-  placeholder,
-  monospace,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  onCommit?: (v: string) => void;
-  placeholder?: string;
-  monospace?: boolean;
-}) {
-  const [localValue, setLocalValue] = React.useState<string | null>(null);
-  const committed = localValue === null;
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onCommit) {
-      setLocalValue(e.target.value);
-    } else {
-      onChange(e.target.value);
-    }
-  };
-
-  const handleBlur = () => {
-    if (onCommit && localValue !== null) {
-      onCommit(localValue);
-      setLocalValue(null);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (onCommit && e.key === 'Enter' && localValue !== null) {
-      onCommit(localValue);
-      setLocalValue(null);
-      (e.target as HTMLInputElement).blur();
-    } else if (onCommit && e.key === 'Escape') {
-      setLocalValue(null);
-      (e.target as HTMLInputElement).blur();
-    }
-  };
-
-  return (
-    <input
-      style={{ ...styles.input, ...(monospace ? styles.inputMono : {}) }}
-      value={committed ? (value ?? '') : localValue!}
-      placeholder={placeholder}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-    />
-  );
-}
-
-function TextArea({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <textarea
-      style={styles.textarea}
-      value={value ?? ''}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      rows={3}
-    />
-  );
-}
-
-function Checkbox({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label style={styles.checkboxRow}>
-      <input
-        type="checkbox"
-        checked={!!checked}
-        onChange={(e) => onChange(e.target.checked)}
-        style={styles.checkbox}
-      />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-
-interface OptionGroup {
-  label: string;
-  options: string[];
-}
-
-function FilteredGroupedSelect({
-  value,
-  onChange,
-  groups,
-  placeholder,
-  clearable,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  groups: OptionGroup[];
-  placeholder?: string;
-  clearable?: boolean;
-}) {
-  const [filterText, setFilterText] = React.useState('');
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [focusedIndex, setFocusedIndex] = React.useState(-1);
-  const wrapperRef = React.useRef<HTMLDivElement>(null);
-
-  // Build flat filtered options
-  const flatOptions = React.useMemo(() => {
-    const lower = filterText.toLowerCase();
-    const result: Array<{ group: string; option: string }> = [];
-    for (const g of groups) {
-      for (const o of g.options) {
-        if (!filterText || o.toLowerCase().includes(lower)) {
-          result.push({ group: g.label, option: o });
-        }
-      }
-    }
-    return result;
-  }, [groups, filterText]);
-
-  // Build filtered groups for display
-  const filteredGroups = React.useMemo(() => {
-    const lower = filterText.toLowerCase();
-    return groups.map((g) => ({
-      ...g,
-      options: filterText ? g.options.filter((o) => o.toLowerCase().includes(lower)) : g.options,
-    })).filter((g) => g.options.length > 0);
-  }, [groups, filterText]);
-
-  const open = () => {
-    setFilterText('');
-    setFocusedIndex(-1);
-    setIsOpen(true);
-  };
-
-  const close = () => {
-    setIsOpen(false);
-    setFocusedIndex(-1);
-  };
-
-  const selectOption = (opt: string) => {
-    onChange(opt);
-    close();
-  };
-
-  const clearValue = () => {
-    setFilterText('');
-    onChange('');
-    close();
-  };
-
-  // Click outside detection
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        close();
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [isOpen]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isOpen) {
-      if (e.key === 'ArrowDown' || e.key === 'Enter') {
-        open();
-        return;
-      }
-      return;
-    }
-    if (e.key === 'Escape') {
-      close();
-      return;
-    }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setFocusedIndex((i) => Math.min(i + 1, flatOptions.length - 1));
-      return;
-    }
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setFocusedIndex((i) => Math.max(i - 1, -1));
-      return;
-    }
-    if (e.key === 'Enter') {
-      if (focusedIndex >= 0 && focusedIndex < flatOptions.length) {
-        selectOption(flatOptions[focusedIndex].option);
-      } else {
-        // Allow free text entry
-        onChange(filterText);
-        close();
-      }
-      return;
-    }
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Only close if focus leaves the wrapper entirely
-    if (wrapperRef.current && wrapperRef.current.contains(e.relatedTarget as Node)) return;
-    if (!isOpen) return;
-    // commit free-typed value on blur
-    if (filterText !== value) {
-      onChange(filterText);
-    }
-    close();
-  };
-
-  // Compute flat index for a given group/option combo
-  const getFlatIndex = (groupLabel: string, opt: string) => {
-    return flatOptions.findIndex((f) => f.group === groupLabel && f.option === opt);
-  };
-
-  const inputStyle: React.CSSProperties = {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: 4,
-    color: '#e2e8f0',
-    fontSize: 12,
-    padding: '4px 7px',
-    width: '100%',
-    boxSizing: 'border-box',
-    outline: 'none',
-    fontFamily: 'var(--font-family-mono)',
-  };
-
-  return (
-    <div ref={wrapperRef} style={{ position: 'relative' }} tabIndex={-1}>
-      <input
-        style={{
-          ...inputStyle,
-          ...(clearable && value ? { paddingRight: 22 } : {}),
-        }}
-        value={isOpen ? filterText : (value || '')}
-        placeholder={placeholder ?? ''}
-        onChange={(e) => setFilterText(e.target.value)}
-        onFocus={open}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-      />
-      {!!(clearable && value) && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            clearValue();
-          }}
-          title="Clear"
-          style={{
-            position: 'absolute',
-            right: 6,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 16,
-            height: 16,
-            borderRadius: 3,
-            border: '1px solid #334155',
-            background: '#0f172a',
-            color: '#94a3b8',
-            cursor: 'pointer',
-            fontSize: 11,
-            lineHeight: '14px',
-            padding: 0,
-          }}
-          onMouseDown={(e) => e.preventDefault()} // don't steal focus / blur input
-        >
-          <X size={12} />
-        </button>
-      )}
-      {isOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 200,
-            background: '#1e293b',
-            border: '1px solid #334155',
-            borderRadius: 4,
-            maxHeight: 220,
-            overflowY: 'auto',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-          }}
-          onMouseDown={(e) => e.preventDefault()} // prevent blur on option click
-        >
-          {filteredGroups.length === 0 ? (
-            <div style={{ padding: '6px 10px', fontSize: 11, color: '#475569' }}>
-              No options
-            </div>
-          ) : (
-            filteredGroups.map((g) => (
-              <div key={g.label}>
-                <div
-                  style={{
-                    padding: '4px 8px 2px',
-                    fontSize: 9,
-                    color: '#475569',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                    fontFamily: 'var(--font-family-mono)',
-                  }}
-                >
-                  {g.label}
-                  {filterText && ` (${g.options.length})`}
-                </div>
-                {g.options.map((o) => {
-                  const flatIdx = getFlatIndex(g.label, o);
-                  const isFocused = flatIdx === focusedIndex;
-                  return (
-                    <div
-                      key={o}
-                      style={{
-                        padding: '4px 10px',
-                        fontSize: 12,
-                        cursor: 'pointer',
-                        color: '#e2e8f0',
-                        background: isFocused ? '#334155' : 'transparent',
-                        fontFamily: 'var(--font-family-mono)',
-                      }}
-                      onMouseEnter={() => setFocusedIndex(flatIdx)}
-                      onMouseLeave={() => setFocusedIndex(-1)}
-                      onClick={() => selectOption(o)}
-                    >
-                      {o}
-                    </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import { FieldRow, TextInput, TextArea, Checkbox, FilteredGroupedSelect } from '../ui/fields/index.js';
+import type { OptionGroup } from '../ui/fields/index.js';
+import { inputStyle, inputMonoStyle, selectStyle } from '../ui/fields/TextInput.js';
 
 function SectionHeader({ title }: { title: string }) {
   return <div style={styles.sectionHeader}>{title}</div>;
@@ -509,19 +143,19 @@ function SlotConditionEditor({
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <input
-          style={{ ...styles.input, fontSize: 11 }}
+          style={{ ...inputStyle, fontSize: 11 }}
           placeholder="equals_string…"
           value={cond.equalsString ?? ''}
           onChange={e => upd({ equalsString: e.target.value || undefined })}
         />
         <input
-          style={{ ...styles.input, fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
+          style={{ ...inputStyle, fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
           placeholder="pattern (regex)…"
           value={cond.pattern ?? ''}
           onChange={e => upd({ pattern: e.target.value || undefined })}
         />
         <select
-          style={{ ...styles.select, fontSize: 11 }}
+          style={{ ...selectStyle, fontSize: 11 }}
           value={cond.valuePresence ?? ''}
           onChange={e => upd({ valuePresence: (e.target.value as 'PRESENT' | 'ABSENT') || undefined })}
         >
@@ -579,7 +213,7 @@ function ClassExpressionEditor({
         ))}
         <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
           <input
-            style={{ ...styles.input, fontSize: 11, flex: 1 }}
+            style={{ ...inputStyle, fontSize: 11, flex: 1 }}
             placeholder="slot name…"
             value={newSlotName}
             onChange={e => setNewSlotName(e.target.value)}
@@ -637,7 +271,7 @@ function RuleEditor({
           </FieldRow>
           <FieldRow label="Rank">
             <input
-              style={{ ...styles.input, width: 80 }}
+              style={{ ...inputStyle, width: 80 }}
               type="number"
               value={rule.rank ?? ''}
               placeholder="—"
@@ -865,7 +499,7 @@ function ClassPanel({ schemaId, className }: { schemaId: string; className: stri
 
       <div style={styles.addRow}>
         <input
-          style={{ ...styles.input, flex: 1 }}
+          style={{ ...inputStyle, flex: 1 }}
           placeholder="new attribute name…"
           value={newSlotName}
           onChange={(e) => setNewSlotName(e.target.value)}
@@ -1171,7 +805,7 @@ function EnumPanel({ schemaId, enumName }: { schemaId: string; enumName: string 
 
       <div style={styles.addRow}>
         <input
-          style={{ ...styles.input, flex: 1 }}
+          style={{ ...inputStyle, flex: 1 }}
           placeholder="new value text…"
           value={newValue}
           onChange={(e) => setNewValue(e.target.value)}
@@ -1617,7 +1251,7 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
         <div key={key} style={styles.importRow}>
           <span style={{ ...styles.importPath, flexShrink: 0, width: 80 }}>{key}</span>
           <input
-            style={{ ...styles.input, ...styles.inputMono, flex: 1, fontSize: 11 }}
+            style={{ ...inputStyle, ...inputMonoStyle, flex: 1, fontSize: 11 }}
             value={uri}
             onChange={(e) => update({ prefixes: { ...schema.prefixes, [key]: e.target.value } })}
           />
@@ -1637,7 +1271,7 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
 
       <div style={styles.addRow}>
         <input
-          style={{ ...styles.input, ...styles.inputMono, width: 80, flexShrink: 0 }}
+          style={{ ...inputStyle, ...inputMonoStyle, width: 80, flexShrink: 0 }}
           placeholder="prefix"
           value={newPrefixKey}
           onChange={(e) => setNewPrefixKey(e.target.value)}
@@ -1653,7 +1287,7 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
           }}
         />
         <input
-          style={{ ...styles.input, ...styles.inputMono, flex: 1 }}
+          style={{ ...inputStyle, ...inputMonoStyle, flex: 1 }}
           placeholder="https://…"
           value={newPrefixUri}
           onChange={(e) => setNewPrefixUri(e.target.value)}
@@ -1703,7 +1337,7 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
 
       <div style={styles.addRow}>
         <input
-          style={{ ...styles.input, flex: 1 }}
+          style={{ ...inputStyle, flex: 1 }}
           placeholder="new slot name…"
           value={newSchemaSlotName}
           onChange={(e) => setNewSchemaSlotName(e.target.value)}
@@ -1748,7 +1382,7 @@ function SchemaMetaPanel({ schemaId }: { schemaId: string }) {
 
       <div style={styles.addRow}>
         <input
-          style={{ ...styles.input, ...styles.inputMono, flex: 1 }}
+          style={{ ...inputStyle, ...inputMonoStyle, flex: 1 }}
           value={newImport}
           onChange={(e) => setNewImport(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleAddImport(); }}
@@ -1958,70 +1592,6 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: 0.8,
     borderBottom: '1px solid #1e293b',
     marginTop: 4,
-  },
-  fieldRow: {
-    padding: '5px 12px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 3,
-  },
-  fieldLabel: {
-    fontSize: 10,
-    color: '#64748b',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  input: {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: 4,
-    color: '#e2e8f0',
-    fontSize: 12,
-    padding: '4px 7px',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-    fontFamily: 'sans-serif',
-  },
-  inputMono: {
-    fontFamily: 'var(--font-family-mono)',
-  },
-  textarea: {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: 4,
-    color: '#e2e8f0',
-    fontSize: 12,
-    padding: '4px 7px',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-    resize: 'vertical',
-    fontFamily: 'sans-serif',
-  },
-  select: {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: 4,
-    color: '#e2e8f0',
-    fontSize: 12,
-    padding: '4px 7px',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-    fontFamily: 'var(--font-family-mono)',
-  },
-  checkboxRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    fontSize: 12,
-    color: '#94a3b8',
-    cursor: 'pointer',
-    padding: '2px 0',
-  },
-  checkbox: {
-    accentColor: '#3b82f6',
   },
   slotEditor: {
     borderBottom: '1px solid #1e293b',
