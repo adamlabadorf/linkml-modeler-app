@@ -8,16 +8,11 @@
  * Per §6.3 of the feature spec.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { usePlatform, useAppStore } from '@linkml-editor/core';
+import { usePlatform, useAppStore, Button, Dialog } from '@linkml-editor/core';
 import { useAuth } from '../auth/AuthContext.js';
 import type { CloudPlatform } from '../platform/CloudPlatform.js';
-import { X } from 'lucide-react';
-
-// ── Tab types ─────────────────────────────────────────────────────────────────
 
 type Tab = 'new' | 'clone' | 'convert';
-
-// ── Validation helpers ────────────────────────────────────────────────────────
 
 const REPO_NAME_RE = /^[a-zA-Z0-9._-]+$/;
 
@@ -50,8 +45,6 @@ function slugify(name: string): string {
     .slice(0, 100);
 }
 
-// ── Progress bar ──────────────────────────────────────────────────────────────
-
 interface ProgressState { phase: string; loaded: number; total: number }
 
 function ProgressBar({ progress }: { progress: ProgressState | null }) {
@@ -75,11 +68,8 @@ function ProgressBar({ progress }: { progress: ProgressState | null }) {
   );
 }
 
-// ── Main dialog ───────────────────────────────────────────────────────────────
-
 interface GitHubProjectDialogProps {
   onClose(): void;
-  /** Called after a project is successfully opened; caller should set it as active. */
   onProjectOpened?(repoPath: string, schemaPath: string): void;
 }
 
@@ -92,11 +82,8 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
   const cloud = platform as unknown as CloudPlatform;
   const login = session?.login ?? '';
 
-  // Determine available tabs
   const hasLocalProject = activeProject !== null;
   const [tab, setTab] = useState<Tab>('new');
-
-  // ── New project state ──────────────────────────────────────────────────────
 
   const [newName, setNewName] = useState('');
   const [newSchemaPath, setNewSchemaPath] = useState('');
@@ -106,8 +93,6 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
   const [newProgress, setNewProgress] = useState<ProgressState | null>(null);
   const [newError, setNewError] = useState<string | null>(null);
 
-  // ── Clone state ────────────────────────────────────────────────────────────
-
   const [cloneUrl, setCloneUrl] = useState('');
   const [cloneSchemaPath, setCloneSchemaPath] = useState('');
   const [clonePersistLayout, setClonePersistLayout] = useState(false);
@@ -115,10 +100,7 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
   const [cloneSubmitting, setCloneSubmitting] = useState(false);
   const [cloneProgress, setCloneProgress] = useState<ProgressState | null>(null);
   const [cloneError, setCloneError] = useState<string | null>(null);
-  // For repos that already have project.json, lock schema path + layout checkbox
   const [cloneConfigLocked, setCloneConfigLocked] = useState(false);
-
-  // ── Convert state ──────────────────────────────────────────────────────────
 
   const [convertName, setConvertName] = useState(() => slugify(activeProject?.name ?? ''));
   const [convertSchemaPath, setConvertSchemaPath] = useState('');
@@ -128,14 +110,11 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
   const [convertProgress, setConvertProgress] = useState<ProgressState | null>(null);
   const [convertError, setConvertError] = useState<string | null>(null);
 
-  // Pre-populate convert name from project
   useEffect(() => {
     if (activeProject?.name) {
       setConvertName(slugify(activeProject.name));
     }
   }, [activeProject?.name]);
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleNewSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,8 +180,6 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
     }
   }, [cloud, cloneUrl, cloneSchemaPath, clonePersistLayout, pushToast, onProjectOpened, onClose]);
 
-  // When clone URL loses focus with a valid URL, check if it's in registry already
-  // (to pre-populate schema path if we have it locally)
   useEffect(() => {
     if (!cloneUrl || validateRepoUrl(cloneUrl)) {
       setCloneConfigLocked(false);
@@ -251,177 +228,160 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
     }
   }, [cloud, convertName, convertSchemaPath, convertPersistLayout, activeProject, pushToast, onProjectOpened, onClose]);
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
   return (
-    <div style={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={styles.dialog} role="dialog" aria-modal="true" aria-label="GitHub Projects">
-        {/* Header */}
-        <div style={styles.header}>
-          <span style={styles.title}>GitHub Projects</span>
-          <button style={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} /></button>
-        </div>
-
-        {/* Tab bar */}
-        <div style={styles.tabBar}>
-          {(['new', 'clone'] as Tab[]).concat(hasLocalProject ? ['convert'] : []).map((t) => (
-            <button
-              key={t}
-              style={{ ...styles.tabBtn, ...(tab === t ? styles.tabBtnActive : {}) }}
-              onClick={() => setTab(t)}
-            >
-              {t === 'new' ? 'New project' : t === 'clone' ? 'Clone existing' : 'Convert local'}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab content */}
-        <div style={styles.body}>
-          {tab === 'new' && (
-            <form onSubmit={handleNewSubmit} style={styles.form}>
-              <Field label="Repository name" required error={newNameError}>
-                <input
-                  style={styles.input}
-                  value={newName}
-                  onChange={(e) => { setNewName(e.target.value); setNewNameError(null); }}
-                  placeholder="my-schema"
-                  autoFocus
-                  disabled={newSubmitting}
-                />
-                {newName && !newNameError && (
-                  <div style={styles.urlPreview}>
-                    github.com/{login}/{newName}
-                  </div>
-                )}
-              </Field>
-
-              <Field label="Schema directory" hint="Where .yaml files will live. Defaults to schema/.">
-                <input
-                  style={styles.input}
-                  value={newSchemaPath}
-                  onChange={(e) => setNewSchemaPath(e.target.value)}
-                  placeholder="schema/"
-                  disabled={newSubmitting}
-                />
-              </Field>
-
-              <PersistLayoutField
-                checked={newPersistLayout}
-                onChange={setNewPersistLayout}
-                disabled={newSubmitting}
-              />
-
-              {newError && <ErrorBox message={newError} />}
-              <ProgressBar progress={newProgress} />
-
-              <button type="submit" style={styles.submitBtn} disabled={newSubmitting}>
-                {newSubmitting ? 'Creating…' : 'Create repository'}
-              </button>
-            </form>
-          )}
-
-          {tab === 'clone' && (
-            <form onSubmit={handleCloneSubmit} style={styles.form}>
-              <Field label="Repository URL" required error={cloneUrlError}>
-                <input
-                  style={styles.input}
-                  value={cloneUrl}
-                  onChange={(e) => { setCloneUrl(e.target.value); setCloneUrlError(null); }}
-                  onBlur={handleCloneUrlBlur}
-                  placeholder="https://github.com/owner/repo"
-                  autoFocus
-                  disabled={cloneSubmitting}
-                />
-              </Field>
-
-              <Field
-                label="Schema directory"
-                hint={
-                  cloneConfigLocked
-                    ? 'Schema path loaded from project metadata.'
-                    : 'Path to schema files within the repo. Defaults to repo root.'
-                }
-              >
-                <input
-                  style={{ ...styles.input, ...(cloneConfigLocked ? styles.inputLocked : {}) }}
-                  value={cloneSchemaPath}
-                  onChange={(e) => !cloneConfigLocked && setCloneSchemaPath(e.target.value)}
-                  placeholder="schema/"
-                  disabled={cloneSubmitting || cloneConfigLocked}
-                  readOnly={cloneConfigLocked}
-                />
-              </Field>
-
-              <PersistLayoutField
-                checked={clonePersistLayout}
-                onChange={setClonePersistLayout}
-                disabled={cloneSubmitting || cloneConfigLocked}
-                locked={cloneConfigLocked}
-              />
-
-              {cloneError && <ErrorBox message={cloneError} />}
-              <ProgressBar progress={cloneProgress} />
-
-              <button type="submit" style={styles.submitBtn} disabled={cloneSubmitting}>
-                {cloneSubmitting ? 'Cloning…' : 'Clone repository'}
-              </button>
-            </form>
-          )}
-
-          {tab === 'convert' && activeProject && (
-            <form onSubmit={handleConvertSubmit} style={styles.form}>
-              <div style={styles.convertInfo}>
-                Converting <strong style={{ color: 'var(--color-fg-primary)' }}>{activeProject.name}</strong> to a
-                GitHub repository. The original local copy will remain unchanged.
-              </div>
-
-              <Field label="Repository name" required error={convertNameError}>
-                <input
-                  style={styles.input}
-                  value={convertName}
-                  onChange={(e) => { setConvertName(e.target.value); setConvertNameError(null); }}
-                  placeholder="my-schema"
-                  autoFocus
-                  disabled={convertSubmitting}
-                />
-                {convertName && !convertNameError && (
-                  <div style={styles.urlPreview}>
-                    github.com/{login}/{convertName}
-                  </div>
-                )}
-              </Field>
-
-              <Field label="Schema directory" hint="Where .yaml files will be placed in the new repo.">
-                <input
-                  style={styles.input}
-                  value={convertSchemaPath}
-                  onChange={(e) => setConvertSchemaPath(e.target.value)}
-                  placeholder="schema/"
-                  disabled={convertSubmitting}
-                />
-              </Field>
-
-              <PersistLayoutField
-                checked={convertPersistLayout}
-                onChange={setConvertPersistLayout}
-                disabled={convertSubmitting}
-              />
-
-              {convertError && <ErrorBox message={convertError} />}
-              <ProgressBar progress={convertProgress} />
-
-              <button type="submit" style={styles.submitBtn} disabled={convertSubmitting}>
-                {convertSubmitting ? 'Converting…' : 'Convert to GitHub'}
-              </button>
-            </form>
-          )}
-        </div>
+    <Dialog
+      open
+      onClose={onClose}
+      title="GitHub Projects"
+      size="md"
+    >
+      {/* Tab bar */}
+      <div style={styles.tabBar}>
+        {(['new', 'clone'] as Tab[]).concat(hasLocalProject ? ['convert'] : []).map((t) => (
+          <button
+            key={t}
+            style={{ ...styles.tabBtn, ...(tab === t ? styles.tabBtnActive : {}) }}
+            onClick={() => setTab(t)}
+            type="button"
+          >
+            {t === 'new' ? 'New project' : t === 'clone' ? 'Clone existing' : 'Convert local'}
+          </button>
+        ))}
       </div>
-    </div>
+
+      {tab === 'new' && (
+        <form onSubmit={handleNewSubmit} style={styles.form}>
+          <Field label="Repository name" required error={newNameError}>
+            <input
+              style={styles.input}
+              value={newName}
+              onChange={(e) => { setNewName(e.target.value); setNewNameError(null); }}
+              placeholder="my-schema"
+              autoFocus
+              disabled={newSubmitting}
+            />
+            {newName && !newNameError && (
+              <div style={styles.urlPreview}>
+                github.com/{login}/{newName}
+              </div>
+            )}
+          </Field>
+
+          <Field label="Schema directory" hint="Where .yaml files will live. Defaults to schema/.">
+            <input
+              style={styles.input}
+              value={newSchemaPath}
+              onChange={(e) => setNewSchemaPath(e.target.value)}
+              placeholder="schema/"
+              disabled={newSubmitting}
+            />
+          </Field>
+
+          <PersistLayoutField checked={newPersistLayout} onChange={setNewPersistLayout} disabled={newSubmitting} />
+
+          {newError && <ErrorBox message={newError} />}
+          <ProgressBar progress={newProgress} />
+
+          <Button type="submit" variant="primary" size="sm" loading={newSubmitting} disabled={newSubmitting}>
+            {newSubmitting ? 'Creating…' : 'Create repository'}
+          </Button>
+        </form>
+      )}
+
+      {tab === 'clone' && (
+        <form onSubmit={handleCloneSubmit} style={styles.form}>
+          <Field label="Repository URL" required error={cloneUrlError}>
+            <input
+              style={styles.input}
+              value={cloneUrl}
+              onChange={(e) => { setCloneUrl(e.target.value); setCloneUrlError(null); }}
+              onBlur={handleCloneUrlBlur}
+              placeholder="https://github.com/owner/repo"
+              autoFocus
+              disabled={cloneSubmitting}
+            />
+          </Field>
+
+          <Field
+            label="Schema directory"
+            hint={
+              cloneConfigLocked
+                ? 'Schema path loaded from project metadata.'
+                : 'Path to schema files within the repo. Defaults to repo root.'
+            }
+          >
+            <input
+              style={{ ...styles.input, ...(cloneConfigLocked ? styles.inputLocked : {}) }}
+              value={cloneSchemaPath}
+              onChange={(e) => !cloneConfigLocked && setCloneSchemaPath(e.target.value)}
+              placeholder="schema/"
+              disabled={cloneSubmitting || cloneConfigLocked}
+              readOnly={cloneConfigLocked}
+            />
+          </Field>
+
+          <PersistLayoutField
+            checked={clonePersistLayout}
+            onChange={setClonePersistLayout}
+            disabled={cloneSubmitting || cloneConfigLocked}
+            locked={cloneConfigLocked}
+          />
+
+          {cloneError && <ErrorBox message={cloneError} />}
+          <ProgressBar progress={cloneProgress} />
+
+          <Button type="submit" variant="primary" size="sm" loading={cloneSubmitting} disabled={cloneSubmitting}>
+            {cloneSubmitting ? 'Cloning…' : 'Clone repository'}
+          </Button>
+        </form>
+      )}
+
+      {tab === 'convert' && activeProject && (
+        <form onSubmit={handleConvertSubmit} style={styles.form}>
+          <div style={styles.convertInfo}>
+            Converting <strong style={{ color: 'var(--color-fg-primary)' }}>{activeProject.name}</strong> to a
+            GitHub repository. The original local copy will remain unchanged.
+          </div>
+
+          <Field label="Repository name" required error={convertNameError}>
+            <input
+              style={styles.input}
+              value={convertName}
+              onChange={(e) => { setConvertName(e.target.value); setConvertNameError(null); }}
+              placeholder="my-schema"
+              autoFocus
+              disabled={convertSubmitting}
+            />
+            {convertName && !convertNameError && (
+              <div style={styles.urlPreview}>
+                github.com/{login}/{convertName}
+              </div>
+            )}
+          </Field>
+
+          <Field label="Schema directory" hint="Where .yaml files will be placed in the new repo.">
+            <input
+              style={styles.input}
+              value={convertSchemaPath}
+              onChange={(e) => setConvertSchemaPath(e.target.value)}
+              placeholder="schema/"
+              disabled={convertSubmitting}
+            />
+          </Field>
+
+          <PersistLayoutField checked={convertPersistLayout} onChange={setConvertPersistLayout} disabled={convertSubmitting} />
+
+          {convertError && <ErrorBox message={convertError} />}
+          <ProgressBar progress={convertProgress} />
+
+          <Button type="submit" variant="primary" size="sm" loading={convertSubmitting} disabled={convertSubmitting}>
+            {convertSubmitting ? 'Converting…' : 'Convert to GitHub'}
+          </Button>
+        </form>
+      )}
+    </Dialog>
   );
 }
-
-// ── Reusable sub-components ───────────────────────────────────────────────────
 
 function Field({
   label,
@@ -492,54 +452,11 @@ function ErrorBox({ message }: { message: string }) {
   return <div style={fieldStyles.errorBox}>{message}</div>;
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.6)',
-    zIndex: 5000,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dialog: {
-    background: 'var(--color-bg-canvas)',
-    border: '1px solid var(--color-border-subtle)',
-    borderRadius: 8,
-    width: 460,
-    maxWidth: '95vw',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '14px 18px',
-    borderBottom: '1px solid var(--color-border-subtle)',
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: 'var(--color-fg-primary)',
-  },
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--color-border-strong)',
-    cursor: 'pointer',
-    fontSize: 14,
-    padding: 0,
-    lineHeight: 1,
-  },
   tabBar: {
     display: 'flex',
     borderBottom: '1px solid var(--color-border-subtle)',
-    padding: '0 18px',
+    marginBottom: 16,
     gap: 0,
   },
   tabBtn: {
@@ -556,15 +473,12 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-accent-hover)',
     borderBottomColor: 'var(--color-accent-hover)',
   },
-  body: {
-    padding: '20px 18px',
-    overflowY: 'auto',
-    maxHeight: 480,
-  },
   form: {
     display: 'flex',
     flexDirection: 'column',
     gap: 16,
+    maxHeight: 420,
+    overflowY: 'auto',
   },
   input: {
     width: '100%',
@@ -587,17 +501,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-state-success)',
     marginTop: 4,
     fontFamily: 'var(--font-family-mono)',
-  },
-  submitBtn: {
-    background: 'var(--color-accent-active)',
-    border: '1px solid var(--color-border-focus)',
-    color: 'var(--color-fg-on-accent)',
-    borderRadius: 4,
-    padding: '8px 16px',
-    fontSize: 12,
-    cursor: 'pointer',
-    alignSelf: 'flex-start',
-    marginTop: 4,
   },
   convertInfo: {
     fontSize: 12,

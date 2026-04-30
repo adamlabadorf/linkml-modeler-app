@@ -7,8 +7,7 @@
  * Per §7 of the feature spec.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { usePlatform, useAppStore } from '@linkml-editor/core';
-import { X } from 'lucide-react';
+import { usePlatform, useAppStore, Button, Dialog } from '@linkml-editor/core';
 
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
 
@@ -24,7 +23,6 @@ export function AppSettingsDialog({ onClose }: AppSettingsDialogProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Load current setting
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -33,7 +31,6 @@ export function AppSettingsDialog({ onClose }: AppSettingsDialogProps) {
         if (stored) {
           setCloneDir(stored);
         } else if (IS_ELECTRON) {
-          // Resolve default: ~/Documents/LinkMLProjects/
           const electronAPI = (window as unknown as { electronAPI?: { getDocumentsPath?(): Promise<string> } }).electronAPI;
           const docs = await electronAPI?.getDocumentsPath?.() ?? '';
           if (!cancelled) setCloneDir(docs ? `${docs}/LinkMLProjects` : '');
@@ -65,107 +62,65 @@ export function AppSettingsDialog({ onClose }: AppSettingsDialogProps) {
   }, [platform, cloneDir, pushToast, onClose]);
 
   return (
-    <div style={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={styles.dialog} role="dialog" aria-modal="true" aria-label="App Settings">
-        <div style={styles.header}>
-          <span style={styles.title}>Settings</span>
-          <button style={styles.closeBtn} onClick={onClose} aria-label="Close"><X size={16} /></button>
-        </div>
-
-        <div style={styles.body}>
-          {loading ? (
-            <div style={styles.loading}>Loading…</div>
-          ) : (
-            <>
-              {IS_ELECTRON ? (
-                <section style={styles.section}>
-                  <div style={styles.sectionTitle}>GitHub Projects</div>
-
-                  <div style={styles.fieldLabel}>GitHub projects folder</div>
-                  <div style={styles.inputRow}>
-                    <input
-                      style={styles.input}
-                      value={cloneDir}
-                      onChange={(e) => setCloneDir(e.target.value)}
-                      placeholder="~/Documents/LinkMLProjects"
-                      disabled={saving}
-                    />
-                    <button style={styles.browseBtn} onClick={handleBrowse} disabled={saving}>
-                      Browse…
-                    </button>
-                  </div>
-                  <div style={styles.hint}>
-                    Where GitHub project repositories are cloned. Changing this folder will not
-                    move existing clones — previously cloned projects will need to be re-cloned.
-                  </div>
-                </section>
-              ) : (
-                <div style={styles.noElectron}>
-                  No additional settings available in web mode.
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {IS_ELECTRON && !loading && (
-          <div style={styles.footer}>
-            <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
-            <button style={styles.saveBtn} onClick={handleSave} disabled={saving || !cloneDir.trim()}>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Settings"
+      size="sm"
+      footer={
+        IS_ELECTRON && !loading ? (
+          <>
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              loading={saving}
+              disabled={saving || !cloneDir.trim()}
+            >
               {saving ? 'Saving…' : 'Save'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+            </Button>
+          </>
+        ) : undefined
+      }
+    >
+      {loading ? (
+        <div style={styles.loading}>Loading…</div>
+      ) : (
+        <>
+          {IS_ELECTRON ? (
+            <section style={styles.section}>
+              <div style={styles.sectionTitle}>GitHub Projects</div>
+
+              <div style={styles.fieldLabel}>GitHub projects folder</div>
+              <div style={styles.inputRow}>
+                <input
+                  style={styles.input}
+                  value={cloneDir}
+                  onChange={(e) => setCloneDir(e.target.value)}
+                  placeholder="~/Documents/LinkMLProjects"
+                  disabled={saving}
+                />
+                <Button variant="secondary" size="sm" onClick={handleBrowse} disabled={saving}>
+                  Browse…
+                </Button>
+              </div>
+              <div style={styles.hint}>
+                Where GitHub project repositories are cloned. Changing this folder will not
+                move existing clones — previously cloned projects will need to be re-cloned.
+              </div>
+            </section>
+          ) : (
+            <div style={styles.noElectron}>
+              No additional settings available in web mode.
+            </div>
+          )}
+        </>
+      )}
+    </Dialog>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.6)',
-    zIndex: 5000,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dialog: {
-    background: 'var(--color-bg-canvas)',
-    border: '1px solid var(--color-border-subtle)',
-    borderRadius: 8,
-    width: 440,
-    maxWidth: '95vw',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '14px 18px',
-    borderBottom: '1px solid var(--color-border-subtle)',
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: 'var(--color-fg-primary)',
-  },
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--color-border-strong)',
-    cursor: 'pointer',
-    fontSize: 14,
-    padding: 0,
-    lineHeight: 1,
-  },
-  body: {
-    padding: '20px 18px',
-  },
   loading: {
     fontSize: 12,
     color: 'var(--color-border-strong)',
@@ -190,6 +145,7 @@ const styles: Record<string, React.CSSProperties> = {
   inputRow: {
     display: 'flex',
     gap: 8,
+    alignItems: 'center',
   },
   input: {
     flex: 1,
@@ -202,16 +158,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '6px 10px',
     outline: 'none',
   },
-  browseBtn: {
-    background: 'var(--color-bg-surface)',
-    border: '1px solid var(--color-border-default)',
-    color: 'var(--color-fg-primary)',
-    borderRadius: 4,
-    padding: '6px 12px',
-    fontSize: 12,
-    cursor: 'pointer',
-    flexShrink: 0,
-  },
   hint: {
     fontSize: 10,
     color: 'var(--color-border-strong)',
@@ -220,30 +166,5 @@ const styles: Record<string, React.CSSProperties> = {
   noElectron: {
     fontSize: 12,
     color: 'var(--color-border-strong)',
-  },
-  footer: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: 8,
-    padding: '12px 18px',
-    borderTop: '1px solid var(--color-border-subtle)',
-  },
-  cancelBtn: {
-    background: 'transparent',
-    border: '1px solid var(--color-border-default)',
-    color: 'var(--color-fg-secondary)',
-    borderRadius: 4,
-    padding: '6px 14px',
-    fontSize: 12,
-    cursor: 'pointer',
-  },
-  saveBtn: {
-    background: 'var(--color-accent-active)',
-    border: '1px solid var(--color-border-focus)',
-    color: 'var(--color-fg-on-accent)',
-    borderRadius: 4,
-    padding: '6px 14px',
-    fontSize: 12,
-    cursor: 'pointer',
   },
 };

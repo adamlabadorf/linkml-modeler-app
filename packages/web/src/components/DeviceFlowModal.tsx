@@ -7,13 +7,13 @@
  */
 import React from 'react';
 import type { DeviceFlowState } from '../auth/AuthContext.js';
+import { Button, Dialog } from '@linkml-editor/core';
 
 interface Props {
   deviceFlow: DeviceFlowState;
   onCancel(): void;
 }
 
-// Detect Electron
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
 
 function openUrl(url: string) {
@@ -32,76 +32,49 @@ export function DeviceFlowModal({ deviceFlow, onCancel }: Props) {
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <div style={styles.title}>Sign in with GitHub</div>
-
-        {status !== 'error' ? (
-          <>
-            <p style={styles.instruction}>
-              Enter this code at GitHub to authorize:
-            </p>
-            <div style={styles.codeRow}>
-              <span style={styles.code}>{userCode}</span>
-              <button style={styles.copyBtn} onClick={copyCode} title="Copy code">
-                Copy
-              </button>
-            </div>
-            <button
-              style={styles.openBtn}
-              onClick={() => openUrl(verificationUri)}
-            >
-              Open GitHub ↗
-            </button>
-            <div style={styles.waiting}>
-              <span style={styles.spinner}>⟳</span>
-              Waiting for authorization…
-            </div>
-          </>
-        ) : (
-          <>
-            <p style={styles.errorMsg}>{error}</p>
-          </>
-        )}
-
-        <button style={styles.cancelBtn} onClick={onCancel}>
-          Cancel
-        </button>
-      </div>
-    </div>
+    <Dialog
+      open
+      onClose={onCancel}
+      title="Sign in with GitHub"
+      size="sm"
+      closeOnBackdrop={false}
+      footer={
+        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+      }
+    >
+      {status !== 'error' ? (
+        <>
+          <p style={styles.instruction}>
+            Enter this code at GitHub to authorize:
+          </p>
+          <div style={styles.codeRow}>
+            <span style={styles.code}>{userCode}</span>
+            <Button variant="primary" size="sm" onClick={copyCode}>Copy</Button>
+          </div>
+          <button
+            style={styles.openBtn}
+            onClick={() => openUrl(verificationUri)}
+            type="button"
+          >
+            Open GitHub ↗
+          </button>
+          <div style={styles.waiting}>
+            <span style={styles.spinner}>⟳</span>
+            Waiting for authorization…
+          </div>
+        </>
+      ) : (
+        <p style={styles.errorMsg}>{error}</p>
+      )}
+    </Dialog>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 5000,
-  },
-  modal: {
-    background: 'var(--color-bg-canvas)',
-    border: '1px solid var(--color-state-info-bg)',
-    borderRadius: 8,
-    padding: '24px 28px',
-    width: 380,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 14,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: 'var(--color-fg-primary)',
-  },
   instruction: {
     fontSize: 13,
     color: 'var(--color-fg-secondary)',
-    margin: 0,
+    margin: '0 0 12px',
   },
   codeRow: {
     display: 'flex',
@@ -111,6 +84,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-border-default)',
     borderRadius: 6,
     padding: '10px 14px',
+    marginBottom: 12,
   },
   code: {
     flex: 1,
@@ -120,16 +94,9 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-accent-hover)',
     fontFamily: 'var(--font-family-mono)',
   },
-  copyBtn: {
-    background: 'var(--color-accent-active)',
-    border: '1px solid var(--color-border-focus)',
-    color: 'var(--color-fg-on-accent)',
-    borderRadius: 4,
-    padding: '4px 10px',
-    fontSize: 11,
-    cursor: 'pointer',
-  },
   openBtn: {
+    display: 'block',
+    width: '100%',
     background: 'var(--color-state-success-bg)',
     border: '1px solid var(--color-state-success-border)',
     color: 'var(--color-state-success-fg)',
@@ -138,6 +105,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     cursor: 'pointer',
     textAlign: 'center',
+    marginBottom: 12,
   },
   waiting: {
     display: 'flex',
@@ -159,15 +127,5 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'var(--color-state-error-bg)',
     border: '1px solid var(--color-state-error-border)',
     borderRadius: 5,
-  },
-  cancelBtn: {
-    background: 'transparent',
-    border: '1px solid var(--color-border-default)',
-    color: 'var(--color-fg-secondary)',
-    borderRadius: 5,
-    padding: '6px 14px',
-    fontSize: 12,
-    cursor: 'pointer',
-    alignSelf: 'flex-end',
   },
 };
