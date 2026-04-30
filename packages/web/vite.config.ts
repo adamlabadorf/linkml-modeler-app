@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/__tests__/setup.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
     alias: {
       '@linkml-editor/core': resolve(__dirname, '../core/src/index.ts'),
     },
