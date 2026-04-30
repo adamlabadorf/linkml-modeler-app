@@ -1,0 +1,37 @@
+id: https://example.org/extras
+name: extras
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/extras/
+  RO: http://purl.obolibrary.org/obo/RO_
+default_prefix: ex
+imports:
+  - linkml:types
+slots:
+  part_of:
+    description: Transitive mereological relationship; unknown keys preserved in extras
+    range: string
+    slot_uri: RO:0001019
+    transitive: true
+    reflexive: false
+    locally_reflexive: false
+  overlaps:
+    description: Symmetric overlap relationship; unknown keys preserved in extras
+    range: string
+    slot_uri: RO:0002131
+    symmetric: true
+    transitive: false
+classes:
+  Component:
+    description: A component that participates in part-of relationships
+    conforms_to: https://example.org/extras/component-spec
+    attributes:
+      id:
+        description: Unique identifier
+        identifier: true
+        range: string
+      name:
+        description: Component name
+        range: string
+    slots:
+      - part_of

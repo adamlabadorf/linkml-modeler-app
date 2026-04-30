@@ -1,0 +1,19 @@
+id: https://example.org/imports_dep
+name: imports_dep
+prefixes:
+  linkml: https://w3id.org/linkml/
+  dep: https://example.org/imports_dep/
+default_prefix: dep
+imports:
+  - linkml:types
+classes:
+  NamedThing:
+    description: A base class providing an identifier and label; imported by other schemas
+    attributes:
+      id:
+        description: Unique identifier
+        identifier: true
+        range: string
+      label:
+        description: Human-readable label
+        range: string

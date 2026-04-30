@@ -1,0 +1,46 @@
+id: https://example.org/mappings
+name: mappings
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/mappings/
+  skos: http://www.w3.org/2004/02/skos/core#
+  schema: http://schema.org/
+  foaf: http://xmlns.com/foaf/0.1/
+  dcterms: http://purl.org/dc/terms/
+  owl: http://www.w3.org/2002/07/owl#
+default_prefix: ex
+imports:
+  - linkml:types
+slots:
+  name:
+    description: The name of an entity; demonstrates all five SKOS mapping types
+    range: string
+    exact_mappings:
+      - schema:name
+      - foaf:name
+    close_mappings:
+      - dcterms:title
+    broad_mappings:
+      - skos:prefLabel
+    narrow_mappings:
+      - foaf:firstName
+    related_mappings:
+      - owl:sameAs
+  description:
+    description: A textual description; shows broad and related mappings only
+    range: string
+    broad_mappings:
+      - dcterms:description
+    related_mappings:
+      - schema:description
+classes:
+  Entity:
+    description: An entity with fully mapped name and description slots
+    attributes:
+      id:
+        description: Unique identifier
+        identifier: true
+        range: string
+    slots:
+      - name
+      - description

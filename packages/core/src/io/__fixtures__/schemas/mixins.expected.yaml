@@ -1,0 +1,36 @@
+id: https://example.org/mixins
+name: mixins
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/mixins/
+default_prefix: ex
+imports:
+  - linkml:types
+classes:
+  Timestamped:
+    description: Provides created_at timestamp; intended as a mixin
+    mixin: true
+    attributes:
+      created_at:
+        description: ISO-8601 creation timestamp
+        range: string
+  Audited:
+    description: Provides created_by field; intended as a mixin
+    mixin: true
+    attributes:
+      created_by:
+        description: Principal who created the record
+        range: string
+  Record:
+    description: A record combining timestamp and audit metadata
+    mixins:
+      - Timestamped
+      - Audited
+    attributes:
+      id:
+        description: Opaque unique identifier
+        identifier: true
+        range: string
+      label:
+        description: Human-readable label
+        range: string

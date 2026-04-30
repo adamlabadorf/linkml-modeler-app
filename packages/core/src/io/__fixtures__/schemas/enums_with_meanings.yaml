@@ -1,0 +1,47 @@
+id: https://example.org/enums_with_meanings
+name: enums_with_meanings
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/enums_with_meanings/
+  HP: http://purl.obolibrary.org/obo/HP_
+  SO: http://purl.obolibrary.org/obo/SO_
+default_prefix: ex
+imports:
+  - linkml:types
+enums:
+  LifeStage:
+    description: Stage of an organism's life cycle
+    code_set: HP
+    permissible_values:
+      embryo:
+        description: Embryonic developmental stage
+        meaning: HP:0099996
+      juvenile:
+        description: Post-embryonic pre-adult stage
+        meaning: HP:0003621
+      adult:
+        description: Fully mature stage
+        meaning: HP:0003581
+  SequenceOntologyFeature:
+    description: Sequence ontology feature types used in annotation
+    permissible_values:
+      gene:
+        description: A region of DNA that encodes a functional product
+        meaning: SO:0000704
+      transcript:
+        description: An RNA synthesized from a genomic template
+        meaning: SO:0000233
+      exon:
+        description: A region that is transcribed and retained after splicing
+        meaning: SO:0000147
+classes:
+  Organism:
+    description: A living organism with a life stage and annotated features
+    attributes:
+      id:
+        description: Unique organism identifier
+        identifier: true
+        range: string
+      life_stage:
+        description: Current life stage
+        range: LifeStage

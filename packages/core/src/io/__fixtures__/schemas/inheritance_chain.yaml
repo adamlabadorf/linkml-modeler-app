@@ -1,0 +1,20 @@
+id: https://example.org/inheritance_chain
+name: inheritance_chain
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ichain: https://example.org/inheritance_chain/
+default_prefix: ichain
+imports:
+  - linkml:types
+classes:
+  A:
+    description: Root class; no parent
+  B:
+    description: Extends A
+    is_a: A
+  C:
+    description: Extends B
+    is_a: B
+  D:
+    description: Extends C; deepest leaf
+    is_a: C

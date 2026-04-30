@@ -1,0 +1,20 @@
+id: https://example.org/imports
+name: imports
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/imports/
+default_prefix: ex
+imports:
+  - linkml:types
+  - imports_dep
+classes:
+  Person:
+    description: A person that extends the imported NamedThing base class
+    is_a: NamedThing
+    attributes:
+      age:
+        description: Age in years
+        range: integer
+      email:
+        description: Contact email address
+        range: string

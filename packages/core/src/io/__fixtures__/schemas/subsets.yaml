@@ -1,0 +1,42 @@
+id: https://example.org/subsets
+name: subsets
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/subsets/
+default_prefix: ex
+imports:
+  - linkml:types
+subsets:
+  Core:
+    description: Minimum required fields for all consumers
+  Extended:
+    description: Optional enrichment fields for advanced use cases
+  Deprecated:
+    description: Fields retained for backward compatibility; avoid in new schemas
+classes:
+  Entity:
+    description: A named entity with core and extended attributes
+    subset_of:
+      - Core
+    attributes:
+      id:
+        description: Primary key
+        identifier: true
+        range: string
+        subset_of:
+          - Core
+      name:
+        description: Human-readable name
+        range: string
+        subset_of:
+          - Core
+      notes:
+        description: Free-text annotations
+        range: string
+        subset_of:
+          - Extended
+      legacy_code:
+        description: Old numeric code; kept for backward compatibility
+        range: string
+        subset_of:
+          - Deprecated
