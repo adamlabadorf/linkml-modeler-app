@@ -94,7 +94,7 @@ function ClassNode({ data, selected }: NodeProps<ClassNodeData>) {
       style={{
         ...styles.wrapper,
         ...(ghost ? styles.ghostWrapper : {}),
-        outline: selected ? '2px solid var(--color-accent-hover)' : ghost ? '1px dashed #374f3a' : '1px solid var(--color-border-default)',
+        outline: selected ? '2px solid var(--color-accent-hover)' : ghost ? '1px dashed var(--color-border-default)' : '1px solid var(--color-border-default)',
       }}
     >
       {/* Target handle (top) — for edges pointing into this node */}
@@ -152,7 +152,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 6,
     minWidth: 200,
     maxWidth: 320,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+    boxShadow: 'var(--shadow-md)',
     fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     color: 'var(--color-fg-primary)',
@@ -160,7 +160,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   ghostWrapper: {
     background: 'var(--color-class-ghost)',
-    opacity: 0.72,
+    /* No opacity — token bg color provides distinction in both themes */
   },
   handle: {
     background: 'var(--color-accent-hover)',

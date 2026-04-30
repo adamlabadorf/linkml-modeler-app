@@ -1,4 +1,5 @@
 import React from 'react';
+import { useFieldId } from './FieldRow.js';
 
 export function TextArea({
   value,
@@ -9,8 +10,10 @@ export function TextArea({
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
+  const fieldId = useFieldId();
   return (
     <textarea
+      id={fieldId || undefined}
       style={textareaStyle}
       value={value ?? ''}
       placeholder={placeholder}
@@ -27,7 +30,6 @@ const textareaStyle: React.CSSProperties = {
   color: 'var(--color-fg-primary)',
   fontSize: 12,
   padding: '4px 7px',
-  outline: 'none',
   width: '100%',
   boxSizing: 'border-box',
   resize: 'vertical',

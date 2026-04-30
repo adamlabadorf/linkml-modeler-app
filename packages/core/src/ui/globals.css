@@ -28,3 +28,24 @@ body {
 :focus:not(:focus-visible) {
   outline: none;
 }
+
+/* Skip link — hidden off-screen until focused (AC-B17) */
+.lme-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 4px;
+  z-index: var(--z-toast);
+  background: var(--color-bg-surface);
+  color: var(--color-fg-primary);
+  border: 2px solid var(--color-border-focus);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-ui);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lme-skip-link:focus {
+  left: 4px;
+}

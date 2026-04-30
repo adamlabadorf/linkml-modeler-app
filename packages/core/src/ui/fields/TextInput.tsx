@@ -1,4 +1,5 @@
 import React from 'react';
+import { useFieldId } from './FieldRow.js';
 
 export function TextInput({
   value,
@@ -13,6 +14,7 @@ export function TextInput({
   placeholder?: string;
   monospace?: boolean;
 }) {
+  const fieldId = useFieldId();
   const [localValue, setLocalValue] = React.useState<string | null>(null);
   const committed = localValue === null;
 
@@ -44,6 +46,7 @@ export function TextInput({
 
   return (
     <input
+      id={fieldId || undefined}
       style={{ ...inputStyle, ...(monospace ? inputMonoStyle : {}) }}
       value={committed ? (value ?? '') : localValue!}
       placeholder={placeholder}
@@ -61,7 +64,6 @@ export const inputStyle: React.CSSProperties = {
   color: 'var(--color-fg-primary)',
   fontSize: 12,
   padding: '4px 7px',
-  outline: 'none',
   width: '100%',
   boxSizing: 'border-box',
   fontFamily: 'sans-serif',

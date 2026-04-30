@@ -60,6 +60,7 @@ function IssueRow({
           style={{
             ...styles.severityBadge,
             background: SEVERITY_COLOR[issue.severity],
+            color: issue.severity === 'warning' ? 'var(--color-state-warning-on)' : '#fff',
           }}
         >
           {SEVERITY_LABEL[issue.severity]}
@@ -231,7 +232,12 @@ export function ValidationPanel() {
 
   if (!validationPanelOpen) {
     return (
-      <div id="lme-validation-panel" style={styles.collapsedBar} onClick={() => setValidationPanelOpen(true)}>
+      <button
+        id="lme-validation-panel"
+        style={styles.collapsedBar}
+        onClick={() => setValidationPanelOpen(true)}
+        aria-label="Open validation panel"
+      >
         <span style={styles.collapsedLabel}>Validation</span>
         {counts.error > 0 && (
           <span style={{ ...styles.collapsedBadge, background: SEVERITY_COLOR.error }}>
@@ -243,7 +249,7 @@ export function ValidationPanel() {
             {counts.warning}
           </span>
         )}
-      </div>
+      </button>
     );
   }
 
@@ -318,10 +324,15 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 6,
     padding: '4px 12px',
     background: 'var(--color-bg-deep)',
+    border: 'none',
     borderTop: '1px solid var(--color-border-subtle)',
     cursor: 'pointer',
     flexShrink: 0,
     userSelect: 'none',
+    width: '100%',
+    textAlign: 'left',
+    color: 'inherit',
+    fontFamily: 'inherit',
   },
   collapsedLabel: {
     fontSize: 10,
@@ -459,7 +470,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     borderRadius: 3,
     padding: '1px 4px',
-    color: '#fff',
     flexShrink: 0,
   },
   issueMessage: {

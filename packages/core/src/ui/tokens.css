@@ -168,7 +168,7 @@
   /* Foreground */
   --color-fg-primary:   #0f172a;
   --color-fg-secondary: #475569;
-  --color-fg-muted:     #94a3b8;
+  --color-fg-muted:     #64748b; /* #94a3b8 failed WCAG AA (2.47:1); #64748b = 4.57:1 on canvas */
   --color-fg-on-accent: #ffffff;
 
   /* Border */

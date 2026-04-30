@@ -363,7 +363,7 @@ const menuStyles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-border-default)',
     borderRadius: 6,
     padding: '4px 0',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+    boxShadow: 'var(--shadow-popover)',
     marginTop: 2,
   },
   separator: {

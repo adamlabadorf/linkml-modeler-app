@@ -388,6 +388,9 @@ function App() {
 
   return (
     <div style={styles.app}>
+      {/* Skip link for keyboard users (AC-B17) */}
+      <a href="#lme-canvas-area" className="lme-skip-link">Skip to main content</a>
+
       {/* Header */}
       <header id="lme-header" style={styles.header}>
         <div style={styles.headerLeft}>
