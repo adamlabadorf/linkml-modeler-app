@@ -426,3 +426,220 @@ describe('validateSchema', () => {
     expect(errors.some(e => e.path === 'default_prefix' && e.severity === 'warning')).toBe(true);
   });
 });
+
+// ─── Kitchen-sink coverage: rarely-exercised branches ─────────────────────────
+
+const KITCHEN_SINK_YAML = `
+id: https://example.org/kitchen-sink
+name: kitchen_sink
+title: Kitchen Sink Schema
+description: Exercises all optional fields for coverage
+version: '1.0'
+license: Apache-2.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/
+default_prefix: ex
+default_range: string
+imports:
+  - linkml:types
+
+subsets:
+  CoreSubset:
+    description: Core fields subset
+
+types:
+  MyString:
+    uri: xsd:string
+    description: Custom string type
+    typeof: string
+
+slots:
+  subject:
+    description: The subject slot
+    range: string
+    required: true
+    recommended: true
+    multivalued: false
+    identifier: true
+    key: true
+    inlined: false
+    inlined_as_list: false
+    domain: BaseClass
+    domain_of:
+      - BaseClass
+    subset_of:
+      - CoreSubset
+    ifabsent: string(default)
+    alias: subject_alias
+    slot_uri: ex:subject
+    mappings:
+      - ex:m1
+    exact_mappings:
+      - ex:em1
+    close_mappings:
+      - ex:cm1
+    broad_mappings:
+      - ex:bm1
+    narrow_mappings:
+      - ex:nm1
+
+enums:
+  OntologyTerm:
+    description: Ontology terms
+    code_set: https://example.org/codes
+    subset_of:
+      - CoreSubset
+    reachable_from:
+      source_ontology: obo:HP
+      source_nodes:
+        - HP:0000001
+      relationship: rdfs:subClassOf
+    permissible_values:
+      term1:
+        description: First term
+        meaning: ex:Term1
+
+classes:
+  BaseClass:
+    description: Base class with all optional fields
+    abstract: true
+    slots:
+      - subject
+    rules:
+      - title: Status rule
+        description: When active, name is required
+        bidirectional: true
+        open_world: false
+        deactivated: false
+        rank: 1
+        preconditions:
+          slot_conditions:
+            subject:
+              equals_string: active
+              equals_number: 42
+              pattern: '^active$'
+              minimum_value: 0
+              maximum_value: 100
+              required: true
+              recommended: true
+              multivalued: false
+              minimum_cardinality: 1
+              maximum_cardinality: 5
+              range: string
+              value_presence: PRESENT
+              equals_string_in:
+                - active
+                - inactive
+              any_of:
+                - equals_string: x
+              all_of:
+                - required: true
+              exactly_one_of:
+                - equals_string: y
+              none_of:
+                - equals_string: z
+              has_member:
+                range: string
+              all_members:
+                required: true
+        postconditions:
+          slot_conditions:
+            subject:
+              required: true
+        elseconditions:
+          is_a: BaseClass
+          slot_conditions:
+            subject:
+              required: false
+`;
+
+describe('kitchen-sink: rarely-exercised yaml branches', () => {
+  it('parses all optional slot fields', () => {
+    const schema = parseYaml(KITCHEN_SINK_YAML);
+    const slot = schema.slots['subject'];
+    expect(slot.required).toBe(true);
+    expect(slot.recommended).toBe(true);
+    expect(slot.keyField).toBe(true);
+    expect(slot.inlined).toBe(false);
+    expect(slot.inlinedAsList).toBe(false);
+    expect(slot.domain).toBe('BaseClass');
+    expect(slot.domainOf).toEqual(['BaseClass']);
+    expect(slot.subsetOf).toEqual(['CoreSubset']);
+    expect(slot.ifAbsent).toBe('string(default)');
+    expect(slot.alias).toBe('subject_alias');
+    expect(slot.slotUri).toBe('ex:subject');
+    expect(slot.mappings).toEqual(['ex:m1']);
+    expect(slot.exactMappings).toEqual(['ex:em1']);
+    expect(slot.closeMappings).toEqual(['ex:cm1']);
+    expect(slot.broadMappings).toEqual(['ex:bm1']);
+    expect(slot.narrowMappings).toEqual(['ex:nm1']);
+  });
+
+  it('parses enum reachable_from with source_nodes and relationship', () => {
+    const schema = parseYaml(KITCHEN_SINK_YAML);
+    const enm = schema.enums['OntologyTerm'];
+    expect(enm.codeSet).toBe('https://example.org/codes');
+    expect(enm.subsetOf).toEqual(['CoreSubset']);
+    expect(enm.reachableFrom?.sourceOntology).toBe('obo:HP');
+    expect(enm.reachableFrom?.sourceNodes).toEqual(['HP:0000001']);
+    expect(enm.reachableFrom?.relationship).toBe('rdfs:subClassOf');
+  });
+
+  it('parses ClassRule with all flags and elseconditions', () => {
+    const schema = parseYaml(KITCHEN_SINK_YAML);
+    const rule = schema.classes['BaseClass'].rules![0];
+    expect(rule.bidirectional).toBe(true);
+    expect(rule.openWorld).toBe(false);
+    expect(rule.deactivated).toBe(false);
+    expect(rule.rank).toBe(1);
+    expect(rule.elseconditions?.isA).toBe('BaseClass');
+  });
+
+  it('parses SlotCondition with all fields', () => {
+    const schema = parseYaml(KITCHEN_SINK_YAML);
+    const rule = schema.classes['BaseClass'].rules![0];
+    const sc = rule.preconditions!.slotConditions!['subject'];
+    expect(sc.equalsString).toBe('active');
+    expect(sc.equalsNumber).toBe(42);
+    expect(sc.pattern).toBe('^active$');
+    expect(sc.minimumValue).toBe(0);
+    expect(sc.maximumValue).toBe(100);
+    expect(sc.required).toBe(true);
+    expect(sc.recommended).toBe(true);
+    expect(sc.multivalued).toBe(false);
+    expect(sc.minimumCardinality).toBe(1);
+    expect(sc.maximumCardinality).toBe(5);
+    expect(sc.range).toBe('string');
+    expect(sc.valuePresence).toBe('PRESENT');
+    expect(sc.equalsStringIn).toEqual(['active', 'inactive']);
+    expect(sc.anyOf).toHaveLength(1);
+    expect(sc.allOf).toHaveLength(1);
+    expect(sc.exactlyOneOf).toHaveLength(1);
+    expect(sc.noneOf).toHaveLength(1);
+    expect(sc.hasMember?.range).toBe('string');
+    expect(sc.allMembers?.required).toBe(true);
+  });
+
+  it('round-trips the kitchen-sink schema', () => {
+    const once = parseYaml(KITCHEN_SINK_YAML);
+    const twice = roundTrip(KITCHEN_SINK_YAML);
+    expect(twice).toEqual(once);
+  });
+
+  it('parses prefixes in array format (prefix_prefix / prefix_reference)', () => {
+    const arrayPrefixYaml = `
+id: https://example.org/array-prefix
+name: array_prefix
+prefixes:
+  - prefix_prefix: linkml
+    prefix_reference: https://w3id.org/linkml/
+  - prefix_prefix: ex
+    prefix_reference: https://example.org/
+default_prefix: ex
+`;
+    const schema = parseYaml(arrayPrefixYaml);
+    expect(schema.prefixes['linkml']).toBe('https://w3id.org/linkml/');
+    expect(schema.prefixes['ex']).toBe('https://example.org/');
+  });
+});
