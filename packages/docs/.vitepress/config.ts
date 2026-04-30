@@ -5,7 +5,9 @@ export default defineConfig({
   description: 'Visual editor for LinkML schemas',
   base: '/linkml-modeler-app/',
   ignoreDeadLinks: [/^http:\/\/localhost/],
+  head: [['link', { rel: 'icon', href: '/linkml-modeler-app/favicon.svg', type: 'image/svg+xml' }]],
   themeConfig: {
+    logo: '/logo.svg',
     nav: [
       { text: 'Home', link: '/' },
       { text: 'User Guide', link: '/user-guide' },
