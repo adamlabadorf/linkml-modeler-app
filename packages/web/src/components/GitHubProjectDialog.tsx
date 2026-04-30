@@ -371,7 +371,7 @@ export function GitHubProjectDialog({ onClose, onProjectOpened }: GitHubProjectD
           {tab === 'convert' && activeProject && (
             <form onSubmit={handleConvertSubmit} style={styles.form}>
               <div style={styles.convertInfo}>
-                Converting <strong style={{ color: '#e2e8f0' }}>{activeProject.name}</strong> to a
+                Converting <strong style={{ color: 'var(--color-fg-primary)' }}>{activeProject.name}</strong> to a
                 GitHub repository. The original local copy will remain unchanged.
               </div>
 
@@ -468,7 +468,7 @@ function PersistLayoutField({
         checked={checked}
         onChange={(e) => !locked && onChange(e.target.checked)}
         disabled={disabled || locked}
-        style={{ cursor: locked ? 'default' : 'pointer', accentColor: '#60a5fa' }}
+        style={{ cursor: locked ? 'default' : 'pointer', accentColor: 'var(--color-accent-hover)' }}
       />
       <div>
         <label htmlFor="persist-layout" style={{ ...fieldStyles.checkboxLabel, cursor: locked ? 'default' : 'pointer' }}>
@@ -505,8 +505,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
   },
   dialog: {
-    background: '#0f172a',
-    border: '1px solid #1e293b',
+    background: 'var(--color-bg-canvas)',
+    border: '1px solid var(--color-border-subtle)',
     borderRadius: 8,
     width: 460,
     maxWidth: '95vw',
@@ -520,17 +520,17 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '14px 18px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
   },
   title: {
     fontSize: 14,
     fontWeight: 700,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
   },
   closeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     cursor: 'pointer',
     fontSize: 14,
     padding: 0,
@@ -538,7 +538,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   tabBar: {
     display: 'flex',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     padding: '0 18px',
     gap: 0,
   },
@@ -546,15 +546,15 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: 'none',
     borderBottom: '2px solid transparent',
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     padding: '8px 12px',
     fontSize: 12,
     cursor: 'pointer',
     marginBottom: -1,
   },
   tabBtnActive: {
-    color: '#60a5fa',
-    borderBottomColor: '#60a5fa',
+    color: 'var(--color-accent-hover)',
+    borderBottomColor: 'var(--color-accent-hover)',
   },
   body: {
     padding: '20px 18px',
@@ -569,9 +569,9 @@ const styles: Record<string, React.CSSProperties> = {
   input: {
     width: '100%',
     background: '#020c1a',
-    border: '1px solid #1e293b',
+    border: '1px solid var(--color-border-subtle)',
     borderRadius: 4,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
     padding: '6px 10px',
@@ -584,13 +584,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   urlPreview: {
     fontSize: 10,
-    color: '#4ade80',
+    color: 'var(--color-state-success)',
     marginTop: 4,
     fontFamily: 'var(--font-family-mono)',
   },
   submitBtn: {
-    background: '#1d4ed8',
-    border: '1px solid #2563eb',
+    background: 'var(--color-accent-active)',
+    border: '1px solid var(--color-border-focus)',
     color: '#eff6ff',
     borderRadius: 4,
     padding: '8px 16px',
@@ -601,9 +601,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   convertInfo: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
     background: '#0c1a30',
-    border: '1px solid #1e293b',
+    border: '1px solid var(--color-border-subtle)',
     borderRadius: 4,
     padding: '8px 12px',
     lineHeight: 1.5,
@@ -618,26 +618,26 @@ const fieldStyles: Record<string, React.CSSProperties> = {
   },
   label: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
   },
   required: {
-    color: '#f87171',
+    color: 'var(--color-state-error)',
   },
   error: {
     fontSize: 11,
-    color: '#f87171',
+    color: 'var(--color-state-error)',
   },
   hint: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     lineHeight: 1.4,
   },
   errorBox: {
-    background: '#450a0a',
-    border: '1px solid #7f1d1d',
+    background: 'var(--color-state-error-bg)',
+    border: '1px solid var(--color-state-error-border)',
     borderRadius: 4,
     color: '#fca5a5',
     fontSize: 12,
@@ -650,7 +650,7 @@ const fieldStyles: Record<string, React.CSSProperties> = {
   },
   checkboxLabel: {
     fontSize: 12,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     display: 'block',
     marginBottom: 2,
   },
@@ -664,18 +664,18 @@ const progressStyles: Record<string, React.CSSProperties> = {
   },
   bar: {
     height: 4,
-    background: '#1e293b',
+    background: 'var(--color-bg-surface)',
     borderRadius: 2,
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
-    background: '#60a5fa',
+    background: 'var(--color-accent-hover)',
     borderRadius: 2,
     transition: 'width 0.3s ease',
   },
   label: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
   },
 };

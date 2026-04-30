@@ -129,14 +129,14 @@ export function ProjectSwitcherDialog({ onClose }: ProjectSwitcherDialogProps) {
                   onClick={() => !isCurrent && handleSelect(entry)}
                   onMouseEnter={(e) => {
                     if (!isCurrent) {
-                      (e.currentTarget as HTMLDivElement).style.background = '#1e293b';
-                      (e.currentTarget as HTMLDivElement).style.borderColor = '#334155';
+                      (e.currentTarget as HTMLDivElement).style.background = 'var(--color-bg-surface)';
+                      (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-border-default)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isCurrent) {
-                      (e.currentTarget as HTMLDivElement).style.background = '#0c1a2e';
-                      (e.currentTarget as HTMLDivElement).style.borderColor = '#1e293b';
+                      (e.currentTarget as HTMLDivElement).style.background = 'var(--color-bg-surface-sunken)';
+                      (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-border-subtle)';
                     }
                   }}
                 >
@@ -192,15 +192,15 @@ const s: Record<string, React.CSSProperties> = {
     zIndex: 3000,
   },
   dialog: {
-    background: '#1e293b',
-    border: '1px solid #334155',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border-default)',
     borderRadius: 8,
     width: '90%',
     maxWidth: 560,
     maxHeight: '80vh',
     display: 'flex',
     flexDirection: 'column',
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     overflow: 'hidden',
   },
   header: {
@@ -208,19 +208,19 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #334155',
+    borderBottom: '1px solid var(--color-border-default)',
     flexShrink: 0,
   },
   title: {
     margin: 0,
     fontSize: 15,
     fontWeight: 700,
-    color: '#60a5fa',
+    color: 'var(--color-accent-hover)',
   },
   closeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     cursor: 'pointer',
     fontSize: 14,
     padding: '2px 6px',
@@ -230,13 +230,13 @@ const s: Record<string, React.CSSProperties> = {
   loading: {
     padding: 32,
     textAlign: 'center',
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
     fontSize: 13,
   },
   empty: {
     padding: 32,
     textAlign: 'center',
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     fontSize: 13,
   },
   list: {
@@ -252,8 +252,8 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     padding: '10px 12px',
-    background: '#0c1a2e',
-    border: '1px solid #1e293b',
+    background: 'var(--color-bg-surface-sunken)',
+    border: '1px solid var(--color-border-subtle)',
     borderRadius: 6,
     cursor: 'pointer',
     transition: 'background 0.15s, border-color 0.15s',
@@ -274,15 +274,15 @@ const s: Record<string, React.CSSProperties> = {
   itemName: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     display: 'flex',
     alignItems: 'center',
     gap: 8,
   },
   currentBadge: {
     fontSize: 10,
-    color: '#60a5fa',
-    background: '#1e3a5f',
+    color: 'var(--color-accent-hover)',
+    background: 'var(--color-state-info-bg)',
     border: '1px solid #1e4080',
     borderRadius: 3,
     padding: '1px 5px',
@@ -290,7 +290,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   itemUrl: {
     fontSize: 10,
-    color: '#60a5fa',
+    color: 'var(--color-accent-hover)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -298,7 +298,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   itemPath: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -312,13 +312,13 @@ const s: Record<string, React.CSSProperties> = {
   },
   itemDate: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     whiteSpace: 'nowrap',
   },
   removeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     cursor: 'pointer',
     padding: '2px 4px',
     fontSize: 12,
@@ -330,8 +330,8 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     padding: '12px 20px',
-    borderTop: '1px solid #334155',
-    background: '#1e293b',
+    borderTop: '1px solid var(--color-border-default)',
+    background: 'var(--color-bg-surface)',
     flexShrink: 0,
   },
   confirmText: {
@@ -340,7 +340,7 @@ const s: Record<string, React.CSSProperties> = {
     flex: 1,
   },
   confirmBtn: {
-    background: '#7f1d1d',
+    background: 'var(--color-state-error-border)',
     border: '1px solid #991b1b',
     color: '#fca5a5',
     borderRadius: 4,
@@ -349,9 +349,9 @@ const s: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   cancelBtn: {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    color: '#94a3b8',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border-default)',
+    color: 'var(--color-fg-secondary)',
     borderRadius: 4,
     padding: '4px 12px',
     fontSize: 12,

@@ -23,10 +23,10 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
   render() {
     if (this.state.error) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#fca5a5', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--color-bg-canvas)', color: '#fca5a5', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 24 }}><AlertTriangle size={24} /> Unexpected Error</div>
-          <div style={{ fontSize: 13, color: '#94a3b8', maxWidth: 600, textAlign: 'center' }}>{this.state.error.message}</div>
-          <button onClick={() => this.setState({ error: null })} style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', borderRadius: 5, padding: '6px 14px', cursor: 'pointer' }}>
+          <div style={{ fontSize: 13, color: 'var(--color-fg-secondary)', maxWidth: 600, textAlign: 'center' }}>{this.state.error.message}</div>
+          <button onClick={() => this.setState({ error: null })} style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-default)', color: 'var(--color-fg-primary)', borderRadius: 5, padding: '6px 14px', cursor: 'pointer' }}>
             Try to recover
           </button>
         </div>
@@ -135,7 +135,7 @@ const yamlStyles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     width: 300,
-    borderLeft: '1px solid #1e293b',
+    borderLeft: '1px solid var(--color-border-subtle)',
     background: '#060e1a',
     flexShrink: 0,
     overflow: 'hidden',
@@ -145,13 +145,13 @@ const yamlStyles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 12px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
   },
   title: {
     fontWeight: 600,
     fontSize: 12,
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
   },
   dirty: {
     fontSize: 11,
@@ -164,7 +164,7 @@ const yamlStyles: Record<string, React.CSSProperties> = {
     padding: '8px 12px',
     fontSize: 10,
     fontFamily: 'var(--font-family-mono)',
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
     whiteSpace: 'pre',
     lineHeight: 1.5,
   },
@@ -210,14 +210,14 @@ const toastStyles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
     pointerEvents: 'auto',
-    background: '#1e293b',
-    border: '1px solid #334155',
-    color: '#e2e8f0',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border-default)',
+    color: 'var(--color-fg-primary)',
   },
-  info: { background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0' },
+  info: { background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-default)', color: 'var(--color-fg-primary)' },
   success: { background: '#14532d', border: '1px solid #166534', color: '#86efac' },
-  warning: { background: '#451a03', border: '1px solid #78350f', color: '#fde68a' },
-  error: { background: '#450a0a', border: '1px solid #7f1d1d', color: '#fca5a5' },
+  warning: { background: 'var(--color-state-warning-bg)', border: '1px solid var(--color-state-warning-border)', color: '#fde68a' },
+  error: { background: 'var(--color-state-error-bg)', border: '1px solid var(--color-state-error-border)', color: '#fca5a5' },
   dismiss: {
     background: 'transparent',
     border: 'none',
@@ -464,7 +464,7 @@ function App() {
           {gitAvailable && commitLog.length > 0 && (
             <>
               {' · '}
-              <span style={{ color: '#475569' }}>
+              <span style={{ color: 'var(--color-border-strong)' }}>
                 {commitLog[0].oid.slice(0, 7)} {commitLog[0].message.split('\n')[0].slice(0, 50)}
               </span>
             </>
@@ -511,8 +511,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     height: '100vh',
-    background: '#0f172a',
-    color: '#e2e8f0',
+    background: 'var(--color-bg-canvas)',
+    color: 'var(--color-fg-primary)',
     overflow: 'hidden',
   },
   header: {
@@ -520,8 +520,8 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 16px',
-    borderBottom: '1px solid #1e293b',
-    background: '#0f172a',
+    borderBottom: '1px solid var(--color-border-subtle)',
+    background: 'var(--color-bg-canvas)',
     flexShrink: 0,
   },
   headerLeft: {
@@ -537,7 +537,7 @@ const styles: Record<string, React.CSSProperties> = {
   logo: {
     fontWeight: 700,
     fontSize: 15,
-    color: '#60a5fa',
+    color: 'var(--color-accent-hover)',
   },
   dirtyBadge: {
     fontSize: 11,
@@ -545,7 +545,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   savingBadge: {
     fontSize: 11,
-    color: '#60a5fa',
+    color: 'var(--color-accent-hover)',
   },
   main: {
     flex: 1,
@@ -570,10 +570,10 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     padding: '4px 16px',
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--color-border-subtle)',
     fontSize: 10,
-    color: '#334155',
-    background: '#0f172a',
+    color: 'var(--color-border-default)',
+    background: 'var(--color-bg-canvas)',
     flexShrink: 0,
   },
 };
