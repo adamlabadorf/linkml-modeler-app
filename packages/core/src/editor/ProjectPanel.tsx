@@ -228,7 +228,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     width: 220,
     borderRight: '1px solid var(--color-border-subtle)',
-    background: '#080f1a',
+    background: 'var(--color-bg-deep)',
     flexShrink: 0,
     overflow: 'hidden',
   },
@@ -258,7 +258,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 6,
     padding: '4px 10px',
-    borderBottom: '1px solid #0d1627',
+    borderBottom: '1px solid var(--color-bg-surface-sunken)',
     flexShrink: 0,
   },
   importsSectionHeader: {
@@ -267,7 +267,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 6,
     padding: '4px 10px',
     borderTop: '1px solid var(--color-border-subtle)',
-    borderBottom: '1px solid #0d1627',
+    borderBottom: '1px solid var(--color-bg-surface-sunken)',
     flexShrink: 0,
     cursor: 'pointer',
     userSelect: 'none' as const,
@@ -288,7 +288,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionCount: {
     fontSize: 9,
     color: 'var(--color-border-default)',
-    background: '#0d1627',
+    background: 'var(--color-bg-surface-sunken)',
     borderRadius: 8,
     padding: '0 5px',
   },
@@ -307,11 +307,11 @@ const styles: Record<string, React.CSSProperties> = {
   fileRow: {
     padding: '6px 10px',
     cursor: 'pointer',
-    borderBottom: '1px solid #0d1627',
+    borderBottom: '1px solid var(--color-bg-surface-sunken)',
     userSelect: 'none' as const,
   },
   fileRowActive: {
-    background: '#172033',
+    background: 'var(--color-bg-surface)',
     borderLeft: '2px solid var(--color-accent-hover)',
     paddingLeft: 8,
   },
@@ -322,8 +322,8 @@ const styles: Record<string, React.CSSProperties> = {
     opacity: 0.85,
   },
   importRowActive: {
-    background: '#141f2e',
-    borderLeft: '2px solid #7c9cbf',
+    background: 'var(--color-bg-surface-sunken)',
+    borderLeft: '2px solid var(--color-fg-secondary)',
     paddingLeft: 8,
   },
   visibilityBtn: {
@@ -382,13 +382,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'block',
   },
   dirtyDot: {
-    color: '#f59e0b',
+    color: 'var(--color-state-warning)',
     fontSize: 10,
     flexShrink: 0,
   },
   readOnlyBadge: {
     fontSize: 8,
-    background: '#1a2535',
+    background: 'var(--color-bg-surface)',
     borderRadius: 3,
     padding: '1px 4px',
     color: 'var(--color-border-strong)',
@@ -403,7 +403,7 @@ const styles: Record<string, React.CSSProperties> = {
   schemaName: {
     fontSize: 10,
     fontFamily: 'var(--font-family-mono)',
-    color: '#7c9cbf',
+    color: 'var(--color-fg-secondary)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap' as const,

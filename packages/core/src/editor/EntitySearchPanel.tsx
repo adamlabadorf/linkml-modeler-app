@@ -254,7 +254,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   activeMark: {
     fontSize: 9,
-    color: '#22c55e',
+    color: 'var(--color-state-success)',
     flexShrink: 0,
   },
   referencedMark: {

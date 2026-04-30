@@ -281,7 +281,7 @@ const ds: Record<string, React.CSSProperties> = {
     background: 'var(--color-state-error-bg)',
     border: '1px solid var(--color-state-error-border)',
     borderRadius: 5,
-    color: '#fca5a5',
+    color: 'var(--color-state-error-fg)',
     fontSize: 12,
     wordBreak: 'break-word',
   },
@@ -303,7 +303,7 @@ const ds: Record<string, React.CSSProperties> = {
   cloneBtn: {
     background: 'var(--color-accent-active)',
     border: '1px solid var(--color-border-focus)',
-    color: '#ffffff',
+    color: 'var(--color-fg-on-accent)',
     borderRadius: 5,
     padding: '6px 20px',
     fontSize: 12,

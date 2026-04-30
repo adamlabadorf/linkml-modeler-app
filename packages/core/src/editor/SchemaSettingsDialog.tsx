@@ -414,7 +414,7 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
-    color: '#93c5fd',
+    color: 'var(--color-state-info-fg)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',

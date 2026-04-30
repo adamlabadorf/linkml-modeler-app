@@ -154,7 +154,7 @@ const styles: Record<string, React.CSSProperties> = {
   focusBtnActive: {
     background: 'var(--color-state-info-bg)',
     border: '1px solid var(--color-accent-active)',
-    color: '#93c5fd',
+    color: 'var(--color-state-info-fg)',
   },
   selCount: {
     background: 'var(--color-border-default)',
@@ -162,7 +162,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0 5px',
     fontSize: 10,
     fontWeight: 700,
-    color: '#cbd5e1',
+    color: 'var(--color-fg-primary)',
   },
   exitBtn: {
     background: 'transparent',

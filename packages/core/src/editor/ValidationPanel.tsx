@@ -20,9 +20,9 @@ const SEVERITY_COLOR: Record<IssueSeverity, string> = {
 };
 
 const SEVERITY_BG: Record<IssueSeverity, string> = {
-  error: '#3f1515',
-  warning: '#3b2800',
-  info: '#0d2140',
+  error: 'var(--color-state-error-bg)',
+  warning: 'var(--color-state-warning-bg)',
+  info: 'var(--color-state-info-bg)',
 };
 
 const SEVERITY_BORDER: Record<IssueSeverity, string> = {
@@ -106,7 +106,7 @@ function SummaryBar({
           </span>
         )}
         {warnCount > 0 && (
-          <span style={{ ...styles.countBadge, background: SEVERITY_COLOR.warning, color: '#1c1400' }}>
+          <span style={{ ...styles.countBadge, background: SEVERITY_COLOR.warning, color: 'var(--color-state-warning-on)' }}>
             {warnCount} warning{warnCount !== 1 ? 's' : ''}
           </span>
         )}
@@ -239,7 +239,7 @@ export function ValidationPanel() {
           </span>
         )}
         {counts.error === 0 && counts.warning > 0 && (
-          <span style={{ ...styles.collapsedBadge, background: SEVERITY_COLOR.warning, color: '#1c1400' }}>
+          <span style={{ ...styles.collapsedBadge, background: SEVERITY_COLOR.warning, color: 'var(--color-state-warning-on)' }}>
             {counts.warning}
           </span>
         )}
@@ -306,7 +306,7 @@ const styles: Record<string, React.CSSProperties> = {
   panel: {
     display: 'flex',
     flexDirection: 'column',
-    background: '#0a1628',
+    background: 'var(--color-bg-surface-sunken)',
     borderTop: '1px solid var(--color-border-subtle)',
     height: 260,
     flexShrink: 0,
@@ -317,7 +317,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 6,
     padding: '4px 12px',
-    background: '#080f1a',
+    background: 'var(--color-bg-deep)',
     borderTop: '1px solid var(--color-border-subtle)',
     cursor: 'pointer',
     flexShrink: 0,
@@ -335,7 +335,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0 5px',
     fontSize: 10,
     fontWeight: 700,
-    color: '#fff',
+    color: 'var(--color-fg-on-accent)',
   },
   panelHeader: {
     display: 'flex',
@@ -344,7 +344,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '5px 12px',
     borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
-    background: '#080f1a',
+    background: 'var(--color-bg-deep)',
   },
   panelTitle: {
     fontWeight: 700,
@@ -377,7 +377,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '5px 12px',
     borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
-    background: '#0c1624',
+    background: 'var(--color-bg-surface-sunken)',
   },
   summaryCounts: {
     display: 'flex',
@@ -410,9 +410,9 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-border-default)',
   },
   runBtn: {
-    background: '#1d4ed8',
-    border: '1px solid #2563eb',
-    color: '#fff',
+    background: 'var(--color-class-concrete)',
+    border: '1px solid var(--color-accent-active)',
+    color: 'var(--color-fg-on-accent)',
     borderRadius: 4,
     padding: '3px 10px',
     fontSize: 11,
@@ -435,8 +435,8 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   filterBtnActive: {
-    background: '#172033',
-    color: '#93c5fd',
+    background: 'var(--color-bg-surface)',
+    color: 'var(--color-state-info-fg)',
     fontWeight: 700,
   },
   issuesList: {

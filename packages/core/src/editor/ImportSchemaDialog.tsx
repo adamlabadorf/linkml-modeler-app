@@ -309,7 +309,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'var(--color-state-error-bg)',
     border: '1px solid var(--color-state-error-border)',
     borderRadius: 5,
-    color: '#fca5a5',
+    color: 'var(--color-state-error-fg)',
     fontSize: 12,
   },
   footer: {

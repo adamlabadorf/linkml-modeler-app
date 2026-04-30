@@ -20,7 +20,7 @@ export function SlotConditionEditor({
   return (
     <div style={{ borderLeft: '2px solid #1e3a5f', marginLeft: 8, paddingLeft: 8, paddingBottom: 4, marginBottom: 4 }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: 11, color: '#86efac', flex: 1 }}>{slotName}</span>
+        <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: 11, color: 'var(--color-state-success-fg)', flex: 1 }}>{slotName}</span>
         <button style={styles.slotRefRemoveBtn} onClick={onRemove} title="Remove slot condition"><X size={12} /></button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

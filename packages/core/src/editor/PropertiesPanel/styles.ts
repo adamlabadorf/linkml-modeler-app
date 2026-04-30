@@ -54,7 +54,7 @@ export const styles: Record<string, React.CSSProperties> = {
     fontSize: 11,
     color: 'var(--color-accent-hover)',
     fontFamily: 'var(--font-family-mono)',
-    background: '#0d1b2e',
+    background: 'var(--color-bg-surface-sunken)',
     borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
     overflow: 'hidden',
@@ -63,7 +63,7 @@ export const styles: Record<string, React.CSSProperties> = {
   },
   readOnlyNotice: {
     padding: '5px 12px',
-    background: '#0f1a2e',
+    background: 'var(--color-bg-surface-sunken)',
     borderBottom: '1px solid var(--color-border-default)',
     fontSize: 11,
     color: 'var(--color-fg-muted)',
@@ -110,7 +110,7 @@ export const styles: Record<string, React.CSSProperties> = {
     flex: '0 1 auto',
   },
   slotEditorRange: {
-    color: '#86efac',
+    color: 'var(--color-state-success-fg)',
     fontFamily: 'var(--font-family-mono)',
     fontSize: 11,
     flex: 1,
@@ -131,7 +131,7 @@ export const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-fg-secondary)',
   },
   slotEditorBody: {
-    background: '#091120',
+    background: 'var(--color-bg-deep)',
     paddingBottom: 6,
   },
   slotEditorActions: {
@@ -179,7 +179,7 @@ export const styles: Record<string, React.CSSProperties> = {
   btnPrimary: {
     background: 'var(--color-accent-active)',
     border: '1px solid var(--color-border-focus)',
-    color: '#fff',
+    color: 'var(--color-fg-on-accent)',
     borderRadius: 4,
     padding: '4px 10px',
     fontSize: 12,
@@ -188,8 +188,8 @@ export const styles: Record<string, React.CSSProperties> = {
   },
   btnDanger: {
     background: 'var(--color-state-error-border)',
-    border: '1px solid #991b1b',
-    color: '#fca5a5',
+    border: '1px solid var(--color-state-error-bg)',
+    color: 'var(--color-state-error-fg)',
     borderRadius: 4,
     padding: '4px 10px',
     fontSize: 12,
@@ -212,7 +212,7 @@ export const styles: Record<string, React.CSSProperties> = {
   },
   deleteConfirmText: {
     fontSize: 12,
-    color: '#fca5a5',
+    color: 'var(--color-state-error-fg)',
   },
   readOnlyValue: {
     fontFamily: 'var(--font-family-mono)',
@@ -226,9 +226,9 @@ export const styles: Record<string, React.CSSProperties> = {
     display: 'inline-block',
     fontSize: 10,
     fontWeight: 600,
-    color: '#86efac',
-    background: '#064e3b',
-    border: '1px solid #065f46',
+    color: 'var(--color-state-success-fg)',
+    background: 'var(--color-state-success-bg)',
+    border: '1px solid var(--color-state-success-border)',
     borderRadius: 4,
     padding: '1px 6px',
     textTransform: 'uppercase',
@@ -267,7 +267,7 @@ export const styles: Record<string, React.CSSProperties> = {
   slotRefName: {
     fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
-    color: '#7dd3fc',
+    color: 'var(--color-state-info-fg)',
     flex: '0 1 auto',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -276,7 +276,7 @@ export const styles: Record<string, React.CSSProperties> = {
   slotRefRange: {
     fontFamily: 'var(--font-family-mono)',
     fontSize: 11,
-    color: '#86efac',
+    color: 'var(--color-state-success-fg)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',

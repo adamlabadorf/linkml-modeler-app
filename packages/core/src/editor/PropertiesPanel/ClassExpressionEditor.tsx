@@ -29,7 +29,7 @@ export function ClassExpressionEditor({
 
   return (
     <div style={{ paddingBottom: 4 }}>
-      <div style={{ fontSize: 10, color: '#94a3b8', padding: '4px 12px',
+      <div style={{ fontSize: 10, color: 'var(--color-fg-secondary)', padding: '4px 12px',
         textTransform: 'uppercase', letterSpacing: 0.5 }}>
         {label}
       </div>
