@@ -6,6 +6,7 @@ import { usePlatform } from '../platform/PlatformContext.js';
 import { getRecentProjects, removeRecentProject } from '../project/recentProjects.js';
 import { openProjectFromDirectory, createNewProject } from '../project/projectLoader.js';
 import type { RecentProject } from '../model/index.js';
+import { Folder, FolderOpen, GitBranch, Hexagon, Link2, Plus, X } from '../ui/icons/index.js';
 
 export function SplashPage() {
   const platform = usePlatform();
@@ -115,7 +116,7 @@ export function SplashPage() {
       <div style={s.container}>
         {/* Logo + branding */}
         <div style={s.branding}>
-          <div style={s.logoIcon}>⬡</div>
+          <div style={s.logoIcon}><Hexagon size={48} /></div>
           <h1 style={s.title}>LinkML Visual Schema Editor</h1>
           <span style={s.version}>v0.1.3</span>
         </div>
@@ -123,19 +124,19 @@ export function SplashPage() {
         {/* Action buttons */}
         <div style={s.actions}>
           <button style={s.actionBtn} onClick={handleNewProject}>
-            <span style={s.actionIcon}>+</span>
+            <span style={s.actionIcon}><Plus size={20} /></span>
             <span style={s.actionLabel}>New Empty Project</span>
             <span style={s.actionHint}>Start with a blank schema</span>
           </button>
 
           <button style={s.actionBtn} onClick={handleOpenFolder}>
-            <span style={s.actionIcon}>📂</span>
+            <span style={s.actionIcon}><FolderOpen size={20} /></span>
             <span style={s.actionLabel}>Open Local Folder</span>
             <span style={s.actionHint}>Scan directory for LinkML schemas</span>
           </button>
 
           <button style={s.actionBtn} onClick={() => setCloneDialogOpen(true)}>
-            <span style={s.actionIcon}>🔗</span>
+            <span style={s.actionIcon}><Link2 size={20} /></span>
             <span style={s.actionLabel}>Clone from URL</span>
             <span style={s.actionHint}>Clone a git repository</span>
           </button>
@@ -165,14 +166,18 @@ export function SplashPage() {
                     <span style={s.recentPath}>{rp.rootPath}</span>
                   </div>
                   <div style={s.recentMeta}>
-                    <span style={s.recentSource}>{rp.source === 'git' ? '⎇ git' : '📁 local'}</span>
+                    <span style={s.recentSource}>
+                      {rp.source === 'git'
+                        ? <><GitBranch size={10} /> git</>
+                        : <><Folder size={10} /> local</>}
+                    </span>
                     <span style={s.recentDate}>{formatDate(rp.lastOpened)}</span>
                     <button
                       style={s.removeBtn}
                       onClick={(e) => handleRemoveRecent(e, rp.rootPath)}
                       title="Remove from recent"
                     >
-                      ✕
+                      <X size={12} />
                     </button>
                   </div>
                 </div>
@@ -216,9 +221,9 @@ const s: Record<string, React.CSSProperties> = {
     gap: 8,
   },
   logoIcon: {
-    fontSize: 48,
     color: '#60a5fa',
     lineHeight: 1,
+    display: 'flex',
   },
   title: {
     fontSize: 20,
@@ -251,9 +256,10 @@ const s: Record<string, React.CSSProperties> = {
     transition: 'background 0.15s, border-color 0.15s',
   },
   actionIcon: {
-    fontSize: 20,
     width: 28,
-    textAlign: 'center' as const,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0,
   },
   actionLabel: {
@@ -328,6 +334,9 @@ const s: Record<string, React.CSSProperties> = {
   recentSource: {
     fontSize: 10,
     color: '#64748b',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 3,
   },
   recentDate: {
     fontSize: 10,
