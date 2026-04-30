@@ -36,6 +36,7 @@ import {
   usePlatform,
   useAppStore,
   serializeYaml,
+  parseYaml,
   PropertiesPanel,
   SchemaSettingsDialog,
   ProjectPanel,
@@ -48,6 +49,11 @@ import {
   ImportSchemaDialog,
   NewSchemaDialog,
   createNewProject,
+  openProjectFromDirectory,
+  emptyCanvasLayout,
+  type SchemaFile,
+  type Project,
+  type ActiveEntity,
 } from '@linkml-editor/core';
 import { WebPlatform } from './platform/WebPlatform.js';
 import { GitPanel } from './editor/GitPanel.js';
@@ -576,6 +582,86 @@ const styles: Record<string, React.CSSProperties> = {
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 async function bootstrap() {
   const { platform, isCloud } = await createPlatform();
+
+  // ── E2E test helper (DEV only) ──────────────────────────────────────────────
+  if (import.meta.env.DEV) {
+    (window as Record<string, unknown>).__lme_e2e__ = {
+      /** Parse YAML and inject a project directly into the store. */
+      loadSchema(yaml: string, opts?: { filePath?: string; rootPath?: string; dirty?: boolean }) {
+        const { filePath = 'schema.yaml', rootPath = '/e2e-test', dirty = false } = opts ?? {};
+        const schema = parseYaml(yaml);
+        const schemaFile: SchemaFile = {
+          id: crypto.randomUUID(),
+          filePath,
+          schema,
+          isDirty: dirty,
+          canvasLayout: emptyCanvasLayout(),
+        };
+        const project: Project = {
+          id: crypto.randomUUID(),
+          name: schema.name || 'E2E Test',
+          rootPath,
+          schemas: [schemaFile],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        useAppStore.getState().setProject(project);
+      },
+      /** Write content to the OPFS-backed LightningFS at the given path. */
+      async writeFile(path: string, content: string) {
+        await platform.writeFile(path, content);
+      },
+      /** Read file content from LightningFS. */
+      async readFile(path: string): Promise<string> {
+        return platform.readFile(path);
+      },
+      /** Scan an OPFS directory for LinkML schemas and open as project. */
+      async openProjectFromPath(dirPath: string) {
+        const { project, hiddenSchemaIds } = await openProjectFromDirectory(dirPath, platform);
+        if (project.schemas.length > 0) {
+          useAppStore.getState().setProject(project);
+          useAppStore.getState().setHiddenSchemaIds(hiddenSchemaIds);
+        }
+      },
+      /** Set the active project's rootPath so Ctrl+S writes to OPFS directly. */
+      setRootPath(path: string) {
+        useAppStore.setState((state) => ({
+          activeProject: state.activeProject
+            ? { ...state.activeProject, rootPath: path }
+            : null,
+        }));
+      },
+      /** Serialize the currently active schema to YAML. */
+      getActiveYaml(): string {
+        const sf = useAppStore.getState().getActiveSchema();
+        if (!sf) return '';
+        return serializeYaml(sf.schema);
+      },
+      /** Run validation on the currently active schema. */
+      runValidation() {
+        const { getActiveSchema, runValidation: doRun } = useAppStore.getState();
+        const sf = getActiveSchema();
+        if (sf) doRun(sf.schema);
+      },
+      /** Return current validation issues. */
+      getValidationIssues() {
+        return useAppStore.getState().validationIssues;
+      },
+      /** Select an entity in the properties panel. */
+      setActiveEntity(entity: ActiveEntity) {
+        useAppStore.getState().setActiveEntity(entity);
+      },
+      /** Select canvas nodes by ID (class/enum name). */
+      setSelection(nodeIds: string[]) {
+        useAppStore.getState().setSelection(nodeIds, []);
+      },
+      /** Close the active project (returns to splash). */
+      closeProject() {
+        useAppStore.getState().closeProject();
+      },
+    };
+  }
+
   const container = document.getElementById('root')!;
   const root = createRoot(container);
 
