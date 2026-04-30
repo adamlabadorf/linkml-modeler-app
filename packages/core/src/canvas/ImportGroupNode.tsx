@@ -52,7 +52,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid #2d5a3d',
     fontFamily: 'var(--font-family-mono)',
     fontSize: 12,
-    color: '#86efac',
+    color: 'var(--color-state-success-fg)',
     userSelect: 'none',
     cursor: 'pointer',
   },

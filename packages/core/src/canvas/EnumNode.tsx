@@ -76,11 +76,11 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
   },
   ghostWrapper: {
-    background: '#1a1710',
+    background: 'var(--color-bg-deep)',
     opacity: 0.72,
   },
   ghostHeader: {
-    background: '#4a3a1e',
+    background: 'var(--color-state-warning-bg)',
   },
   handle: {
     background: 'var(--color-accent-hover)',
@@ -94,7 +94,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 6,
     padding: '6px 10px',
     background: 'var(--color-enum)',
-    color: '#fff',
+    color: 'var(--color-fg-on-accent)',
     fontWeight: 600,
     fontSize: 13,
     letterSpacing: 0.2,
@@ -123,7 +123,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 4,
   },
   valueText: {
-    color: '#fde68a',
+    color: 'var(--color-state-warning-fg)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',

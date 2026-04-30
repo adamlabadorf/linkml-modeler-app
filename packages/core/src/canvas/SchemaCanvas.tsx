@@ -41,6 +41,11 @@ import { buildManifestData, writeEditorManifest } from '../io/editorManifest.js'
 import type { CanvasLayout } from '../model/index.js';
 import { emptyClassDefinition, emptyEnumDefinition } from '../model/index.js';
 
+// ── CSS token reader (for SVG/canvas contexts that require concrete color values) ──
+function cssToken(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 // ── Node type registry ────────────────────────────────────────────────────────
 const nodeTypes: NodeTypes = {
   classNode: ClassNode,
@@ -200,8 +205,8 @@ const dlgStyles: Record<string, React.CSSProperties> = {
   },
   confirm: {
     background: 'var(--color-state-error-border)',
-    border: '1px solid #991b1b',
-    color: '#fca5a5',
+    border: '1px solid var(--color-state-error-bg)',
+    color: 'var(--color-state-error-fg)',
     borderRadius: 4,
     padding: '6px 14px',
     cursor: 'pointer',
@@ -707,11 +712,11 @@ function SchemaCanvasInner() {
         <Controls />
         <MiniMap
           nodeColor={(n) => {
-            if ((n.data as { entityType: string }).entityType === 'enum') return '#b45309';
+            if ((n.data as { entityType: string }).entityType === 'enum') return cssToken('--color-enum');
             const d = n.data as { classDef?: { abstract?: boolean; mixin?: boolean } };
-            if (d.classDef?.mixin) return '#7c3aed';
-            if (d.classDef?.abstract) return '#0369a1';
-            return '#1d4ed8';
+            if (d.classDef?.mixin) return cssToken('--color-class-mixin');
+            if (d.classDef?.abstract) return cssToken('--color-class-abstract');
+            return cssToken('--color-class-concrete');
           }}
           maskColor="rgba(0,0,0,0.6)"
           style={{ background: 'var(--color-bg-canvas)' }}
@@ -859,7 +864,7 @@ const styles: Record<string, React.CSSProperties> = {
     top: 12,
     left: '50%',
     transform: 'translateX(-50%)',
-    background: '#1a1a2e',
+    background: 'var(--color-bg-surface-sunken)',
     border: '1px solid var(--color-border-strong)',
     borderRadius: 6,
     padding: '5px 14px',
@@ -881,7 +886,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '6px 14px',
     fontSize: 12,
     fontFamily: 'var(--font-family-mono)',
-    color: '#93c5fd',
+    color: 'var(--color-state-info-fg)',
     display: 'flex',
     alignItems: 'center',
     gap: 10,

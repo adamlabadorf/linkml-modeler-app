@@ -32,11 +32,11 @@ function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
   const kindBadgeStyle: React.CSSProperties = {
     ...styles.badge,
     background: inherited
-      ? '#1a2435'
+      ? 'var(--color-bg-surface)'
       : kind === 'schema' ? 'var(--color-state-info-bg)' : 'var(--color-bg-surface)',
     color: inherited
-      ? '#4a6080'
-      : kind === 'schema' ? '#7dd3fc' : 'var(--color-fg-secondary)',
+      ? 'var(--color-fg-muted)'
+      : kind === 'schema' ? 'var(--color-state-info-fg)' : 'var(--color-fg-secondary)',
   };
 
   const rowStyle = inherited
@@ -55,7 +55,7 @@ function SlotRow({ resolved }: { resolved: ResolvedSlot }) {
       )}
       <span style={styles.badgeGroup}>
         {inherited && (
-          <span style={{ ...styles.badge, background: '#1a2435', color: '#4a6080' }} title={inheritedFrom ? `from ${inheritedFrom}` : 'inherited'}><ArrowUp size={10} /></span>
+          <span style={{ ...styles.badge, background: 'var(--color-bg-surface)', color: 'var(--color-fg-muted)' }} title={inheritedFrom ? `from ${inheritedFrom}` : 'inherited'}><ArrowUp size={10} /></span>
         )}
         <span style={kindBadgeStyle}>{kind === 'schema' ? 'S' : 'A'}</span>
         {hasUsageOverride && <span style={{ ...styles.badge, color: 'var(--color-state-warning)' }}>~</span>}
@@ -159,7 +159,7 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
   },
   ghostWrapper: {
-    background: '#111c14',
+    background: 'var(--color-class-ghost)',
     opacity: 0.72,
   },
   handle: {
@@ -173,7 +173,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 6,
     padding: '6px 10px',
-    color: '#fff',
+    color: 'var(--color-fg-on-accent)',
     fontWeight: 600,
     fontSize: 13,
     letterSpacing: 0.2,
@@ -207,7 +207,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-fg-muted)',
   },
   isaValue: {
-    color: '#93c5fd',
+    color: 'var(--color-state-info-fg)',
   },
   body: {
     padding: '4px 0',
@@ -246,14 +246,14 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   slotRange: {
-    color: '#86efac',
+    color: 'var(--color-state-success-fg)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
   slotRangeInherited: {
-    color: '#3d6b4a',
+    color: 'var(--color-fg-muted)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',

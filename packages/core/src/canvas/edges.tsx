@@ -152,7 +152,7 @@ export const RangeEdge = memo(function RangeEdge(props: EdgeProps) {
                     border: b === 'R' ? '1px solid #991b1b' : '1px solid var(--color-border-strong)',
                     borderRadius: 3,
                     padding: '0 3px',
-                    color: b === 'R' ? '#fca5a5' : 'var(--color-fg-secondary)',
+                    color: b === 'R' ? 'var(--color-state-error-fg)' : 'var(--color-fg-secondary)',
                     fontFamily: 'var(--font-family-mono)',
                     fontWeight: 600,
                   }}
@@ -189,7 +189,7 @@ export const RangeEdge = memo(function RangeEdge(props: EdgeProps) {
               </div>
               <div style={{ marginBottom: 2 }}>
                 <span style={{ color: 'var(--color-fg-secondary)' }}>range: </span>
-                <span style={{ color: '#86efac' }}>{data.range}</span>
+                <span style={{ color: 'var(--color-state-success-fg)' }}>{data.range}</span>
               </div>
               {badges.length > 0 && (
                 <div>
@@ -230,7 +230,7 @@ export const MixinEdge = memo(function MixinEdge(props: EdgeProps) {
       <BaseEdge
         path={path}
         markerEnd={props.markerEnd ?? 'url(#arrow-hollow)'}
-        style={{ stroke: '#c084fc', strokeWidth: 1.5, strokeDasharray: '6 3' }}
+        style={{ stroke: 'var(--color-edge-mixin)', strokeWidth: 1.5, strokeDasharray: '6 3' }}
       />
       <EdgeLabel x={labelX} y={labelY} label={props.label as string | undefined} />
     </>
@@ -245,7 +245,7 @@ export const UnionOfEdge = memo(function UnionOfEdge(props: EdgeProps) {
     <>
       <BaseEdge
         path={path}
-        style={{ stroke: '#fb923c', strokeWidth: 1.5, strokeDasharray: '2 4' }}
+        style={{ stroke: 'var(--color-edge-union)', strokeWidth: 1.5, strokeDasharray: '2 4' }}
       />
       <EdgeLabel x={labelX} y={labelY} label={props.label as string | undefined} />
     </>
