@@ -1,12 +1,18 @@
 export {
   AlertTriangle,
   ArrowUp,
+  BookOpen,
   Diamond,
+  FilePlus,
   Folder,
   FolderOpen,
+  Github,
   GitBranch,
   Hexagon,
   Link2,
+  Monitor,
+  Moon,
   Plus,
+  Sun,
   X,
 } from 'lucide-react';

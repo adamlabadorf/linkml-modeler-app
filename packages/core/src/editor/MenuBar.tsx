@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppStore, useTemporalStore } from '../store/index.js';
 import { startTour, type TourId } from '../tours/index.js';
 import { version } from '../../package.json';
+import { useTheme } from '../ui/useTheme.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MenuItem {
@@ -194,6 +195,8 @@ export function MenuBar({
   const setYamlPreviewOpen = useAppStore((s) => s.setYamlPreviewOpen);
   const setSchemaSettingsOpen = useAppStore((s) => s.setSchemaSettingsOpen);
 
+  const { theme, setTheme } = useTheme();
+
   const [aboutOpen, setAboutOpen] = React.useState(false);
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
 
@@ -242,6 +245,10 @@ export function MenuBar({
     { label: 'Validation Panel', checked: validationPanelOpen, action: () => setValidationPanelOpen(!validationPanelOpen) },
     { label: 'Git Panel', checked: gitPanelOpen, action: () => setGitPanelOpen(!gitPanelOpen) },
     { label: 'YAML Preview', checked: yamlPreviewOpen, action: () => setYamlPreviewOpen(!yamlPreviewOpen) },
+    { separator: true },
+    { label: 'Theme: Dark', checked: theme === 'dark', action: () => setTheme('dark') },
+    { label: 'Theme: Light', checked: theme === 'light', action: () => setTheme('light') },
+    { label: 'Theme: System', checked: theme === 'system', action: () => setTheme('system') },
   ];
 
   const gitItems: MenuEntry[] = [

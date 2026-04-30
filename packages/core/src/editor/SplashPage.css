@@ -1,0 +1,293 @@
+/* SplashPage layout and CSS-only interaction states */
+
+.splash-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  width: 100%;
+  background: var(--color-bg-canvas);
+  color: var(--color-fg-primary);
+  padding: var(--space-8) var(--space-7);
+  box-sizing: border-box;
+}
+
+.splash-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  max-width: 1024px;
+  width: 100%;
+}
+
+/* Two-column grid */
+.splash-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  width: 100%;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .splash-columns {
+    grid-template-columns: 1fr;
+    gap: var(--space-7);
+  }
+}
+
+/* ── Left column ─────────────────────────────────────────────────────────── */
+.splash-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.splash-hero-logo {
+  width: 64px;
+  height: 64px;
+}
+
+.splash-hero-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-fg-primary);
+  margin: 0;
+  line-height: var(--line-height-tight);
+}
+
+.splash-hero-tagline {
+  font-size: var(--font-size-md);
+  color: var(--color-fg-secondary);
+  margin: 0;
+  line-height: var(--line-height-normal);
+}
+
+.splash-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.splash-actions .lm-btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.splash-footer-links {
+  display: flex;
+  gap: var(--space-4);
+}
+
+/* ── Right column ────────────────────────────────────────────────────────── */
+.splash-recent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.splash-recent-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-fg-muted);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.splash-recent-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+/* Recent item: outer li holds background/border/hover; inner trigger handles click */
+.splash-recent-item {
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-surface-sunken);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  transition: background 0.15s, border-color 0.15s;
+  overflow: hidden;
+}
+
+.splash-recent-item:hover {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-default);
+}
+
+.splash-recent-trigger {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  padding: var(--space-4) var(--space-5);
+  font-family: var(--font-family-ui);
+  min-width: 0;
+}
+
+.splash-recent-trigger:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: -2px;
+}
+
+.splash-recent-name {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-fg-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.splash-recent-path {
+  font-size: var(--font-size-xs);
+  color: var(--color-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-family-mono);
+  max-width: 100%;
+}
+
+.splash-recent-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-right: var(--space-4);
+  flex-shrink: 0;
+}
+
+.splash-recent-source {
+  font-size: var(--font-size-xs);
+  color: var(--color-fg-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.splash-recent-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-fg-muted);
+}
+
+/* X button hidden by default, shown on parent li hover */
+.splash-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.splash-recent-item:hover .splash-remove-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.splash-remove-btn:hover {
+  color: var(--color-state-error-fg);
+}
+
+.splash-remove-btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Empty state */
+.splash-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.splash-empty-icon {
+  color: var(--color-border-default);
+  display: flex;
+}
+
+.splash-empty-text {
+  font-size: var(--font-size-base);
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+
+/* ── Page footer ─────────────────────────────────────────────────────────── */
+.splash-page-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-sm);
+}
+
+.splash-theme-toggle {
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.splash-theme-toggle:hover {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-default);
+  color: var(--color-fg-primary);
+}
+
+.splash-theme-toggle:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Loading state */
+.splash-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: var(--color-bg-canvas);
+}
+
+.splash-loading-text {
+  font-size: var(--font-size-md);
+  color: var(--color-fg-secondary);
+}

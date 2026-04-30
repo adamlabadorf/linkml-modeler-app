@@ -1,12 +1,34 @@
 // Splash / Welcome page — shown when no project is loaded.
 
 import React from 'react';
+import './SplashPage.css';
 import { useAppStore } from '../store/index.js';
 import { usePlatform } from '../platform/PlatformContext.js';
 import { getRecentProjects, removeRecentProject } from '../project/recentProjects.js';
 import { openProjectFromDirectory, createNewProject } from '../project/projectLoader.js';
 import type { RecentProject } from '../model/index.js';
-import { Folder, FolderOpen, GitBranch, Hexagon, Link2, Plus, X } from '../ui/icons/index.js';
+import { BookOpen, FilePlus, Folder, FolderOpen, Github, GitBranch, Link2, Monitor, Moon, Sun, X } from '../ui/icons/index.js';
+import { Button } from '../ui/Button.js';
+import { useTheme, type Theme } from '../ui/useTheme.js';
+import { version } from '../../package.json';
+
+const THEME_ICON: Record<Theme, React.ReactNode> = {
+  dark: <Moon size={14} />,
+  light: <Sun size={14} />,
+  system: <Monitor size={14} />,
+};
+
+const NEXT_THEME: Record<Theme, Theme> = {
+  dark: 'light',
+  light: 'system',
+  system: 'dark',
+};
+
+const THEME_LABEL: Record<Theme, string> = {
+  dark: 'Dark',
+  light: 'Light',
+  system: 'System',
+};
 
 export function SplashPage() {
   const platform = usePlatform();
@@ -15,6 +37,7 @@ export function SplashPage() {
   const pushToast = useAppStore((s) => s.pushToast);
   const setCloneDialogOpen = useAppStore((s) => s.setCloneDialogOpen);
   const setHiddenSchemaIds = useAppStore((s) => s.setHiddenSchemaIds);
+  const { theme, setTheme } = useTheme();
 
   const [recentProjects, setRecentProjects] = React.useState<RecentProject[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -62,7 +85,6 @@ export function SplashPage() {
         setIsLoading(false);
         return;
       }
-      // Preserve the project name from the recent entry
       project.name = recent.name;
       setProject(project);
       setHiddenSchemaIds(hiddenSchemaIds);
@@ -103,276 +125,109 @@ export function SplashPage() {
 
   if (isLoading) {
     return (
-      <div style={s.root}>
-        <div style={s.loadingContainer}>
-          <span style={s.loadingText}>Opening project...</span>
-        </div>
+      <div className="splash-loading">
+        <span className="splash-loading-text">Opening project...</span>
       </div>
     );
   }
 
   return (
-    <div style={s.root}>
-      <div style={s.container}>
-        {/* Logo + branding */}
-        <div style={s.branding}>
-          <div style={s.logoIcon}><Hexagon size={48} /></div>
-          <h1 style={s.title}>LinkML Visual Schema Editor</h1>
-          <span style={s.version}>v0.1.3</span>
-        </div>
+    <div className="splash-root">
+      <div className="splash-container">
+        <div className="splash-columns">
+          {/* Left column — hero */}
+          <div className="splash-hero">
+            <img src="/logo.svg" alt="LinkML Modeler" className="splash-hero-logo" width="64" height="64" />
+            <h1 className="splash-hero-title">LinkML Visual Schema Editor</h1>
+            <p className="splash-hero-tagline">Author and visualize LinkML schemas without hand-editing YAML.</p>
 
-        {/* Action buttons */}
-        <div style={s.actions}>
-          <button style={s.actionBtn} onClick={handleNewProject}>
-            <span style={s.actionIcon}><Plus size={20} /></span>
-            <span style={s.actionLabel}>New Empty Project</span>
-            <span style={s.actionHint}>Start with a blank schema</span>
-          </button>
+            <div className="splash-actions">
+              <Button variant="primary" size="lg" icon={<FilePlus size={18} />} onClick={handleNewProject}>
+                New Empty Project
+              </Button>
+              <Button variant="primary" size="lg" icon={<FolderOpen size={18} />} onClick={handleOpenFolder}>
+                Open Local Folder
+              </Button>
+              <Button variant="primary" size="lg" icon={<Link2 size={18} />} onClick={() => setCloneDialogOpen(true)}>
+                Clone from URL
+              </Button>
+            </div>
 
-          <button style={s.actionBtn} onClick={handleOpenFolder}>
-            <span style={s.actionIcon}><FolderOpen size={20} /></span>
-            <span style={s.actionLabel}>Open Local Folder</span>
-            <span style={s.actionHint}>Scan directory for LinkML schemas</span>
-          </button>
-
-          <button style={s.actionBtn} onClick={() => setCloneDialogOpen(true)}>
-            <span style={s.actionIcon}><Link2 size={20} /></span>
-            <span style={s.actionLabel}>Clone from URL</span>
-            <span style={s.actionHint}>Clone a git repository</span>
-          </button>
-        </div>
-
-        {/* Recent projects */}
-        {recentProjects.length > 0 && (
-          <div style={s.recentSection}>
-            <h2 style={s.recentTitle}>Recent Projects</h2>
-            <div style={s.recentList}>
-              {recentProjects.map((rp) => (
-                <div
-                  key={rp.rootPath}
-                  style={s.recentItem}
-                  onClick={() => handleOpenRecent(rp)}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.background = 'var(--color-bg-surface)';
-                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-border-default)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.background = 'var(--color-bg-surface-sunken)';
-                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-border-subtle)';
-                  }}
-                >
-                  <div style={s.recentInfo}>
-                    <span style={s.recentName}>{rp.name}</span>
-                    <span style={s.recentPath}>{rp.rootPath}</span>
-                  </div>
-                  <div style={s.recentMeta}>
-                    <span style={s.recentSource}>
-                      {rp.source === 'git'
-                        ? <><GitBranch size={10} /> git</>
-                        : <><Folder size={10} /> local</>}
-                    </span>
-                    <span style={s.recentDate}>{formatDate(rp.lastOpened)}</span>
-                    <button
-                      style={s.removeBtn}
-                      onClick={(e) => handleRemoveRecent(e, rp.rootPath)}
-                      title="Remove from recent"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div className="splash-footer-links">
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<BookOpen size={14} />}
+                onClick={() => window.open('https://linkml.io/linkml/', '_blank')}
+              >
+                Documentation
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<Github size={14} />}
+                onClick={() => window.open('https://github.com/linkml/linkml', '_blank')}
+              >
+                GitHub
+              </Button>
             </div>
           </div>
-        )}
 
-        {/* Footer hint */}
-        <div style={s.hint}>
-          Tip: Open a directory with <code style={s.code}>.yaml</code> files containing LinkML schemas
+          {/* Right column — recent projects */}
+          <div className="splash-recent">
+            <h2 className="splash-recent-title">Recent Projects</h2>
+            {recentProjects.length > 0 ? (
+              <ul className="splash-recent-list">
+                {recentProjects.map((rp) => (
+                  <li key={rp.rootPath} className="splash-recent-item">
+                    <button
+                      className="splash-recent-trigger"
+                      onClick={() => handleOpenRecent(rp)}
+                    >
+                      <span className="splash-recent-name">{rp.name}</span>
+                      <span className="splash-recent-path" title={rp.rootPath}>{rp.rootPath}</span>
+                    </button>
+                    <div className="splash-recent-meta">
+                      <span className="splash-recent-source">
+                        {rp.source === 'git'
+                          ? <><GitBranch size={10} /> git</>
+                          : <><Folder size={10} /> local</>}
+                      </span>
+                      <span className="splash-recent-date">{formatDate(rp.lastOpened)}</span>
+                      <button
+                        className="splash-remove-btn"
+                        onClick={(e) => handleRemoveRecent(e, rp.rootPath)}
+                        title="Remove from recent"
+                        aria-label={`Remove ${rp.name} from recent projects`}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="splash-empty-state">
+                <span className="splash-empty-icon"><FolderOpen size={32} /></span>
+                <p className="splash-empty-text">Open a folder or create a new project to get started.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Page footer: version + theme toggle */}
+        <div className="splash-page-footer">
+          <span>v{version}</span>
+          <button
+            className="splash-theme-toggle"
+            onClick={() => setTheme(NEXT_THEME[theme])}
+            title={`Theme: ${THEME_LABEL[theme]} (click to cycle)`}
+            aria-label={`Current theme: ${THEME_LABEL[theme]}. Click to cycle.`}
+          >
+            {THEME_ICON[theme]}
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
-const s: Record<string, React.CSSProperties> = {
-  root: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    width: '100%',
-    background: 'var(--color-bg-canvas)',
-    color: 'var(--color-fg-primary)',
-  },
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 32,
-    maxWidth: 560,
-    width: '100%',
-    padding: '40px 24px',
-  },
-  branding: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logoIcon: {
-    color: 'var(--color-accent-hover)',
-    lineHeight: 1,
-    display: 'flex',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 700,
-    color: 'var(--color-fg-primary)',
-    margin: 0,
-    textAlign: 'center',
-  },
-  version: {
-    fontSize: 11,
-    color: 'var(--color-border-strong)',
-  },
-  actions: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 10,
-    width: '100%',
-  },
-  actionBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    padding: '14px 18px',
-    background: 'var(--color-bg-surface-sunken)',
-    border: '1px solid var(--color-border-subtle)',
-    borderRadius: 8,
-    cursor: 'pointer',
-    color: 'var(--color-fg-primary)',
-    textAlign: 'left' as const,
-    transition: 'background 0.15s, border-color 0.15s',
-  },
-  actionIcon: {
-    width: 28,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  actionLabel: {
-    fontSize: 14,
-    fontWeight: 600,
-    flex: 1,
-  },
-  actionHint: {
-    fontSize: 11,
-    color: 'var(--color-fg-muted)',
-    flexShrink: 0,
-  },
-  recentSection: {
-    width: '100%',
-  },
-  recentTitle: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: 'var(--color-fg-muted)',
-    margin: '0 0 10px 0',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 1,
-  },
-  recentList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    maxHeight: 260,
-    overflowY: 'auto',
-  },
-  recentItem: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '10px 14px',
-    background: 'var(--color-bg-surface-sunken)',
-    border: '1px solid var(--color-border-subtle)',
-    borderRadius: 6,
-    cursor: 'pointer',
-    transition: 'background 0.15s, border-color 0.15s',
-  },
-  recentInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 2,
-    minWidth: 0,
-    flex: 1,
-  },
-  recentName: {
-    fontSize: 13,
-    fontWeight: 600,
-    color: 'var(--color-fg-primary)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  recentPath: {
-    fontSize: 10,
-    color: 'var(--color-border-strong)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    fontFamily: 'var(--font-family-mono)',
-  },
-  recentMeta: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    flexShrink: 0,
-    marginLeft: 12,
-  },
-  recentSource: {
-    fontSize: 10,
-    color: 'var(--color-fg-muted)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 3,
-  },
-  recentDate: {
-    fontSize: 10,
-    color: 'var(--color-border-strong)',
-  },
-  removeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--color-border-strong)',
-    cursor: 'pointer',
-    padding: '2px 4px',
-    fontSize: 12,
-    lineHeight: 1,
-    borderRadius: 3,
-  },
-  hint: {
-    fontSize: 11,
-    color: 'var(--color-border-default)',
-    textAlign: 'center',
-  },
-  code: {
-    background: 'var(--color-bg-surface)',
-    padding: '1px 5px',
-    borderRadius: 3,
-    fontSize: 11,
-    color: 'var(--color-fg-secondary)',
-  },
-  loadingContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'column',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: 'var(--color-fg-secondary)',
-  },
-};
