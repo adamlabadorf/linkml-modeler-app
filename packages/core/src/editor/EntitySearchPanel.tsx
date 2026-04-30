@@ -165,20 +165,20 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     flex: 1,
     overflow: 'hidden',
-    background: '#0f172a',
+    background: 'var(--color-bg-canvas)',
   },
   inputWrapper: {
     padding: '6px 8px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
   },
   searchInput: {
     width: '100%',
     boxSizing: 'border-box',
-    background: '#1e293b',
-    border: '1px solid #334155',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border-default)',
     borderRadius: 4,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     fontSize: 11,
     padding: '4px 7px',
     outline: 'none',
@@ -190,7 +190,7 @@ const styles: Record<string, React.CSSProperties> = {
   empty: {
     padding: 12,
     fontSize: 11,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontStyle: 'italic',
   },
   groupHeader: {
@@ -202,7 +202,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   groupLabel: {
     fontSize: 9,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontFamily: 'var(--font-family-mono)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -213,10 +213,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
   importedBadge: {
     fontSize: 8,
-    background: '#1e293b',
+    background: 'var(--color-bg-surface)',
     borderRadius: 3,
     padding: '1px 4px',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     flexShrink: 0,
   },
   row: {
@@ -236,17 +236,17 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   classBadge: {
-    background: '#1e3a5f',
-    color: '#60a5fa',
+    background: 'var(--color-state-info-bg)',
+    color: 'var(--color-state-info)',
   },
   enumBadge: {
-    background: '#451a03',
-    color: '#fbbf24',
+    background: 'var(--color-state-warning-bg)',
+    color: 'var(--color-state-warning)',
   },
   entityName: {
     fontSize: 11,
     fontFamily: 'var(--font-family-mono)',
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -259,7 +259,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   referencedMark: {
     fontSize: 9,
-    color: '#60a5fa',
+    color: 'var(--color-accent-hover)',
     flexShrink: 0,
   },
 };

@@ -14,9 +14,9 @@ import { X } from '../ui/icons/index.js';
 // ── Severity config ───────────────────────────────────────────────────────────
 
 const SEVERITY_COLOR: Record<IssueSeverity, string> = {
-  error: '#f87171',
-  warning: '#fbbf24',
-  info: '#60a5fa',
+  error: 'var(--color-state-error)',
+  warning: 'var(--color-state-warning)',
+  info: 'var(--color-state-info)',
 };
 
 const SEVERITY_BG: Record<IssueSeverity, string> = {
@@ -26,9 +26,9 @@ const SEVERITY_BG: Record<IssueSeverity, string> = {
 };
 
 const SEVERITY_BORDER: Record<IssueSeverity, string> = {
-  error: '#7f1d1d',
-  warning: '#78350f',
-  info: '#1e3a5f',
+  error: 'var(--color-state-error-border)',
+  warning: 'var(--color-state-warning-border)',
+  info: 'var(--color-state-info-bg)',
 };
 
 const SEVERITY_LABEL: Record<IssueSeverity, string> = {
@@ -307,7 +307,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     background: '#0a1628',
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--color-border-subtle)',
     height: 260,
     flexShrink: 0,
     overflow: 'hidden',
@@ -318,14 +318,14 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 6,
     padding: '4px 12px',
     background: '#080f1a',
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--color-border-subtle)',
     cursor: 'pointer',
     flexShrink: 0,
     userSelect: 'none',
   },
   collapsedLabel: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -342,21 +342,21 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '5px 12px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
     background: '#080f1a',
   },
   panelTitle: {
     fontWeight: 700,
     fontSize: 10,
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   closeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     cursor: 'pointer',
     fontSize: 12,
     padding: '0 2px',
@@ -365,9 +365,9 @@ const styles: Record<string, React.CSSProperties> = {
   notice: {
     padding: '4px 12px',
     fontSize: 10,
-    color: '#334155',
+    color: 'var(--color-border-default)',
     fontStyle: 'italic',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
   },
   summaryBar: {
@@ -375,7 +375,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '5px 12px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
     background: '#0c1624',
   },
@@ -392,12 +392,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   allClear: {
     fontSize: 11,
-    color: '#4ade80',
+    color: 'var(--color-state-success)',
     fontWeight: 600,
   },
   notRun: {
     fontSize: 11,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontStyle: 'italic',
   },
   summaryRight: {
@@ -407,7 +407,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   timeAgo: {
     fontSize: 10,
-    color: '#334155',
+    color: 'var(--color-border-default)',
   },
   runBtn: {
     background: '#1d4ed8',
@@ -422,14 +422,14 @@ const styles: Record<string, React.CSSProperties> = {
   filterBar: {
     display: 'flex',
     gap: 0,
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
   },
   filterBtn: {
     background: 'transparent',
     border: 'none',
-    borderRight: '1px solid #1e293b',
-    color: '#64748b',
+    borderRight: '1px solid var(--color-border-subtle)',
+    color: 'var(--color-fg-muted)',
     padding: '4px 10px',
     fontSize: 10,
     cursor: 'pointer',
@@ -464,7 +464,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   issueMessage: {
     fontSize: 11,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     flex: 1,
   },
   issueMeta: {
@@ -476,7 +476,7 @@ const styles: Record<string, React.CSSProperties> = {
   issuePath: {
     fontSize: 10,
     fontFamily: 'var(--font-family-mono)',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -484,8 +484,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   jumpBtn: {
     background: 'transparent',
-    border: '1px solid #334155',
-    color: '#60a5fa',
+    border: '1px solid var(--color-border-default)',
+    color: 'var(--color-accent-hover)',
     borderRadius: 3,
     padding: '1px 6px',
     fontSize: 10,
@@ -495,7 +495,7 @@ const styles: Record<string, React.CSSProperties> = {
   emptyList: {
     padding: '16px 12px',
     fontSize: 12,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontStyle: 'italic',
     textAlign: 'center',
   },

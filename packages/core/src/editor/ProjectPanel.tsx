@@ -227,14 +227,14 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     width: 220,
-    borderRight: '1px solid #1e293b',
+    borderRight: '1px solid var(--color-border-subtle)',
     background: '#080f1a',
     flexShrink: 0,
     overflow: 'hidden',
   },
   header: {
     padding: '8px 10px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
@@ -242,7 +242,7 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontWeight: 700,
     fontSize: 11,
-    color: '#60a5fa',
+    color: 'var(--color-accent-hover)',
     letterSpacing: 0.3,
     textTransform: 'uppercase' as const,
     flex: 1,
@@ -250,7 +250,7 @@ const styles: Record<string, React.CSSProperties> = {
   empty: {
     padding: 12,
     fontSize: 12,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontStyle: 'italic',
   },
   sectionHeader: {
@@ -266,7 +266,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 6,
     padding: '4px 10px',
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--color-border-subtle)',
     borderBottom: '1px solid #0d1627',
     flexShrink: 0,
     cursor: 'pointer',
@@ -274,12 +274,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   chevron: {
     fontSize: 8,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     flexShrink: 0,
   },
   sectionLabel: {
     fontSize: 9,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     fontWeight: 700,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
@@ -287,7 +287,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sectionCount: {
     fontSize: 9,
-    color: '#334155',
+    color: 'var(--color-border-default)',
     background: '#0d1627',
     borderRadius: 8,
     padding: '0 5px',
@@ -302,7 +302,7 @@ const styles: Record<string, React.CSSProperties> = {
     overflowY: 'auto' as const,
     padding: '4px 0',
     maxHeight: 220,
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--color-border-subtle)',
   },
   fileRow: {
     padding: '6px 10px',
@@ -312,7 +312,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fileRowActive: {
     background: '#172033',
-    borderLeft: '2px solid #60a5fa',
+    borderLeft: '2px solid var(--color-accent-hover)',
     paddingLeft: 8,
   },
   fileRowHidden: {
@@ -329,7 +329,7 @@ const styles: Record<string, React.CSSProperties> = {
   visibilityBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#334155',
+    color: 'var(--color-border-default)',
     cursor: 'pointer',
     padding: '0 2px',
     fontSize: 8,
@@ -345,13 +345,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fileIcon: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     flexShrink: 0,
   },
   fileName: {
     fontSize: 12,
     fontFamily: 'var(--font-family-mono)',
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -361,7 +361,7 @@ const styles: Record<string, React.CSSProperties> = {
   importName: {
     fontSize: 12,
     fontFamily: 'var(--font-family-mono)',
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -375,7 +375,7 @@ const styles: Record<string, React.CSSProperties> = {
   importSource: {
     fontSize: 9,
     fontFamily: 'var(--font-family-mono)',
-    color: '#334155',
+    color: 'var(--color-border-default)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap' as const,
@@ -391,7 +391,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#1a2535',
     borderRadius: 3,
     padding: '1px 4px',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     flexShrink: 0,
     letterSpacing: 0.5,
   },
@@ -415,22 +415,22 @@ const styles: Record<string, React.CSSProperties> = {
   },
   stat: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
   },
   footer: {
     padding: '6px 10px',
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--color-border-subtle)',
     flexShrink: 0,
     marginTop: 'auto',
   },
   footerText: {
     fontSize: 10,
-    color: '#334155',
+    color: 'var(--color-border-default)',
   },
   searchToggleBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     cursor: 'pointer',
     fontSize: 11,
     padding: '0 2px',

@@ -153,12 +153,12 @@ export function SplashPage() {
                   style={s.recentItem}
                   onClick={() => handleOpenRecent(rp)}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.background = '#1e293b';
-                    (e.currentTarget as HTMLDivElement).style.borderColor = '#334155';
+                    (e.currentTarget as HTMLDivElement).style.background = 'var(--color-bg-surface)';
+                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-border-default)';
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.background = '#0c1a2e';
-                    (e.currentTarget as HTMLDivElement).style.borderColor = '#1e293b';
+                    (e.currentTarget as HTMLDivElement).style.background = 'var(--color-bg-surface-sunken)';
+                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-border-subtle)';
                   }}
                 >
                   <div style={s.recentInfo}>
@@ -202,8 +202,8 @@ const s: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     height: '100%',
     width: '100%',
-    background: '#0f172a',
-    color: '#e2e8f0',
+    background: 'var(--color-bg-canvas)',
+    color: 'var(--color-fg-primary)',
   },
   container: {
     display: 'flex',
@@ -221,20 +221,20 @@ const s: Record<string, React.CSSProperties> = {
     gap: 8,
   },
   logoIcon: {
-    color: '#60a5fa',
+    color: 'var(--color-accent-hover)',
     lineHeight: 1,
     display: 'flex',
   },
   title: {
     fontSize: 20,
     fontWeight: 700,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     margin: 0,
     textAlign: 'center',
   },
   version: {
     fontSize: 11,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
   },
   actions: {
     display: 'flex',
@@ -247,11 +247,11 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 12,
     padding: '14px 18px',
-    background: '#0c1a2e',
-    border: '1px solid #1e293b',
+    background: 'var(--color-bg-surface-sunken)',
+    border: '1px solid var(--color-border-subtle)',
     borderRadius: 8,
     cursor: 'pointer',
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     textAlign: 'left' as const,
     transition: 'background 0.15s, border-color 0.15s',
   },
@@ -269,7 +269,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   actionHint: {
     fontSize: 11,
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     flexShrink: 0,
   },
   recentSection: {
@@ -278,7 +278,7 @@ const s: Record<string, React.CSSProperties> = {
   recentTitle: {
     fontSize: 12,
     fontWeight: 600,
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     margin: '0 0 10px 0',
     textTransform: 'uppercase' as const,
     letterSpacing: 1,
@@ -295,8 +295,8 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 14px',
-    background: '#0c1a2e',
-    border: '1px solid #1e293b',
+    background: 'var(--color-bg-surface-sunken)',
+    border: '1px solid var(--color-border-subtle)',
     borderRadius: 6,
     cursor: 'pointer',
     transition: 'background 0.15s, border-color 0.15s',
@@ -311,14 +311,14 @@ const s: Record<string, React.CSSProperties> = {
   recentName: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e2e8f0',
+    color: 'var(--color-fg-primary)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
   recentPath: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -333,19 +333,19 @@ const s: Record<string, React.CSSProperties> = {
   },
   recentSource: {
     fontSize: 10,
-    color: '#64748b',
+    color: 'var(--color-fg-muted)',
     display: 'flex',
     alignItems: 'center',
     gap: 3,
   },
   recentDate: {
     fontSize: 10,
-    color: '#475569',
+    color: 'var(--color-border-strong)',
   },
   removeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#475569',
+    color: 'var(--color-border-strong)',
     cursor: 'pointer',
     padding: '2px 4px',
     fontSize: 12,
@@ -354,15 +354,15 @@ const s: Record<string, React.CSSProperties> = {
   },
   hint: {
     fontSize: 11,
-    color: '#334155',
+    color: 'var(--color-border-default)',
     textAlign: 'center',
   },
   code: {
-    background: '#1e293b',
+    background: 'var(--color-bg-surface)',
     padding: '1px 5px',
     borderRadius: 3,
     fontSize: 11,
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
   },
   loadingContainer: {
     display: 'flex',
@@ -373,6 +373,6 @@ const s: Record<string, React.CSSProperties> = {
   },
   loadingText: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: 'var(--color-fg-secondary)',
   },
 };
