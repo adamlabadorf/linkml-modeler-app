@@ -2,14 +2,57 @@
   <img src="logo.svg" width="120" alt="LinkML Visual Schema Editor" />
 </p>
 
-# LinkML Visual Schema Editor
+<h1 align="center">LinkML Visual Schema Editor</h1>
 
-A cross-platform graphical tool for authoring, editing, and visualizing [LinkML](https://linkml.io/) schemas using an ERD-style canvas.
+<p align="center">
+  A cross-platform graphical tool for authoring, editing, and visualizing <a href="https://linkml.io/">LinkML</a> schemas on an ERD-style canvas — without hand-editing YAML.
+</p>
 
-## Overview
+<p align="center">
+  <a href="https://adamlabadorf.github.io/linkml-modeler-app/app/"><img src="https://img.shields.io/badge/Try%20it%20now-live%20demo-blue?style=flat-square" alt="Try it now" /></a>
+  <a href="https://adamlabadorf.github.io/linkml-modeler-app/"><img src="https://img.shields.io/badge/docs-site-green?style=flat-square" alt="Docs" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="MIT License" /></a>
+</p>
 
-- **Web app** — static build, deployable to any web server or GitHub Pages
-- **Electron app** — desktop application using the same shared codebase
+<p align="center">
+  <img src="docs/screenshots/canvas-dark.png" width="800" alt="LinkML Visual Schema Editor — canvas view" />
+</p>
+
+---
+
+## Features
+
+- **Visual ERD canvas** — drag, connect, and arrange LinkML classes and enums without touching YAML
+- **Properties panel** — edit slot definitions, ranges, and constraints in a structured side panel
+- **Real-time YAML** — live YAML preview with round-trip fidelity; unknown fields are preserved
+- **Schema validation** — instant error and warning reporting against the LinkML meta-model
+- **Focus mode** — zero in on selected nodes and their direct relationships
+- **Git integration** — clone, commit, push, and pull directly from the editor (browser OPFS or Electron fs)
+- **Multi-schema support** — work with schemas that import other schemas; imported entities shown as read-only ghost nodes
+- **Dark & light themes** — system-aware with manual toggle
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/splash-dark.png" alt="Splash page" width="380" /></td>
+    <td><img src="docs/screenshots/properties-dark.png" alt="Properties panel" width="380" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Splash — new / recent project picker</em></td>
+    <td align="center"><em>Properties panel — class & slot editor</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/focus-mode-dark.png" alt="Focus mode" width="380" /></td>
+    <td><img src="docs/screenshots/validation-dark.png" alt="Validation panel" width="380" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Focus mode — isolate selected entities</em></td>
+    <td align="center"><em>Validation panel — errors & warnings</em></td>
+  </tr>
+</table>
+
+---
 
 ## Quick Start
 
@@ -46,10 +89,6 @@ In a second terminal, build the Electron main process and launch it:
 pnpm --filter @linkml-editor/electron build && npx electron packages/electron/dist/main.js
 ```
 
-The Electron window will connect to the Vite dev server at `localhost:5173`, so any code changes you make will be reflected immediately via hot module replacement — just like in the browser. DevTools open automatically in this mode.
-
-This works because the Electron main process uses `app.isPackaged` (not `NODE_ENV`) to detect dev mode. When launched via `npx electron`, `app.isPackaged` is `false`, so it loads from the dev server. No environment variables are needed, which avoids cross-platform shell compatibility issues.
-
 ### Build for production
 
 ```bash
@@ -57,7 +96,21 @@ pnpm build
 ```
 
 - **Web output:** `packages/web/dist/` — serve these static files from any web server.
-- **Electron output:** `packages/electron/dist/main.js` — run with `npx electron packages/electron/dist/main.js` (bundles the web dist automatically).
+- **Electron output:** `packages/electron/dist/main.js` — run with `npx electron packages/electron/dist/main.js`.
+
+---
+
+## Documentation
+
+**[View the full documentation site →](https://adamlabadorf.github.io/linkml-modeler-app/)**
+
+| Document | Description |
+|---|---|
+| [User Guide](https://adamlabadorf.github.io/linkml-modeler-app/user-guide) | How to use the editor |
+| [Developer Guide](https://adamlabadorf.github.io/linkml-modeler-app/development) | Developer setup, architecture, and contribution guide |
+| [Design Spec](https://adamlabadorf.github.io/linkml-modeler-app/design-spec) | Full design specification |
+
+---
 
 ## Repository Structure
 
@@ -66,11 +119,12 @@ packages/
 ├── core/       # Shared React app (renderer) — canvas, editor, store, IO, model, UI
 ├── web/        # Vite web build harness + platform adapter
 ├── electron/   # Electron main process + IPC handlers
-└── docs/       # VitePress documentation site (deployed to GitHub Pages)
+└── docs/       # VitePress documentation site
 docs/
-├── design-spec.md    # High-level design specification (v1.0-draft)
-├── user-guide.md     # End-user guide
-└── development.md    # Developer guide
+├── screenshots/      # App screenshots (source)
+├── design-spec.md
+├── user-guide.md
+└── development.md
 ```
 
 ## Tech Stack
@@ -78,16 +132,6 @@ docs/
 React 18 + TypeScript · ReactFlow · Zustand · js-yaml · Lucide · Vite · isomorphic-git
 
 Styling uses CSS custom properties for theming; no CSS framework is bundled.
-
-## Documentation
-
-**[View the full documentation site](https://adamlabadorf.github.io/linkml-modeler-app/)**
-
-| Document | Description |
-|---|---|
-| [User Guide](https://adamlabadorf.github.io/linkml-modeler-app/user-guide) | How to use the editor |
-| [Developer Guide](https://adamlabadorf.github.io/linkml-modeler-app/development) | Developer setup, architecture, and contribution guide |
-| [Design Spec](https://adamlabadorf.github.io/linkml-modeler-app/design-spec) | Full design specification |
 
 ## Scripts
 
@@ -98,3 +142,9 @@ Styling uses CSS custom properties for theming; no CSS framework is bundled.
 | `pnpm test` | Run all tests |
 | `pnpm lint` | Lint TypeScript/TSX source files |
 | `pnpm format` | Format source files with Prettier |
+
+---
+
+## License
+
+[MIT](LICENSE)
