@@ -10,14 +10,14 @@ hero:
     alt: LinkML Modeler App
   actions:
     - theme: brand
+      text: Try it now
+      link: /app/
+    - theme: alt
       text: Get Started
       link: /user-guide
     - theme: alt
       text: Developer Guide
       link: /development
-    - theme: alt
-      text: Design Spec
-      link: /design-spec
 
 features:
   - icon: 🎨

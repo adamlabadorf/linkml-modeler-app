@@ -1,4 +1,4 @@
-name: Deploy Docs
+name: Deploy Docs + App
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'packages/docs/**'
+      - 'packages/web/**'
+      - 'packages/core/**'
       - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
@@ -53,8 +55,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build VitePress site
+      - name: Build VitePress docs
         run: pnpm --filter @linkml-editor/docs run build
+
+      - name: Build web app
+        env:
+          VITE_BASE_URL: /${{ github.event.repository.name }}/app/
+        run: pnpm --filter @linkml-editor/web build
+
+      - name: Embed web app at /app/ in docs site
+        run: |
+          mkdir -p packages/docs/.vitepress/dist/app
+          cp -r packages/web/dist/. packages/docs/.vitepress/dist/app/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
