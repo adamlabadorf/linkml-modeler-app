@@ -30,6 +30,7 @@ import 'reactflow/dist/style.css';
 import ClassNode from './ClassNode.js';
 import EnumNode from './EnumNode.js';
 import ImportGroupNode from './ImportGroupNode.js';
+import { Diamond, Hexagon, Plus } from '../ui/icons/index.js';
 import { edgeTypes, EdgeMarkerDefs } from './edges.js';
 import { deriveGraph } from './deriveGraph.js';
 import { runAutoLayout } from './autoLayout.js';
@@ -87,10 +88,10 @@ function CanvasContextMenu({
       ) : (
         <>
           <div style={ctxStyles.item} onClick={() => { onAddClass(menu.canvasPos); onClose(); }}>
-            ⬡ Add Class
+            <Hexagon size={13} style={{ marginRight: 6 }} /> Add Class
           </div>
           <div style={ctxStyles.item} onClick={() => { onAddEnum(menu.canvasPos); onClose(); }}>
-            ◈ Add Enum
+            <Diamond size={13} style={{ marginRight: 6 }} /> Add Enum
           </div>
         </>
       )}
@@ -116,6 +117,8 @@ const ctxStyles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     fontFamily: 'monospace',
     userSelect: 'none',
+    display: 'flex',
+    alignItems: 'center',
   },
 };
 
@@ -725,7 +728,7 @@ function SchemaCanvasInner() {
               onClick={() => handleAddClass({ x: 100, y: 100 })}
               title="Add Class"
             >
-              ⬡ + Class
+              <Hexagon size={13} style={{ marginRight: 4 }} /><Plus size={11} style={{ marginRight: 4 }} />Class
             </button>
             <button
               id="lme-canvas-add-enum"
@@ -733,12 +736,12 @@ function SchemaCanvasInner() {
               onClick={() => handleAddEnum({ x: 400, y: 100 })}
               title="Add Enum"
             >
-              ◈ + Enum
+              <Diamond size={13} style={{ marginRight: 4 }} /><Plus size={11} style={{ marginRight: 4 }} />Enum
             </button>
           </>
         )}
         <button id="lme-canvas-layout" style={styles.toolbarBtn} onClick={handleAutoLayout} title="Auto Layout (Ctrl+Shift+L)">
-          ⬡ Layout
+          <Hexagon size={13} style={{ marginRight: 4 }} />Layout
         </button>
       </div>
 
@@ -848,6 +851,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'monospace',
     cursor: 'pointer',
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+    display: 'flex',
+    alignItems: 'center',
   },
   readOnlyBanner: {
     position: 'absolute',
