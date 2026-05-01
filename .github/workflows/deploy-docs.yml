@@ -55,6 +55,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build core package
+        run: pnpm --filter @linkml-editor/core run build
+
       - name: Build VitePress docs
         run: pnpm --filter @linkml-editor/docs run build
 
