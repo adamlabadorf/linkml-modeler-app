@@ -8,80 +8,96 @@
 import { driver, type DriveStep, type Config } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
-// ── Dark theme override for driver.js popovers ────────────────────────────────
+// ── Theme-aware styles for driver.js popovers ─────────────────────────────────
+// Uses CSS custom properties from tokens.css so light/dark theme switching
+// on <html data-theme="..."> automatically drives correct popover colors.
 
 const TOUR_STYLES = `
   .lme-tour-popover {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    color: #e2e8f0;
-    font-family: monospace;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    color: var(--color-fg-primary);
+    font-family: var(--font-family-mono);
     max-width: 320px;
     padding: 18px 20px 14px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    box-shadow: var(--shadow-modal);
   }
   .lme-tour-popover .driver-popover-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #60a5fa;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-accent-default);
     margin-bottom: 8px;
   }
   .lme-tour-popover .driver-popover-description {
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     line-height: 1.65;
-    color: #94a3b8;
+    color: var(--color-fg-secondary);
   }
   .lme-tour-popover .driver-popover-description b {
-    color: #e2e8f0;
-    font-weight: 600;
+    color: var(--color-fg-primary);
+    font-weight: var(--font-weight-semibold);
   }
   .lme-tour-popover .driver-popover-description code,
   .lme-tour-popover .driver-popover-description kbd {
-    background: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 3px;
+    background: var(--color-bg-canvas);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
     padding: 1px 5px;
-    font-size: 11px;
-    font-family: monospace;
-    color: #e2e8f0;
+    font-size: var(--font-size-xs);
+    font-family: var(--font-family-mono);
+    color: var(--color-fg-primary);
   }
-  .lme-tour-popover .driver-popover-navigation-btns {
+  /* Footer layout: [Back] [Progress (centered)] [Next/Done]
+     display:contents on navigation-btns flattens Back/Next into the footer
+     flex container so we can order them around the progress text. */
+  .lme-tour-popover .driver-popover-footer {
     margin-top: 14px;
     display: flex;
     align-items: center;
     gap: 6px;
   }
+  .lme-tour-popover .driver-popover-navigation-btns {
+    display: contents;
+  }
   .lme-tour-popover .driver-popover-prev-btn,
   .lme-tour-popover .driver-popover-next-btn,
   .lme-tour-popover .driver-popover-done-btn {
-    background: #334155;
-    border: 1px solid #475569;
-    border-radius: 5px;
-    color: #e2e8f0;
+    background-image: none;
+    background: var(--color-bg-surface-raised);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    color: var(--color-fg-primary);
     cursor: pointer;
-    font-family: monospace;
-    font-size: 11px;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    order: 1;
     padding: 5px 12px;
+    text-shadow: none;
   }
   .lme-tour-popover .driver-popover-next-btn,
   .lme-tour-popover .driver-popover-done-btn {
-    background: #1d4ed8;
-    border-color: #2563eb;
-    color: #fff;
-    margin-left: auto;
+    background: var(--color-accent-default);
+    border-color: var(--color-accent-active);
+    color: var(--color-fg-on-accent);
   }
-  .lme-tour-popover .driver-popover-prev-btn:hover { background: #475569; }
+  .lme-tour-popover .driver-popover-prev-btn {
+    order: -1;
+  }
+  .lme-tour-popover .driver-popover-prev-btn:hover { background: var(--color-bg-hover); }
   .lme-tour-popover .driver-popover-next-btn:hover,
-  .lme-tour-popover .driver-popover-done-btn:hover { background: #2563eb; }
+  .lme-tour-popover .driver-popover-done-btn:hover { background: var(--color-accent-active); }
   .lme-tour-popover .driver-popover-progress-text {
-    font-size: 10px;
-    color: #475569;
-    font-family: monospace;
-    margin-left: 4px;
+    flex: 1;
+    order: 0;
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--color-fg-muted);
+    font-family: var(--font-family-mono);
   }
   .lme-tour-popover .driver-popover-close-btn {
-    color: #475569;
+    color: var(--color-fg-muted);
     font-size: 16px;
     line-height: 1;
     position: absolute;
@@ -90,9 +106,9 @@ const TOUR_STYLES = `
     background: transparent;
     border: none;
     cursor: pointer;
-    font-family: monospace;
+    font-family: var(--font-family-mono);
   }
-  .lme-tour-popover .driver-popover-close-btn:hover { color: #94a3b8; }
+  .lme-tour-popover .driver-popover-close-btn:hover { color: var(--color-fg-secondary); }
   .driver-overlay { background: rgba(0,0,0,0.65) !important; }
 `;
 
@@ -100,6 +116,7 @@ let stylesInjected = false;
 function injectStyles() {
   if (stylesInjected) return;
   const el = document.createElement('style');
+  el.id = 'lme-tour-styles';
   el.textContent = TOUR_STYLES;
   document.head.appendChild(el);
   stylesInjected = true;
@@ -561,7 +578,7 @@ export function startTour(
 
   const steps = TOURS[id];
 
-  // Inject dark theme CSS once, then drive.
+  // Inject theme-aware CSS once, then drive.
   injectStyles();
 
   // Small delay so React can flush any state updates from the panel opens above.
