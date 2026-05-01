@@ -299,7 +299,17 @@ export function GitPanel({ onSaveBeforeCommit }: { onSaveBeforeCommit?: () => Pr
       if (!activeProject) return;
       setIsInitializing(true);
       try {
-        const ok = await platform.gitCreateRepo(repoPath);
+        let effectivePath = repoPath;
+        if (!effectivePath || effectivePath === '/') {
+          const projectsDir = await platform.getProjectsPath();
+          effectivePath = `${projectsDir}/${activeProject.id}`;
+          useAppStore.setState((state) => ({
+            activeProject: state.activeProject
+              ? { ...state.activeProject, rootPath: effectivePath }
+              : null,
+          }));
+        }
+        const ok = await platform.gitCreateRepo(effectivePath);
         if (ok) {
           setGitAvailable(true);
           updateGitConfig({ enabled: true, defaultBranch: 'main' });
