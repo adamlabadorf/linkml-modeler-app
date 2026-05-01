@@ -377,18 +377,21 @@ describe('WebPlatform credential/settings', () => {
     localStorage.clear();
   });
 
-  it('storeCredential persists to localStorage', async () => {
+  it('storeCredential stores in-memory (not in localStorage)', async () => {
     const { WebPlatform } = await import('../platform/WebPlatform.js');
     const p = new WebPlatform();
     await p.storeCredential('mykey', 'myval');
-    expect(localStorage.getItem('linkml-editor:mykey')).toBe('myval');
+    expect(await p.getCredential('mykey')).toBe('myval');
+    // Must NOT appear in localStorage — security requirement (T2 #9)
+    expect(localStorage.getItem('linkml-editor:mykey')).toBeNull();
   });
 
-  it('getCredential retrieves from localStorage', async () => {
+  it('getCredential reads from in-memory store (ignores localStorage)', async () => {
     const { WebPlatform } = await import('../platform/WebPlatform.js');
     const p = new WebPlatform();
+    // Even if localStorage has the old format, getCredential must not return it
     localStorage.setItem('linkml-editor:foo', 'bar');
-    expect(await p.getCredential('foo')).toBe('bar');
+    expect(await p.getCredential('foo')).toBeNull();
   });
 
   it('getCredential returns null when not set', async () => {
@@ -397,12 +400,12 @@ describe('WebPlatform credential/settings', () => {
     expect(await p.getCredential('nonexistent')).toBeNull();
   });
 
-  it('deleteCredential removes from localStorage', async () => {
+  it('deleteCredential removes from in-memory store', async () => {
     const { WebPlatform } = await import('../platform/WebPlatform.js');
     const p = new WebPlatform();
-    localStorage.setItem('linkml-editor:delme', 'val');
+    await p.storeCredential('delme', 'val');
     await p.deleteCredential('delme');
-    expect(localStorage.getItem('linkml-editor:delme')).toBeNull();
+    expect(await p.getCredential('delme')).toBeNull();
   });
 
   it('getSetting and setSetting round-trip', async () => {

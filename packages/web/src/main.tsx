@@ -74,39 +74,89 @@ const DEMO_URL = 'https://adamlabadorf.github.io/linkml-modeler-app/app/';
 // ── Detect Electron ───────────────────────────────────────────────────────────
 const IS_ELECTRON = typeof window !== 'undefined' && 'electronAPI' in window;
 
-// ── Platform selection ────────────────────────────────────────────────────────
-async function createPlatform(): Promise<{ platform: import('@linkml-editor/core').PlatformAPI; isCloud: boolean }> {
-  let local;
+// ── Platform creation ─────────────────────────────────────────────────────────
+
+async function createBasePlatform(): Promise<{ basePlatform: import('@linkml-editor/core').PlatformAPI; initialToken: string | null }> {
   if (IS_ELECTRON) {
     const { ElectronPlatform } = await import('./platform/ElectronPlatform.js');
-    local = new ElectronPlatform();
-  } else {
-    local = new WebPlatform();
+    const base = new ElectronPlatform();
+    // Electron persists the token via keytar — restore on startup
+    const token = await base.getCredential('github-token');
+    return { basePlatform: base, initialToken: token };
   }
+  // Web: credentials are in-memory only — always start signed out after a page load
+  return { basePlatform: new WebPlatform(), initialToken: null };
+}
 
-  // Check for stored GitHub token — activate CloudPlatform if present
-  const token = await local.getCredential('github-token');
-  if (token) {
-    const { CloudPlatform } = await import('./platform/CloudPlatform.js');
-
-    // In Electron, resolve the configured clone directory
-    let cloneRoot: string | undefined;
-    if (IS_ELECTRON) {
-      const configuredDir = await local.getSetting('github-clone-dir');
-      if (configuredDir) {
-        cloneRoot = configuredDir;
-      } else {
-        // Default: ~/Documents/LinkMLProjects/
-        const electronAPI = (window as unknown as { electronAPI?: { getDocumentsPath?(): Promise<string> } }).electronAPI;
-        const documents = await electronAPI?.getDocumentsPath?.() ?? '';
-        cloneRoot = documents ? `${documents}/LinkMLProjects` : undefined;
-      }
+async function buildCloudPlatform(
+  base: import('@linkml-editor/core').PlatformAPI,
+  token: string,
+): Promise<import('./platform/CloudPlatform.js').CloudPlatform> {
+  const { CloudPlatform } = await import('./platform/CloudPlatform.js');
+  let cloneRoot: string | undefined;
+  if (IS_ELECTRON) {
+    const configuredDir = await base.getSetting('github-clone-dir');
+    if (configuredDir) {
+      cloneRoot = configuredDir;
+    } else {
+      const electronAPI = (window as unknown as { electronAPI?: { getDocumentsPath?(): Promise<string> } }).electronAPI;
+      const documents = await electronAPI?.getDocumentsPath?.() ?? '';
+      cloneRoot = documents ? `${documents}/LinkMLProjects` : undefined;
     }
-
-    return { platform: new CloudPlatform(local, token, { cloneRoot }), isCloud: true };
   }
+  return new CloudPlatform(base, token, { cloneRoot });
+}
 
-  return { platform: local, isCloud: false };
+// ── RootApp — manages active platform and wires up AuthProvider callbacks ──────
+
+function RootApp({
+  basePlatform,
+  initialToken,
+  onPlatformChange,
+}: {
+  basePlatform: import('@linkml-editor/core').PlatformAPI;
+  initialToken: string | null;
+  onPlatformChange?: (p: import('@linkml-editor/core').PlatformAPI) => void;
+}) {
+  const [activePlatform, setActivePlatform] = React.useState<import('@linkml-editor/core').PlatformAPI>(basePlatform);
+
+  const attachCloudListeners = React.useCallback((cloud: import('./platform/CloudPlatform.js').CloudPlatform) => {
+    cloud.onSyncStatus((status) => {
+      const { setSyncStatus, pushToast } = useAppStore.getState();
+      setSyncStatus(status);
+      if (status === 'error') {
+        pushToast({ message: 'Sync failed — another session may have modified this project. Please refresh.', severity: 'error' });
+      }
+    });
+    window.addEventListener('beforeunload', () => void cloud.flushSync());
+  }, []);
+
+  const switchToCloud = React.useCallback(async (token: string) => {
+    const cloud = await buildCloudPlatform(basePlatform, token);
+    attachCloudListeners(cloud);
+    setActivePlatform(cloud);
+    onPlatformChange?.(cloud);
+  }, [basePlatform, attachCloudListeners, onPlatformChange]);
+
+  const switchToBase = React.useCallback(() => {
+    setActivePlatform(basePlatform);
+    onPlatformChange?.(basePlatform);
+    // Reset sync status so the UI doesn't show stale CloudPlatform state
+    useAppStore.getState().setSyncStatus(null);
+  }, [basePlatform, onPlatformChange]);
+
+  // Electron resume: activate CloudPlatform if keytar had a stored token
+  React.useEffect(() => {
+    if (initialToken) void switchToCloud(initialToken);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <PlatformContext.Provider value={activePlatform}>
+      <AuthProvider onSignedIn={switchToCloud} onSignedOut={switchToBase}>
+        <App />
+      </AuthProvider>
+    </PlatformContext.Provider>
+  );
 }
 
 // ── YAML Preview panel ────────────────────────────────────────────────────────
@@ -591,10 +641,18 @@ const styles: Record<string, React.CSSProperties> = {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 async function bootstrap() {
-  const { platform, isCloud } = await createPlatform();
+  const { basePlatform, initialToken } = await createBasePlatform();
+
+  const container = document.getElementById('root')!;
+  const root = createRoot(container);
 
   // ── E2E test helper (DEV only) ──────────────────────────────────────────────
+  // Uses a mutable ref so helpers always call through the current active platform
+  // (e.g. CloudPlatform after sign-in).
   if (import.meta.env.DEV) {
+    const platformRef: { current: import('@linkml-editor/core').PlatformAPI } = { current: basePlatform };
+    const onPlatformChange = (p: import('@linkml-editor/core').PlatformAPI) => { platformRef.current = p; };
+
     (window as unknown as Record<string, unknown>).__lme_e2e__ = {
       /** Parse YAML and inject a project directly into the store. */
       loadSchema(yaml: string, opts?: { filePath?: string; rootPath?: string; dirty?: boolean }) {
@@ -619,15 +677,15 @@ async function bootstrap() {
       },
       /** Write content to the OPFS-backed LightningFS at the given path. */
       async writeFile(path: string, content: string) {
-        await platform.writeFile(path, content);
+        await platformRef.current.writeFile(path, content);
       },
       /** Read file content from LightningFS. */
       async readFile(path: string): Promise<string> {
-        return platform.readFile(path);
+        return platformRef.current.readFile(path);
       },
       /** Scan an OPFS directory for LinkML schemas and open as project. */
       async openProjectFromPath(dirPath: string) {
-        const { project, hiddenSchemaIds } = await openProjectFromDirectory(dirPath, platform);
+        const { project, hiddenSchemaIds } = await openProjectFromDirectory(dirPath, platformRef.current);
         if (project.schemas.length > 0) {
           useAppStore.getState().setProject(project);
           useAppStore.getState().setHiddenSchemaIds(hiddenSchemaIds);
@@ -670,41 +728,21 @@ async function bootstrap() {
         useAppStore.getState().closeProject();
       },
     };
-  }
 
-  const container = document.getElementById('root')!;
-  const root = createRoot(container);
-
-  // Wire up sync status and beforeunload for CloudPlatform
-  if (isCloud) {
-    const { CloudPlatform } = await import('./platform/CloudPlatform.js');
-    if (platform instanceof CloudPlatform) {
-      const cloudPlatform = platform;
-
-      // Propagate sync status into the Zustand store
-      cloudPlatform.onSyncStatus((status) => {
-        const { setSyncStatus, pushToast } = useAppStore.getState();
-        setSyncStatus(status);
-        if (status === 'error') {
-          pushToast({ message: 'Sync failed — another session may have modified this project. Please refresh.', severity: 'error' });
-        }
-      });
-
-      // Final push on page unload
-      window.addEventListener('beforeunload', () => {
-        void cloudPlatform.flushSync();
-      });
-    }
+    root.render(
+      <React.StrictMode>
+        <ErrorBoundary>
+          <RootApp basePlatform={basePlatform} initialToken={initialToken} onPlatformChange={onPlatformChange} />
+        </ErrorBoundary>
+      </React.StrictMode>
+    );
+    return;
   }
 
   root.render(
     <React.StrictMode>
       <ErrorBoundary>
-        <PlatformContext.Provider value={platform}>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </PlatformContext.Provider>
+        <RootApp basePlatform={basePlatform} initialToken={initialToken} />
       </ErrorBoundary>
     </React.StrictMode>
   );

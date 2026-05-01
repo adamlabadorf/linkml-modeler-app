@@ -194,10 +194,11 @@ export class GitHubAuth {
   }
 
   /**
-   * Signs out by deleting the stored token and reloading the page.
+   * Signs out by deleting the stored credential.
+   * Callers are responsible for updating the UI (e.g. swapping back to the
+   * base platform). No page reload is triggered.
    */
   async signOut(): Promise<void> {
     await this.platform.deleteCredential(CREDENTIAL_KEY);
-    window.location.reload();
   }
 }

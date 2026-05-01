@@ -45,14 +45,23 @@ export function useAuth(): AuthContextValue {
 
 const CLIENT_ID = (import.meta as unknown as { env: Record<string, string> }).env?.VITE_GITHUB_CLIENT_ID ?? '';
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export interface AuthProviderProps {
+  children: React.ReactNode;
+  /** Called after successful sign-in with the OAuth token. When provided,
+   *  the caller handles platform swap — no page reload occurs. */
+  onSignedIn?: (token: string) => void | Promise<void>;
+  /** Called after sign-out. When provided, the caller handles platform swap. */
+  onSignedOut?: () => void | Promise<void>;
+}
+
+export function AuthProvider({ children, onSignedIn, onSignedOut }: AuthProviderProps) {
   const platform = usePlatform();
   const [auth] = useState(() => new GitHubAuth(platform, CLIENT_ID));
   const [session, setSession] = useState<GitHubSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [deviceFlow, setDeviceFlow] = useState<DeviceFlowState | null>(null);
 
-  // On mount, check for stored session
+  // On mount, check for stored session (Electron keytar; web: always null at startup)
   useEffect(() => {
     let cancelled = false;
     async function checkSession() {
@@ -85,8 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newSession = await handle.poll();
       setSession(newSession);
       setDeviceFlow(null);
-      // Reload so bootstrap() picks up the stored token and activates CloudPlatform
-      window.location.reload();
+      if (onSignedIn) {
+        // Web path: swap platform in-place without a page reload
+        await onSignedIn(newSession.token);
+      } else {
+        // Electron fallback: reload so bootstrap() picks up the keytar token
+        window.location.reload();
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       // If cancelled, just close silently
@@ -98,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         prev ? { ...prev, status: 'error', error: msg } : null
       );
     }
-  }, [auth]);
+  }, [auth, onSignedIn]);
 
   const cancelSignIn = useCallback(() => {
     deviceFlow?.handle.cancel();
@@ -107,9 +121,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     await auth.signOut();
-    // signOut() reloads — state below is never reached but included for type safety
     setSession(null);
-  }, [auth]);
+    if (onSignedOut) {
+      await onSignedOut();
+    } else {
+      // Electron fallback: reload to clear keytar-backed session state
+      window.location.reload();
+    }
+  }, [auth, onSignedOut]);
 
   return (
     <AuthContext.Provider value={{ session, loading, deviceFlow, startSignIn, cancelSignIn, signOut }}>

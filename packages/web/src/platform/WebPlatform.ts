@@ -4,7 +4,9 @@
  * File I/O: File System Access API (FSAA) with download/upload fallback.
  * Git:      isomorphic-git backed by @isomorphic-git/lightning-fs (OPFS).
  *
- * Credential handling: in-memory only (prompted per-push); no persistent storage.
+ * Credential handling: in-memory only (session lifetime). Credentials are
+ * never written to localStorage or any persistent browser storage. The
+ * token is cleared when the page is closed or refreshed. See SECURITY.md.
  */
 import git from 'isomorphic-git';
 import http from 'isomorphic-git/http/web';
@@ -32,11 +34,14 @@ const pfs = fs.promises;
 // blocked. Route all remote git operations through a CORS proxy.
 // See: https://isomorphic-git.org/docs/en/cors_proxy
 //
-// Set VITE_GIT_CORS_PROXY at build time to your own proxy (recommended for
-// production). Falls back to the public proxy for quick testing only.
-const CORS_PROXY: string =
-  (import.meta.env.VITE_GIT_CORS_PROXY as string | undefined) ??
-  'https://cors.isomorphic-git.org';
+// Set VITE_GIT_CORS_PROXY at build time to a proxy you control.
+// If not set, remote git operations are disabled. See SECURITY.md.
+const CORS_PROXY: string | undefined =
+  import.meta.env.VITE_GIT_CORS_PROXY as string | undefined;
+
+const NO_PROXY_ERROR =
+  'Git remote operations require a CORS proxy. ' +
+  'Configure VITE_GIT_CORS_PROXY in your deployment. See SECURITY.md.';
 
 // ── FSAA availability ─────────────────────────────────────────────────────────
 const FSAA_AVAILABLE =
@@ -60,7 +65,11 @@ export class WebPlatform implements PlatformAPI {
   readonly platform = 'web' as const;
   gitAvailable = false;
 
-  // In-memory credential store (cleared on page unload)
+  // In-memory credential store — never written to disk or browser storage.
+  // Cleared automatically when the page is closed or refreshed.
+  private _credentialStorage: Map<string, string> = new Map();
+
+  // In-memory git auth cache (username/password for push prompts)
   private _credentials: Map<string, { username: string; password: string }> = new Map();
 
   async init(repoPath?: string): Promise<void> {
@@ -337,6 +346,7 @@ export class WebPlatform implements PlatformAPI {
 
   async gitPush(repoPath: string, onAuthRequest?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null> {
     if (!this.gitAvailable) return null;
+    if (!CORS_PROXY) return { ok: false, error: NO_PROXY_ERROR };
     try {
       const onAuth = async (url: string) => {
         const cached = this._credentials.get(url);
@@ -370,6 +380,7 @@ export class WebPlatform implements PlatformAPI {
 
   async gitPull(repoPath: string, onAuthRequest?: (url: string) => Promise<GitCredentials | null>): Promise<GitPushResult | null> {
     if (!this.gitAvailable) return null;
+    if (!CORS_PROXY) return { ok: false, error: NO_PROXY_ERROR };
     try {
       const onAuth = async (url: string) => {
         const cached = this._credentials.get(url);
@@ -436,18 +447,18 @@ export class WebPlatform implements PlatformAPI {
     }
   }
 
-  // ── Credential storage (localStorage) ──────────────────────────────────────
+  // ── Credential storage (in-memory, session lifetime) ───────────────────────
 
   async storeCredential(key: string, value: string): Promise<void> {
-    localStorage.setItem(`linkml-editor:${key}`, value);
+    this._credentialStorage.set(key, value);
   }
 
   async getCredential(key: string): Promise<string | null> {
-    return localStorage.getItem(`linkml-editor:${key}`);
+    return this._credentialStorage.get(key) ?? null;
   }
 
   async deleteCredential(key: string): Promise<void> {
-    localStorage.removeItem(`linkml-editor:${key}`);
+    this._credentialStorage.delete(key);
   }
 
   async getSetting(key: string): Promise<string | null> {
@@ -459,6 +470,7 @@ export class WebPlatform implements PlatformAPI {
   }
 
   async gitClone(url: string, destPath: string, options?: GitCloneOptions): Promise<GitCloneResult> {
+    if (!CORS_PROXY) return { ok: false, destPath, error: NO_PROXY_ERROR };
     try {
       // Ensure destination directory exists
       await (pfs as unknown as { mkdir: (p: string, opts: { recursive: boolean }) => Promise<void> })

@@ -95,16 +95,17 @@ describe('WebPlatform', () => {
     expect(result).toBeNull();
   });
 
-  it('storeCredential and getCredential round-trip via localStorage', async () => {
+  it('storeCredential and getCredential round-trip in-memory (not in localStorage)', async () => {
     const { WebPlatform } = await import('../platform/WebPlatform.js');
     const p = new WebPlatform();
     await p.storeCredential('github-token', 'tok_abc123');
     const val = await p.getCredential('github-token');
     expect(val).toBe('tok_abc123');
-    expect(localStorage.getItem('linkml-editor:github-token')).toBe('tok_abc123');
+    // Must NOT be written to localStorage — security requirement (T2 #9)
+    expect(localStorage.getItem('linkml-editor:github-token')).toBeNull();
   });
 
-  it('deleteCredential removes key from localStorage', async () => {
+  it('deleteCredential removes key from in-memory store', async () => {
     const { WebPlatform } = await import('../platform/WebPlatform.js');
     const p = new WebPlatform();
     await p.storeCredential('github-token', 'tok_abc123');
@@ -120,6 +121,14 @@ describe('WebPlatform', () => {
     expect(val).toBeNull();
   });
 
+  it('credentials are isolated per WebPlatform instance', async () => {
+    const { WebPlatform } = await import('../platform/WebPlatform.js');
+    const p1 = new WebPlatform();
+    const p2 = new WebPlatform();
+    await p1.storeCredential('github-token', 'tok_p1');
+    expect(await p2.getCredential('github-token')).toBeNull();
+  });
+
   it('setSetting and getSetting round-trip via localStorage with settings namespace', async () => {
     const { WebPlatform } = await import('../platform/WebPlatform.js');
     const p = new WebPlatform();
@@ -129,13 +138,22 @@ describe('WebPlatform', () => {
     expect(localStorage.getItem('linkml-editor-settings:cloneDir')).toBe('/home/user/repos');
   });
 
-  it('credential and settings namespaces do not collide', async () => {
+  it('credentials (in-memory) and settings (localStorage) do not interfere', async () => {
     const { WebPlatform } = await import('../platform/WebPlatform.js');
     const p = new WebPlatform();
     await p.storeCredential('key', 'cred-value');
     await p.setSetting('key', 'setting-value');
     expect(await p.getCredential('key')).toBe('cred-value');
     expect(await p.getSetting('key')).toBe('setting-value');
+  });
+
+  it('gitClone returns error when CORS proxy is not configured', async () => {
+    const { WebPlatform } = await import('../platform/WebPlatform.js');
+    const p = new WebPlatform();
+    // VITE_GIT_CORS_PROXY is undefined in test env
+    const result = await p.gitClone('https://github.com/org/repo', '/dest');
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/CORS proxy/i);
   });
 });
 
