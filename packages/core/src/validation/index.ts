@@ -190,6 +190,18 @@ export function validateSchemaFull(
     }
   }
 
+  // ── Schema-level slot range validation ─────────────────────────────────
+  for (const [slotName, slot] of Object.entries(schema.slots)) {
+    if (slot.range && !isValidRange(slot.range)) {
+      issues.push({
+        id: nextId(), severity: 'error', category: 'existence',
+        path: `slots.${slotName}.range`,
+        message: `Slot '${slotName}' range '${slot.range}' does not exist`,
+        jump: { type: 'schema' },
+      });
+    }
+  }
+
   // ── Circularity detection ─────────────────────────────────────────────────
   const cycles = detectInheritanceCycles(schema.classes);
   for (const cycle of cycles) {

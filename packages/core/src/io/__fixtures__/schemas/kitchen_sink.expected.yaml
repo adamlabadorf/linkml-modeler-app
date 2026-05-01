@@ -44,6 +44,11 @@ subsets:
     description: test subset B
     aliases:
       - B
+types:
+  NumberAsStr:
+    description: An integer represented as a string in serialization
+    typeof: integer
+    repr: str
 slots:
   employed at:
     range: Company
@@ -100,6 +105,10 @@ slots:
     range: BirthEvent
   height_in_m:
     range: float
+  temporal relation:
+    description: A temporal relationship between two things
+    is_a: related to
+    range: Thing
 enums:
   FamilialRelationshipType:
     permissible_values:

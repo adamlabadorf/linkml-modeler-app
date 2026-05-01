@@ -150,6 +150,8 @@ export interface ClassRule {
 export interface SlotDefinition {
   name: string;
   description?: string;
+  isA?: string; // Parent slot name (slot-level inheritance)
+  mixins?: string[]; // Mixin slot names
   range?: string; // Type, class name, or enum name
   required?: boolean;
   recommended?: boolean;
@@ -215,6 +217,8 @@ export interface TypeDefinition {
   uri?: string;
   description?: string;
   typeof?: string; // Parent type
+  base?: string; // Python base class, e.g. "str" or "int"
+  repr?: string; // Python repr override
   extras?: Record<string, unknown>;
 }
 

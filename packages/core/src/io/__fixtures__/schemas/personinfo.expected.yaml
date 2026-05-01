@@ -30,9 +30,11 @@ types:
     uri: rdfs:Resource
     description: A string URI or CURIE representation of an external identifier, modeled as a Resource in RDF
     typeof: uriorcurie
+    base: str
   ImageURL:
     uri: xsd:anyURI
     typeof: uri
+    base: str
   SalaryType:
     typeof: decimal
 slots:

@@ -515,6 +515,92 @@ describe('validateEnum', () => {
   });
 });
 
+// ── T1 #7 — Schema-level slot range validation ───────────────────────────────
+
+describe('schema-level slot range validation (T1 #7)', () => {
+  it('range: NonExistentClass on a schema-level slot produces an existence error', () => {
+    const s = baseSchema();
+    s.slots['my_slot'] = { name: 'my_slot', range: 'DoesNotExist' };
+    const issues = validateSchemaFull(s);
+    expect(
+      hasIssue(issues, {
+        category: 'existence',
+        severity: 'error',
+        pathContains: 'slots.my_slot.range',
+      })
+    ).toBe(true);
+  });
+
+  it('range: string on a schema-level slot is valid (built-in)', () => {
+    const s = baseSchema();
+    s.slots['my_slot'] = { name: 'my_slot', range: 'string' };
+    const issues = validateSchemaFull(s);
+    expect(
+      hasIssue(issues, {
+        category: 'existence',
+        severity: 'error',
+        pathContains: 'slots.my_slot.range',
+      })
+    ).toBe(false);
+  });
+
+  it('range resolving to a class in the schema is valid', () => {
+    const s = baseSchema();
+    s.classes['TargetClass'] = emptyClassDefinition('TargetClass');
+    s.slots['ref_slot'] = { name: 'ref_slot', range: 'TargetClass' };
+    const issues = validateSchemaFull(s);
+    expect(
+      hasIssue(issues, {
+        category: 'existence',
+        severity: 'error',
+        pathContains: 'slots.ref_slot.range',
+      })
+    ).toBe(false);
+  });
+
+  it('range resolving to an enum in the schema is valid', () => {
+    const s = baseSchema();
+    s.enums['StatusEnum'] = {
+      ...emptyEnumDefinition('StatusEnum'),
+      permissibleValues: { active: { text: 'active' } },
+    };
+    s.slots['status_slot'] = { name: 'status_slot', range: 'StatusEnum' };
+    const issues = validateSchemaFull(s);
+    expect(
+      hasIssue(issues, {
+        category: 'existence',
+        severity: 'error',
+        pathContains: 'slots.status_slot.range',
+      })
+    ).toBe(false);
+  });
+
+  it('range resolving to an external class via externalNames does not error', () => {
+    const s = baseSchema();
+    s.slots['imported_slot'] = { name: 'imported_slot', range: 'ImportedClass' };
+    const issues = validateSchemaFull(s, {
+      classes: new Set(['ImportedClass']),
+      enums: new Set(),
+    });
+    expect(
+      hasIssue(issues, {
+        category: 'existence',
+        severity: 'error',
+        pathContains: 'slots.imported_slot.range',
+      })
+    ).toBe(false);
+  });
+
+  it('schema-level slot with no range produces no range error', () => {
+    const s = baseSchema();
+    s.slots['untyped_slot'] = { name: 'untyped_slot' };
+    const rangeErrors = validateSchemaFull(s).filter(
+      (i) => i.category === 'existence' && i.path.includes('untyped_slot.range')
+    );
+    expect(rangeErrors).toHaveLength(0);
+  });
+});
+
 // ── §9.2 — Metamodel JSON Schema validation (not yet implemented) ─────────────
 
 describe('§9.2 metamodel validation (TODO)', () => {

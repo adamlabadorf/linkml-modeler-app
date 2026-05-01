@@ -35,6 +35,12 @@ default_range: string
 see_also:
   - https://example.org/
 
+types:
+  NumberAsStr:
+    typeof: integer
+    repr: str
+    description: An integer represented as a string in serialization
+
 subsets:
 
   subset A:
@@ -235,6 +241,10 @@ slots:
     range: float
     unit:
       ucum_code: m
+  temporal relation:
+    is_a: related to
+    range: Thing
+    description: A temporal relationship between two things
 
 
 

@@ -56,22 +56,6 @@ export const arbCURIE: fc.Arbitrary<string> = fc.tuple(
 // ─── LinkML model arbitraries ─────────────────────────────────────────────────
 
 /**
- * PermissibleValue where text matches the containing dict key.
- * Caller passes the key; we generate optional description/meaning.
- */
-function arbPermissibleValueFor(text: string): fc.Arbitrary<PermissibleValue> {
-  return fc.record({
-    description: fc.option(arbShortText, { nil: undefined }),
-    meaning: fc.option(arbCURIE, { nil: undefined }),
-  }).map(body => {
-    const pv: PermissibleValue = { text };
-    if (body.description !== undefined) pv.description = body.description;
-    if (body.meaning !== undefined) pv.meaning = body.meaning;
-    return pv;
-  });
-}
-
-/**
  * EnumDefinition with 1–5 permissible values.
  * Guarantees pv.text === key in permissibleValues (required for round-trip).
  */
@@ -109,6 +93,11 @@ export const arbEnumDefinition: fc.Arbitrary<EnumDefinition> = fc.record({
 export const arbSlotDefinition: fc.Arbitrary<SlotDefinition> = fc.record({
   name: arbName,
   description: fc.option(arbShortText, { nil: undefined }),
+  isA: fc.option(arbName, { nil: undefined }),
+  mixins: fc.option(
+    fc.array(arbName, { minLength: 1, maxLength: 2 }),
+    { nil: undefined },
+  ),
   range: fc.option(arbName, { nil: undefined }),
   required: fc.option(fc.boolean(), { nil: undefined }),
   recommended: fc.option(fc.boolean(), { nil: undefined }),
@@ -127,6 +116,8 @@ export const arbSlotDefinition: fc.Arbitrary<SlotDefinition> = fc.record({
 }).map(raw => {
   const slot: SlotDefinition = { name: raw.name };
   if (raw.description !== undefined) slot.description = raw.description;
+  if (raw.isA !== undefined) slot.isA = raw.isA;
+  if (raw.mixins !== undefined) slot.mixins = raw.mixins;
   if (raw.range !== undefined) slot.range = raw.range;
   if (raw.required !== undefined) slot.required = raw.required;
   if (raw.recommended !== undefined) slot.recommended = raw.recommended;

@@ -121,6 +121,8 @@ function parsePermissibleValue(raw: unknown, text: string): PermissibleValue {
 function parseSlot(raw: Record<string, unknown>, name: string): SlotDefinition {
   const slot: SlotDefinition = { name };
   if (raw['description']) slot.description = raw['description'] as string;
+  if (raw['is_a']) slot.isA = raw['is_a'] as string;
+  if (raw['mixins']) slot.mixins = raw['mixins'] as string[];
   if (raw['range']) slot.range = raw['range'] as string;
   if (raw['required'] !== undefined) slot.required = Boolean(raw['required']);
   if (raw['recommended'] !== undefined) slot.recommended = Boolean(raw['recommended']);
@@ -289,6 +291,8 @@ function parseType(raw: Record<string, unknown> | null | undefined, name: string
     if (raw['uri']) type.uri = raw['uri'] as string;
     if (raw['description']) type.description = raw['description'] as string;
     if (raw['typeof']) type.typeof = raw['typeof'] as string;
+    if (raw['base']) type.base = raw['base'] as string;
+    if (raw['repr']) type.repr = raw['repr'] as string;
     const extras = collectExtras(raw, KNOWN_TYPE_KEYS);
     if (extras) type.extras = extras;
   }
@@ -385,6 +389,8 @@ function isDefined(v: unknown): boolean {
 function serializeSlot(slot: SlotDefinition): Record<string, unknown> | null {
   const out: Record<string, unknown> = {};
   if (isDefined(slot.description)) out['description'] = slot.description;
+  if (isDefined(slot.isA)) out['is_a'] = slot.isA;
+  if (isDefined(slot.mixins)) out['mixins'] = slot.mixins;
   if (isDefined(slot.range)) out['range'] = slot.range;
   if (isDefined(slot.required)) out['required'] = slot.required;
   if (isDefined(slot.recommended)) out['recommended'] = slot.recommended;
@@ -549,6 +555,8 @@ function serializeType(type: TypeDefinition): Record<string, unknown> {
   if (isDefined(type.uri)) out['uri'] = type.uri;
   if (isDefined(type.description)) out['description'] = type.description;
   if (isDefined(type.typeof)) out['typeof'] = type.typeof;
+  if (isDefined(type.base)) out['base'] = type.base;
+  if (isDefined(type.repr)) out['repr'] = type.repr;
   if (type.extras) Object.assign(out, type.extras);
   return out;
 }

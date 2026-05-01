@@ -643,3 +643,98 @@ default_prefix: ex
     expect(schema.prefixes['ex']).toBe('https://example.org/');
   });
 });
+
+// ─── T1 #5 — TypeDefinition.base and repr round-trip ─────────────────────────
+
+describe('TypeDefinition.base and repr (T1 #5)', () => {
+  const SCHEMA_WITH_TYPE_BASE_REPR = `
+id: https://example.org/types-test
+name: types_test
+prefixes:
+  linkml: https://w3id.org/linkml/
+  xsd: http://www.w3.org/2001/XMLSchema#
+default_prefix: types_test
+types:
+  StrRepr:
+    typeof: integer
+    base: int
+    repr: str
+    description: Integer with custom python repr
+  StrOnly:
+    typeof: string
+    base: str
+`;
+
+  it('parses base and repr from TypeDefinition', () => {
+    const schema = parseYaml(SCHEMA_WITH_TYPE_BASE_REPR);
+    expect(schema.types['StrRepr'].base).toBe('int');
+    expect(schema.types['StrRepr'].repr).toBe('str');
+    expect(schema.types['StrOnly'].base).toBe('str');
+    expect(schema.types['StrOnly'].repr).toBeUndefined();
+  });
+
+  it('round-trips base and repr without data loss', () => {
+    const once = parseYaml(SCHEMA_WITH_TYPE_BASE_REPR);
+    const twice = parseYaml(serializeYaml(once));
+    expect(twice.types['StrRepr'].base).toBe('int');
+    expect(twice.types['StrRepr'].repr).toBe('str');
+    expect(twice.types['StrOnly'].base).toBe('str');
+  });
+
+  it('emitted YAML contains base and repr keys', () => {
+    const schema = parseYaml(SCHEMA_WITH_TYPE_BASE_REPR);
+    const yaml = serializeYaml(schema);
+    expect(yaml).toContain('base: int');
+    expect(yaml).toContain('repr: str');
+  });
+});
+
+// ─── T1 #6 — Schema-level slot is_a and mixins round-trip ────────────────────
+
+describe('Schema-level slot is_a and mixins (T1 #6)', () => {
+  const SCHEMA_WITH_SLOT_INHERITANCE = `
+id: https://example.org/slot-inheritance
+name: slot_inheritance
+prefixes:
+  linkml: https://w3id.org/linkml/
+default_prefix: slot_inheritance
+slots:
+  base_slot:
+    range: string
+    description: The base slot
+  child_slot:
+    is_a: base_slot
+    range: string
+    description: Inherits from base_slot
+  mixin_slot:
+    mixin: true
+  combined_slot:
+    is_a: base_slot
+    mixins:
+      - mixin_slot
+    range: string
+`;
+
+  it('parses is_a and mixins from schema-level slots', () => {
+    const schema = parseYaml(SCHEMA_WITH_SLOT_INHERITANCE);
+    expect(schema.slots['child_slot'].isA).toBe('base_slot');
+    expect(schema.slots['combined_slot'].isA).toBe('base_slot');
+    expect(schema.slots['combined_slot'].mixins).toEqual(['mixin_slot']);
+    expect(schema.slots['base_slot'].isA).toBeUndefined();
+  });
+
+  it('round-trips slot is_a and mixins without data loss', () => {
+    const once = parseYaml(SCHEMA_WITH_SLOT_INHERITANCE);
+    const twice = parseYaml(serializeYaml(once));
+    expect(twice.slots['child_slot'].isA).toBe('base_slot');
+    expect(twice.slots['combined_slot'].isA).toBe('base_slot');
+    expect(twice.slots['combined_slot'].mixins).toEqual(['mixin_slot']);
+  });
+
+  it('emitted YAML contains is_a and mixins for schema-level slots', () => {
+    const schema = parseYaml(SCHEMA_WITH_SLOT_INHERITANCE);
+    const yaml = serializeYaml(schema);
+    expect(yaml).toContain('is_a: base_slot');
+    expect(yaml).toContain('mixins:');
+  });
+});
