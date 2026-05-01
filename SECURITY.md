@@ -97,6 +97,51 @@ When no proxy is configured, users see:
 
 ---
 
+---
+
+## Electron IPC Hardening (Desktop Build)
+
+The Electron desktop build is experimental and not part of the v1.0 supported surface, but the following hardening measures have been implemented.
+
+### IPC Path Scoping
+
+All IPC handlers that accept file-system paths from the renderer (`readFile`, `writeFile`, `listDirectory`, and all git operations) validate the path against an **allowed-roots set** before operating. A path is accepted only if it resolves (via `path.resolve`) to a location inside at least one registered root.
+
+Roots are populated from:
+- Paths returned by native OS file/directory picker dialogs (`openFile`, `saveFile`, `openDirectory`)
+- Successful `gitClone` destination directories
+- `app.getPath('documents')` — seeded at startup to allow clone operations to the default projects directory
+
+Path comparison uses `path.relative` rather than `String.startsWith` to correctly reject sibling-prefix paths (e.g., `/foo/bar2` is not considered inside `/foo/bar`).
+
+### URL Allowlist for `shell.openExternal`
+
+URLs passed to `shell.openExternal` — both via the `shell:openExternal` IPC channel and via `window.open` in the renderer — are validated against an allowlist of safe schemes:
+
+- `https:` — standard web
+- `http:` — local/dev server
+- `mailto:` — system mail client
+
+All other schemes (`file:`, `javascript:`, `app:`, `data:`, `ftp:`, custom protocols) are blocked and logged to the console.
+
+### DevTools Lockdown
+
+The Chromium DevTools panel is disabled in packaged builds via `webPreferences.devTools: false`. This prevents users from injecting arbitrary JavaScript into the renderer process through the DevTools console. DevTools remain enabled in development mode (`app.isPackaged === false`).
+
+### `gitCheckout` Per-File Path Validation
+
+The `gitCheckout` IPC handler's filesystem fallback path (used when a file is untracked and must be deleted) resolves the per-file path against the validated repo root before calling `fs.unlink`, preventing a crafted relative path from deleting files outside the repository.
+
+### Residual Risks and Future Work
+
+| Risk | Status |
+|------|--------|
+| Symlink traversal (symlink inside allowed root points outside) | Not mitigated — `fs.realpath` resolution deferred to v1.1 |
+| Per-file paths in `gitStage` / `gitUnstage` passed to isomorphic-git | Trusted to isomorphic-git's own relative-path handling |
+| Credential exposure in memory (`credentialCache`) | In-process only; no IPC exposure |
+
+---
+
 ## Reporting a Vulnerability
 
 **Please do not file public GitHub issues for security vulnerabilities.**
