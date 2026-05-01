@@ -12,9 +12,9 @@ export function getRecentProjects(): RecentProject[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as RecentProject[];
     if (!Array.isArray(parsed)) return [];
-    return parsed.sort(
-      (a, b) => new Date(b.lastOpened).getTime() - new Date(a.lastOpened).getTime()
-    );
+    return parsed
+      .filter((p) => p.rootPath) // exclude entries without a persistent location
+      .sort((a, b) => new Date(b.lastOpened).getTime() - new Date(a.lastOpened).getTime());
   } catch {
     return [];
   }
