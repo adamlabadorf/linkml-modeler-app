@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "test": "echo 'No electron tests yet' && exit 0",
+    "test": "vitest run",
     "package": "pnpm --filter @linkml-editor/web build:electron && pnpm run build && electron-builder --publish never",
     "package:linux": "pnpm --filter @linkml-editor/web build:electron && pnpm run build && electron-builder --linux --publish never",
     "package:mac": "pnpm --filter @linkml-editor/web build:electron && pnpm run build && electron-builder --mac --publish never",
@@ -29,7 +29,8 @@
   "devDependencies": {
     "electron": "^30.0.0",
     "electron-builder": "^25.1.8",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
   },
   "optionalDependencies": {
     "keytar": "^7.9.0"
