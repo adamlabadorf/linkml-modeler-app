@@ -1,0 +1,90 @@
+name: Deployment Smoke Test
+
+on:
+  workflow_run:
+    workflows: ["Deploy Docs + App"]
+    types:
+      - completed
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
+    steps:
+      - name: Configure base URL
+        run: |
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO="${GITHUB_REPOSITORY##*/}"
+          echo "ORIGIN=https://${OWNER}.github.io" >> "$GITHUB_ENV"
+          echo "BASE_URL=https://${OWNER}.github.io/${REPO}" >> "$GITHUB_ENV"
+
+      - name: Check docs and app routes
+        run: |
+          FAILED=0
+
+          check() {
+            local url="$1"
+            local status
+            status=$(curl -fsSL --max-time 30 --retry 3 --retry-delay 10 \
+              -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+            if [ "$status" = "200" ]; then
+              printf 'OK    [%s] %s\n' "$status" "$url"
+            else
+              printf 'FAIL  [%s] %s\n' "$status" "$url"
+              FAILED=1
+            fi
+          }
+
+          check "${BASE_URL}/"
+          check "${BASE_URL}/user-guide"
+          check "${BASE_URL}/development"
+          check "${BASE_URL}/design-spec"
+          check "${BASE_URL}/app/"
+          check "${BASE_URL}/logo.svg"
+          check "${BASE_URL}/favicon.svg"
+
+          [ "$FAILED" -eq 0 ] || exit 1
+
+      - name: Check web app JS and CSS assets
+        run: |
+          APP_URL="${BASE_URL}/app/"
+          INDEX_HTML=$(curl -fsSL --max-time 30 "$APP_URL") || {
+            echo "FAIL: Could not fetch $APP_URL"
+            exit 1
+          }
+
+          FAILED=0
+
+          check_asset() {
+            local kind="$1"
+            local abs_path="$2"
+            if [ -z "$abs_path" ]; then
+              printf 'FAIL  No %s asset found in %s\n' "$kind" "$APP_URL"
+              FAILED=1
+              return
+            fi
+            local url="${ORIGIN}${abs_path}"
+            local status
+            status=$(curl -fsSL --max-time 30 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+            if [ "$status" = "200" ]; then
+              printf 'OK    [%s] %s\n' "$status" "$url"
+            else
+              printf 'FAIL  [%s] %s\n' "$status" "$url"
+              FAILED=1
+            fi
+          }
+
+          # Extract absolute asset paths written by Vite (includes base: /linkml-modeler-app/app/)
+          JS_PATH=$(printf '%s' "$INDEX_HTML" | grep -oP 'src="\K(/[^"]+\.js)' | head -1)
+          CSS_PATH=$(printf '%s' "$INDEX_HTML" | grep -oP 'href="\K(/[^"]+\.css)' | head -1)
+
+          check_asset "JS bundle" "$JS_PATH"
+          check_asset "CSS bundle" "$CSS_PATH"
+
+          [ "$FAILED" -eq 0 ] || exit 1
