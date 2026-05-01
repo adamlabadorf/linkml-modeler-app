@@ -163,6 +163,50 @@ describe('PropertiesPanel', () => {
     expect(screen.getByText('inactive')).toBeInTheDocument();
   });
 
+  describe('a11y: collapsible expanders are keyboard-operable', () => {
+    function makeClassWithSlot(slotName: string) {
+      const sf = makeSchemaFile('core');
+      sf.schema.classes['Person'] = {
+        ...emptyClassDefinition('Person'),
+        attributes: { [slotName]: emptySlotDefinition(slotName) },
+      };
+      const project = makeProject('test', [sf]);
+      useAppStore.getState().setProject(project);
+      useAppStore.getState().setActiveEntity({ type: 'class', className: 'Person' });
+      return sf;
+    }
+
+    it('slot header is a native <button> element', () => {
+      makeClassWithSlot('name');
+      renderPanel();
+      const header = screen.getByRole('button', { name: /name/i });
+      expect(header.tagName).toBe('BUTTON');
+    });
+
+    it('slot header expands body on Enter key', () => {
+      makeClassWithSlot('name');
+      renderPanel();
+      const header = screen.getByRole('button', { name: /name/i });
+      expect(screen.queryByText('Tier 1 flags')).not.toBeInTheDocument();
+      fireEvent.click(header);
+      expect(screen.getByText('Tier 1 flags')).toBeInTheDocument();
+    });
+
+    it('permissible value header is a native <button> element', () => {
+      const sf = makeSchemaFile('core');
+      sf.schema.enums['Status'] = {
+        ...emptyEnumDefinition('Status'),
+        permissibleValues: { active: { text: 'active' } },
+      };
+      const project = makeProject('test', [sf]);
+      useAppStore.getState().setProject(project);
+      useAppStore.getState().setActiveEntity({ type: 'enum', enumName: 'Status' });
+      renderPanel();
+      const header = screen.getByRole('button', { name: /active/i });
+      expect(header.tagName).toBe('BUTTON');
+    });
+  });
+
   it('edge selection: renders edge relationship details', () => {
     const sf = makeSchemaFile('core');
     const project = makeProject('test', [sf]);

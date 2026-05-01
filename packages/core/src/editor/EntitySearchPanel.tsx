@@ -130,7 +130,8 @@ export function EntitySearchPanel() {
                   const inActive = activeSchemaEntityNames.has(row.name) && row.schemaId === activeSchemaId;
                   const isReferenced = activeSchemaReferencedNames.has(row.name) && row.schemaId !== activeSchemaId;
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={`${row.schemaId}:${row.type}:${row.name}`}
                       style={styles.row}
                       onClick={() => handleRowClick(row)}
@@ -147,7 +148,7 @@ export function EntitySearchPanel() {
                       <span style={styles.entityName}>{row.name}</span>
                       {inActive && <span style={styles.activeMark} title="In active schema">✓</span>}
                       {isReferenced && <span style={styles.referencedMark} title="Referenced by active schema">→</span>}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -225,8 +226,17 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 6,
     padding: '3px 8px',
     cursor: 'pointer',
+    borderTop: 'none',
+    borderLeft: 'none',
+    borderRight: 'none',
     borderBottom: '1px solid transparent',
     userSelect: 'none',
+    background: 'none',
+    width: '100%',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    color: 'inherit',
+    textAlign: 'left' as const,
   },
   typeBadge: {
     fontSize: 8,

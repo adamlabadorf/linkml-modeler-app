@@ -157,7 +157,8 @@ export function ProjectPanel() {
           {/* ── Imported schemas ──────────────────────────────────────────── */}
           {importedSchemas.length > 0 && (
             <>
-              <div
+              <button
+                type="button"
                 style={styles.importsSectionHeader}
                 onClick={() => setImportsCollapsed((c) => !c)}
                 title={importsCollapsed ? 'Expand imports' : 'Collapse imports'}
@@ -165,7 +166,7 @@ export function ProjectPanel() {
                 <span style={styles.chevron}>{importsCollapsed ? '▶' : '▼'}</span>
                 <span style={styles.sectionLabel}>Imports</span>
                 <span style={styles.sectionCount}>{importedSchemas.length}</span>
-              </div>
+              </button>
 
               {!importsCollapsed && (
                 <div style={styles.importsList}>
@@ -269,9 +270,17 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '4px 10px',
     borderTop: '1px solid var(--color-border-subtle)',
     borderBottom: '1px solid var(--color-bg-surface-sunken)',
+    borderLeft: 'none',
+    borderRight: 'none',
     flexShrink: 0,
     cursor: 'pointer',
     userSelect: 'none' as const,
+    background: 'none',
+    width: '100%',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    color: 'inherit',
+    textAlign: 'left' as const,
   },
   chevron: {
     fontSize: 8,
