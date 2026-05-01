@@ -27,11 +27,11 @@ import {
 import {
   emptyCanvasLayout,
   emptySchema,
-  emptyClassDefinition,
   type Project,
   type SchemaFile,
   type CanvasLayout,
 } from '../../model/index.js';
+import type { PlatformAPI } from '../../platform/PlatformContext.js';
 
 // ── Factories ─────────────────────────────────────────────────────────────────
 
@@ -312,7 +312,7 @@ describe('readEditorManifest', () => {
       readFile: vi.fn().mockResolvedValue(jsyaml.dump(manifestData)),
       writeFile: vi.fn(),
     };
-    const result = await readEditorManifest(platform as any, '/root');
+    const result = await readEditorManifest(platform as unknown as PlatformAPI, '/root');
     expect(result).not.toBeNull();
     expect(result!.version).toBe(1);
     expect(result!.schemas?.['main.yaml']?.layout?.nodes?.['A']).toEqual({ x: 1, y: 2 });
@@ -323,7 +323,7 @@ describe('readEditorManifest', () => {
       readFile: vi.fn().mockRejectedValue(new Error('ENOENT')),
       writeFile: vi.fn(),
     };
-    const result = await readEditorManifest(platform as any, '/root');
+    const result = await readEditorManifest(platform as unknown as PlatformAPI, '/root');
     expect(result).toBeNull();
   });
 
@@ -332,7 +332,7 @@ describe('readEditorManifest', () => {
       readFile: vi.fn().mockResolvedValue('{ not valid yaml: ['),
       writeFile: vi.fn(),
     };
-    const result = await readEditorManifest(platform as any, '/root');
+    const result = await readEditorManifest(platform as unknown as PlatformAPI, '/root');
     expect(result).toBeNull();
   });
 
@@ -341,7 +341,7 @@ describe('readEditorManifest', () => {
       readFile: vi.fn().mockResolvedValue('version: 2\n'),
       writeFile: vi.fn(),
     };
-    const result = await readEditorManifest(platform as any, '/root');
+    const result = await readEditorManifest(platform as unknown as PlatformAPI, '/root');
     expect(result).toBeNull();
   });
 
@@ -350,7 +350,7 @@ describe('readEditorManifest', () => {
       readFile: vi.fn().mockRejectedValue(new Error('nope')),
       writeFile: vi.fn(),
     };
-    await readEditorManifest(platform as any, '/my/project');
+    await readEditorManifest(platform as unknown as PlatformAPI, '/my/project');
     expect(platform.readFile).toHaveBeenCalledWith(`/my/project/${MANIFEST_FILENAME}`);
   });
 });
@@ -364,7 +364,7 @@ describe('writeEditorManifest', () => {
       writeFile: vi.fn().mockResolvedValue(undefined),
     };
     const data: EditorManifestData = { version: 1 };
-    await writeEditorManifest(platform as any, '/root', data);
+    await writeEditorManifest(platform as unknown as PlatformAPI, '/root', data);
     expect(platform.writeFile).toHaveBeenCalledWith(
       `/root/${MANIFEST_FILENAME}`,
       expect.stringContaining('version: 1')
@@ -377,7 +377,7 @@ describe('writeEditorManifest', () => {
       writeFile: vi.fn().mockRejectedValue(new Error('Read-only filesystem')),
     };
     await expect(
-      writeEditorManifest(platform as any, '/root', { version: 1 })
+      writeEditorManifest(platform as unknown as PlatformAPI, '/root', { version: 1 })
     ).resolves.not.toThrow();
   });
 
@@ -398,8 +398,8 @@ describe('writeEditorManifest', () => {
         },
       },
     };
-    await writeEditorManifest(platform as any, '/root', data);
-    const reparsed = await readEditorManifest(platform as any, '/root');
+    await writeEditorManifest(platform as unknown as PlatformAPI, '/root', data);
+    const reparsed = await readEditorManifest(platform as unknown as PlatformAPI, '/root');
     expect(reparsed).toEqual(data);
   });
 });

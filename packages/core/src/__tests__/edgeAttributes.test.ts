@@ -16,8 +16,6 @@ import { deriveGraph } from '../canvas/deriveGraph.js';
 import {
   parseYaml,
   serializeYaml,
-  emptySchema,
-  emptyClassDefinition,
   emptyCanvasLayout,
 } from '../index.js';
 import type { AppStore } from '../store/index.js';

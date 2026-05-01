@@ -323,7 +323,6 @@ describe('round-trip fidelity', () => {
   });
 
   it('extras fields survive round-trip', () => {
-    const once = parseYaml(UNKNOWN_KEYS_YAML);
     const twice = roundTrip(UNKNOWN_KEYS_YAML);
     expect(twice.extras?.['some_future_key']).toBe('future_value');
     expect(twice.classes['MyClass'].extras?.['future_class_key']).toBe('some_value');

@@ -294,7 +294,7 @@ export function ValidationPanel() {
           </div>
         ) : filtered.length === 0 ? (
           <div style={styles.emptyList}>
-            Click "Validate" to run the validation engine.
+            Click &quot;Validate&quot; to run the validation engine.
           </div>
         ) : (
           filtered.map((issue) => (

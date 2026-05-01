@@ -57,10 +57,6 @@ export function ClassPanel({ schemaId, className }: { schemaId: string; classNam
   const [newUsageSlotName, setNewUsageSlotName] = useState('');
 
   const classDef = schema?.classes[className] as ClassDefinition | undefined;
-  if (!classDef) return <EmptyPanel message="Class not found" />;
-  const cls = classDef;
-
-  const update = (partial: Partial<ClassDefinition>) => updateClass(schemaId, className, partial);
 
   // Merge all schema-level slots across all loaded schemas
   const allSchemaSlots = useMemo(() => {
@@ -76,9 +72,14 @@ export function ClassPanel({ schemaId, className }: { schemaId: string; classNam
   );
   // Slot names that are eligible to add as slot_usage (inherited but not yet overridden)
   const availableForUsage = useMemo(
-    () => inheritedSlotNames.filter((n) => !(n in cls.slotUsage)),
-    [inheritedSlotNames, cls.slotUsage]
+    () => inheritedSlotNames.filter((n) => !(n in (classDef?.slotUsage ?? {}))),
+    [inheritedSlotNames, classDef?.slotUsage]
   );
+
+  if (!classDef) return <EmptyPanel message="Class not found" />;
+  const cls = classDef;
+
+  const update = (partial: Partial<ClassDefinition>) => updateClass(schemaId, className, partial);
 
   function handleAddSlot() {
     const name = newSlotName.trim();

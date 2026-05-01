@@ -1,8 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { create } from 'zustand';
+import type { StoreApi } from 'zustand';
 import { temporal } from 'zundo';
+import type { TemporalState } from 'zundo';
 import { createProjectSlice, type ProjectSlice } from '../slices/projectSlice.js';
 import { createUISlice, type UISlice } from '../slices/uiSlice.js';
+
+type PartialProjectState = Pick<ProjectSlice, 'activeProject' | 'activeSchemaId'>;
+type TemporalStore = { temporal: StoreApi<TemporalState<PartialProjectState>> };
+function getTemporalState(store: ReturnType<typeof createTemporalStore>) {
+  return (store as unknown as TemporalStore).temporal.getState();
+}
 import type { Project, SchemaFile } from '../../model/index.js';
 import {
   emptyCanvasLayout,
@@ -445,7 +453,7 @@ describe('ProjectSlice — undo/redo (zundo)', () => {
     store.getState().addClass(sf.id, emptyClassDefinition('Animal'));
     expect(store.getState().activeProject!.schemas[0].schema.classes).toHaveProperty('Animal');
 
-    (store as any).temporal.getState().undo();
+    getTemporalState(store).undo();
 
     // After undo, Animal should be gone
     const classes = store.getState().activeProject!.schemas[0].schema.classes;
@@ -458,8 +466,8 @@ describe('ProjectSlice — undo/redo (zundo)', () => {
     store.getState().setProject(makeProject('test', [sf]));
 
     store.getState().addClass(sf.id, emptyClassDefinition('Animal'));
-    (store as any).temporal.getState().undo();
-    (store as any).temporal.getState().redo();
+    getTemporalState(store).undo();
+    getTemporalState(store).redo();
 
     const classes = store.getState().activeProject!.schemas[0].schema.classes;
     expect(classes).toHaveProperty('Animal');
@@ -473,7 +481,7 @@ describe('ProjectSlice — undo/redo (zundo)', () => {
     store.getState().addClass(sf.id, emptyClassDefinition('A'));
     store.getState().addClass(sf.id, emptyClassDefinition('B'));
 
-    const temporal = (store as any).temporal.getState();
+    const temporal = getTemporalState(store);
     temporal.undo(); // undo B
     expect(store.getState().activeProject!.schemas[0].schema.classes).not.toHaveProperty('B');
     expect(store.getState().activeProject!.schemas[0].schema.classes).toHaveProperty('A');
@@ -488,9 +496,9 @@ describe('ProjectSlice — undo/redo (zundo)', () => {
     store.getState().setProject(makeProject('test', [sf]));
 
     store.getState().addClass(sf.id, emptyClassDefinition('A'));
-    (store as any).temporal.getState().undo();
+    getTemporalState(store).undo();
     store.getState().addClass(sf.id, emptyClassDefinition('B')); // new mutation clears redo stack
-    (store as any).temporal.getState().redo(); // should be a no-op now
+    getTemporalState(store).redo(); // should be a no-op now
 
     const classes = store.getState().activeProject!.schemas[0].schema.classes;
     expect(classes).toHaveProperty('B');

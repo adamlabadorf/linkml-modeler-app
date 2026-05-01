@@ -212,7 +212,7 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
         let cursor: string | undefined = partial.isA;
         while (cursor) {
           if (cursor === className) {
-            (get() as any).pushToast?.({
+            (get() as { pushToast?: (toast: { severity: string; message: string }) => void }).pushToast?.({
               severity: 'error',
               message: `Circular inheritance: "${className}" cannot inherit from "${partial.isA}"`,
             });
