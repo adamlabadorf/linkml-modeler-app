@@ -85,6 +85,8 @@ export class WebPlatform implements PlatformAPI {
 
   async gitCreateRepo(dirPath: string): Promise<boolean> {
     try {
+      await (pfs as unknown as { mkdir: (p: string, opts: { recursive: boolean }) => Promise<void> })
+        .mkdir(dirPath, { recursive: true }).catch(() => {});
       await git.init({ fs, dir: dirPath, defaultBranch: 'main' });
       this.gitAvailable = true;
       return true;
