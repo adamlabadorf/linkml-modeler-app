@@ -137,7 +137,7 @@ export function SplashPage({ demoUrl }: { demoUrl?: string }) {
         <div className="splash-columns">
           {/* Left column — hero */}
           <div className="splash-hero">
-            <img src="/logo.svg" alt="LinkML Modeler" className="splash-hero-logo" width="64" height="64" />
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="LinkML Modeler" className="splash-hero-logo" width="64" height="64" />
             <h1 className="splash-hero-title">LinkML Visual Schema Editor</h1>
             <p className="splash-hero-tagline">Author and visualize LinkML schemas without hand-editing YAML.</p>
 
