@@ -737,3 +737,167 @@ slots:
     expect(yaml).toContain('mixins:');
   });
 });
+
+// ─── Extras survive a parse → edit → serialize → parse cycle ─────────────────
+//
+// The existing extras test only verifies parse → serialize → parse.
+// This suite adds the middle "edit" step: mutate a known field between
+// serialize and re-parse, then confirm the extras are still present.
+
+describe('extras survive parse/edit/serialize cycle', () => {
+  const EXTRAS_SCHEMA = `
+id: https://example.org/extras-edit-test
+name: extras_edit_test
+prefixes:
+  linkml: https://w3id.org/linkml/
+default_prefix: extras_edit_test
+some_future_key: retained_value
+another_future: 42
+classes:
+  MyClass:
+    description: A class
+    future_class_key: class_future_val
+    attributes:
+      my_slot:
+        range: string
+        future_slot_key: slot_future_val
+`;
+
+  it('schema-level extras survive after adding a class', () => {
+    const schema = parseYaml(EXTRAS_SCHEMA);
+    // Edit: add a new class to the parsed schema
+    schema.classes['NewClass'] = {
+      name: 'NewClass',
+      description: 'Added after parse',
+      mixins: [],
+      slots: [],
+      attributes: {},
+      slotUsage: {},
+    };
+    const reparsed = parseYaml(serializeYaml(schema));
+    expect(reparsed.extras?.['some_future_key']).toBe('retained_value');
+    expect(reparsed.extras?.['another_future']).toBe(42);
+    // The new class is also present
+    expect(reparsed.classes['NewClass']).toBeDefined();
+  });
+
+  it('class-level extras survive after changing a known field', () => {
+    const schema = parseYaml(EXTRAS_SCHEMA);
+    // Edit: change the description on the existing class
+    schema.classes['MyClass'].description = 'Updated description';
+    const reparsed = parseYaml(serializeYaml(schema));
+    expect(reparsed.classes['MyClass'].description).toBe('Updated description');
+    expect(reparsed.classes['MyClass'].extras?.['future_class_key']).toBe('class_future_val');
+  });
+
+  it('slot-level extras survive after toggling a boolean field', () => {
+    const schema = parseYaml(EXTRAS_SCHEMA);
+    // Edit: mark the slot as required
+    schema.classes['MyClass'].attributes['my_slot'].required = true;
+    const reparsed = parseYaml(serializeYaml(schema));
+    expect(reparsed.classes['MyClass'].attributes['my_slot'].required).toBe(true);
+    expect(reparsed.classes['MyClass'].attributes['my_slot'].extras?.['future_slot_key']).toBe('slot_future_val');
+  });
+});
+
+// ─── Non-preserved features (documentation tests) ────────────────────────────
+//
+// These tests explicitly assert what is LOST during parse → serialize.
+// They are intentionally negative: js-yaml does not preserve YAML comments,
+// anchors/aliases, original quoting style, blank lines, or key order.
+// This documents the known fidelity boundary of the round-trip engine.
+
+describe('non-preserved features (documents known losses)', () => {
+  it('YAML comments are stripped by the parser', () => {
+    const withComments = `
+id: https://example.org/comments-test
+name: comments_test
+# This is a top-level comment
+default_prefix: comments_test
+classes:
+  # This comment describes MyClass
+  MyClass:
+    description: A class # inline comment
+`;
+    const output = serializeYaml(parseYaml(withComments));
+    expect(output).not.toContain('#');
+  });
+
+  it('YAML anchors are inlined (aliases become duplicated values)', () => {
+    // js-yaml resolves &anchor / *alias at parse time, producing duplicated
+    // values rather than preserving the reference structure.
+    const withAnchors = `
+id: https://example.org/anchors-test
+name: anchors_test
+default_prefix: anchors_test
+prefixes:
+  linkml: &linkml_uri https://w3id.org/linkml/
+  schema: *linkml_uri
+`;
+    const schema = parseYaml(withAnchors);
+    // js-yaml resolves *linkml_uri to the anchor value at parse time
+    expect(schema.prefixes['schema']).toBe('https://w3id.org/linkml/');
+    const output = serializeYaml(schema);
+    // The output contains the resolved value inline, not an alias reference
+    expect(output).not.toContain('*linkml_uri');
+    expect(output).not.toContain('&linkml_uri');
+  });
+
+  it('single-quoted strings are re-emitted without quotes when safe', () => {
+    const withQuotes = `
+id: https://example.org/quotes-test
+name: 'quotes_test'
+default_prefix: quotes_test
+`;
+    const output = serializeYaml(parseYaml(withQuotes));
+    // js-yaml emits plain scalars when quoting is not required
+    expect(output).toContain('name: quotes_test');
+    expect(output).not.toContain("name: 'quotes_test'");
+  });
+
+  it('blank lines between sections are not preserved', () => {
+    const withBlanks = `
+id: https://example.org/blanks-test
+name: blanks_test
+default_prefix: blanks_test
+
+
+classes:
+
+
+  MyClass:
+    description: A class
+
+
+`;
+    const output = serializeYaml(parseYaml(withBlanks));
+    // The serializer uses js-yaml defaults — blank lines within sections
+    // are not re-inserted by the emitter.
+    expect(output).not.toMatch(/\n{3,}/);
+  });
+
+  it('original key order within a class is not guaranteed to be preserved', () => {
+    // The serializer emits keys in a fixed convention order (description,
+    // is_a, mixins, …) regardless of the order in the input YAML.
+    const customOrder = `
+id: https://example.org/keyorder-test
+name: keyorder_test
+default_prefix: keyorder_test
+classes:
+  MyClass:
+    is_a: BaseClass
+    description: A class with unusual key order
+    abstract: true
+  BaseClass:
+    abstract: true
+    description: Base
+`;
+    const output = serializeYaml(parseYaml(customOrder));
+    const descPos = output.indexOf('description: A class with unusual key order');
+    const isAPos = output.indexOf('is_a: BaseClass');
+    // In the emitted output description comes before is_a (convention order)
+    expect(descPos).toBeGreaterThan(-1);
+    expect(isAPos).toBeGreaterThan(-1);
+    expect(descPos).toBeLessThan(isAPos);
+  });
+});
