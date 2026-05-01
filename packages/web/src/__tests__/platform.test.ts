@@ -9,18 +9,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ── LightningFS mock ──────────────────────────────────────────────────────────
 // isomorphic-git and LightningFS use IndexedDB / OPFS internally.
 // In jsdom neither is available so we mock the module.
-vi.mock('@isomorphic-git/lightning-fs', () => {
-  const mockPfs = {
-    readFile: vi.fn().mockResolvedValue('content'),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    mkdir: vi.fn().mockResolvedValue(undefined),
-    readdir: vi.fn().mockResolvedValue([]),
-    stat: vi.fn().mockResolvedValue({ isDirectory: () => false }),
-  };
-  return {
-    default: vi.fn(() => ({ promises: mockPfs })),
-  };
-});
+// mockPfs is hoisted so FSAA import tests can inspect writeFile calls.
+const mockPfs = vi.hoisted(() => ({
+  readFile: vi.fn().mockResolvedValue('content'),
+  writeFile: vi.fn().mockResolvedValue(undefined),
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  readdir: vi.fn().mockResolvedValue([]),
+  stat: vi.fn().mockResolvedValue({ isDirectory: () => false }),
+}));
+
+vi.mock('@isomorphic-git/lightning-fs', () => ({
+  default: vi.fn(() => ({ promises: mockPfs })),
+}));
 
 vi.mock('isomorphic-git', () => ({
   default: {
@@ -233,5 +233,127 @@ describe('ElectronPlatform', () => {
     const result = await p.gitPull('/some/repo');
     expect(mockElectronAPI.gitPull).toHaveBeenCalledWith('/some/repo');
     expect(result).toEqual({ ok: true });
+  });
+});
+
+// ── WebPlatform.openDirectory FSAA import tests ───────────────────────────────
+// These tests verify the fix for PTS-135: openDirectory() must import yaml files
+// from the native FileSystemDirectoryHandle into LightningFS so that subsequent
+// listDirectory/readFile calls (and re-opens from Recent Projects) can find them.
+
+describe('WebPlatform.openDirectory (FSAA import)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    mockPfs.writeFile.mockClear();
+    mockPfs.mkdir.mockClear();
+  });
+
+  afterEach(() => {
+    const w = window as Record<string, unknown>;
+    delete w['showDirectoryPicker'];
+    delete w['showOpenFilePicker'];
+    delete w['showSaveFilePicker'];
+  });
+
+  it('imports yaml files into LightningFS and returns the OPFS path', async () => {
+    const yamlContent = 'id: https://example.org/test\nclasses:';
+    const mockFileHandle = {
+      kind: 'file' as const,
+      getFile: vi.fn().mockResolvedValue({ text: vi.fn().mockResolvedValue(yamlContent) }),
+    };
+    const mockDirHandle = {
+      name: 'my-schemas',
+      entries: async function* () {
+        yield ['schema.yaml', mockFileHandle] as [string, typeof mockFileHandle];
+        yield ['readme.txt', { kind: 'file' as const, getFile: vi.fn() }] as [string, unknown];
+      },
+    };
+
+    Object.assign(window, {
+      showOpenFilePicker: vi.fn(),
+      showSaveFilePicker: vi.fn(),
+      showDirectoryPicker: vi.fn().mockResolvedValue(mockDirHandle),
+    });
+
+    const { WebPlatform } = await import('../platform/WebPlatform.js');
+    const p = new WebPlatform();
+    const result = await p.openDirectory();
+
+    expect(result).toBe('/my-schemas');
+    expect(mockFileHandle.getFile).toHaveBeenCalled();
+    expect(mockPfs.writeFile).toHaveBeenCalledWith(
+      '/my-schemas/schema.yaml',
+      yamlContent,
+      'utf8',
+    );
+  });
+
+  it('skips non-yaml files and does not call writeFile for them', async () => {
+    const mockTxtHandle = { kind: 'file' as const, getFile: vi.fn() };
+    const mockDirHandle = {
+      name: 'docs',
+      entries: async function* () {
+        yield ['readme.txt', mockTxtHandle] as [string, typeof mockTxtHandle];
+        yield ['notes.md', { kind: 'file' as const, getFile: vi.fn() }] as [string, unknown];
+      },
+    };
+
+    Object.assign(window, {
+      showOpenFilePicker: vi.fn(),
+      showSaveFilePicker: vi.fn(),
+      showDirectoryPicker: vi.fn().mockResolvedValue(mockDirHandle),
+    });
+
+    const { WebPlatform } = await import('../platform/WebPlatform.js');
+    const p = new WebPlatform();
+    const result = await p.openDirectory();
+
+    expect(result).toBe('/docs');
+    expect(mockTxtHandle.getFile).not.toHaveBeenCalled();
+    expect(mockPfs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('skips directory entries (only imports files)', async () => {
+    const mockSubDirHandle = { kind: 'directory' as const };
+    const mockYamlHandle = {
+      kind: 'file' as const,
+      getFile: vi.fn().mockResolvedValue({ text: vi.fn().mockResolvedValue('id: x\nclasses:') }),
+    };
+    const mockDirHandle = {
+      name: 'project',
+      entries: async function* () {
+        yield ['subdir', mockSubDirHandle] as [string, typeof mockSubDirHandle];
+        yield ['schema.yml', mockYamlHandle] as [string, typeof mockYamlHandle];
+      },
+    };
+
+    Object.assign(window, {
+      showOpenFilePicker: vi.fn(),
+      showSaveFilePicker: vi.fn(),
+      showDirectoryPicker: vi.fn().mockResolvedValue(mockDirHandle),
+    });
+
+    const { WebPlatform } = await import('../platform/WebPlatform.js');
+    const p = new WebPlatform();
+    const result = await p.openDirectory();
+
+    expect(result).toBe('/project');
+    expect(mockPfs.writeFile).toHaveBeenCalledTimes(1);
+    expect(mockPfs.writeFile).toHaveBeenCalledWith('/project/schema.yml', 'id: x\nclasses:', 'utf8');
+  });
+
+  it('returns null when user cancels the picker (AbortError)', async () => {
+    Object.assign(window, {
+      showOpenFilePicker: vi.fn(),
+      showSaveFilePicker: vi.fn(),
+      showDirectoryPicker: vi.fn().mockRejectedValue(Object.assign(new Error('user cancelled'), { name: 'AbortError' })),
+    });
+
+    const { WebPlatform } = await import('../platform/WebPlatform.js');
+    const p = new WebPlatform();
+    const result = await p.openDirectory();
+
+    expect(result).toBeNull();
+    expect(mockPfs.writeFile).not.toHaveBeenCalled();
   });
 });

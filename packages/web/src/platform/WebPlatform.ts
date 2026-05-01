@@ -194,8 +194,29 @@ export class WebPlatform implements PlatformAPI {
   async openDirectory(): Promise<string | null> {
     if (FSAA_AVAILABLE && 'showDirectoryPicker' in window) {
       try {
-        const dirHandle = await (window as Window & { showDirectoryPicker: () => Promise<{ name: string }> }).showDirectoryPicker();
-        return `/${dirHandle.name}`;
+        const dirHandle = await (window as Window & {
+          showDirectoryPicker: () => Promise<FileSystemDirectoryHandle>;
+        }).showDirectoryPicker();
+        const opfsPath = `/${dirHandle.name}`;
+
+        // Import schema-relevant files from the native directory into LightningFS
+        // so listDirectory/readFile work on this and future page loads.
+        await (pfs as unknown as { mkdir: (p: string, opts: { recursive: boolean }) => Promise<void> })
+          .mkdir(opfsPath, { recursive: true }).catch(() => {});
+
+        for await (const [name, handle] of dirHandle.entries()) {
+          if (handle.kind !== 'file') continue;
+          if (!/\.(ya?ml)$/i.test(name)) continue;
+          try {
+            const file = await (handle as FileSystemFileHandle).getFile();
+            const content = await file.text();
+            await this.writeFile(`${opfsPath}/${name}`, content);
+          } catch {
+            // skip unreadable entries
+          }
+        }
+
+        return opfsPath;
       } catch (e: unknown) {
         if ((e as { name?: string }).name === 'AbortError') return null;
         throw e;
