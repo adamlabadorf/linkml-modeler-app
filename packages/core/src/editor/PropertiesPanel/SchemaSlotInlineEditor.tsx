@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { SlotDefinition } from '../../model/index.js';
 import { FieldRow, TextInput, TextArea, Checkbox, FilteredGroupedSelect } from '../../ui/fields/index.js';
 import type { OptionGroup } from '../../ui/fields/index.js';
@@ -24,7 +24,7 @@ export function SchemaSlotInlineEditor({
 
   return (
     <div style={styles.slotEditor}>
-      <div style={styles.slotEditorHeader} onClick={() => setExpanded((v) => !v)}>
+      <button type="button" style={styles.slotEditorHeader} onClick={() => setExpanded((v) => !v)}>
         <span style={styles.slotEditorToggle}>{expanded ? '▾' : '▸'}</span>
         <span style={styles.slotEditorName}>{slot.name}</span>
         {slot.range && <span style={styles.slotEditorRange}>: {slot.range}</span>}
@@ -33,7 +33,7 @@ export function SchemaSlotInlineEditor({
           {slot.multivalued && <span style={styles.slotBadge}>M</span>}
           {slot.identifier && <span style={styles.slotBadge}>id</span>}
         </div>
-      </div>
+      </button>
 
       {expanded && (
         <div style={styles.slotEditorBody}>

@@ -1,4 +1,3 @@
-import React from 'react';
 import type { SlotCondition } from '../../model/index.js';
 import { Checkbox } from '../../ui/fields/index.js';
 import { inputStyle, selectStyle } from '../../ui/fields/TextInput.js';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { PermissibleValue } from '../../model/index.js';
 import { FieldRow, TextInput, TextArea } from '../../ui/fields/index.js';
 import { DeleteButton } from './internal.js';
@@ -17,11 +17,11 @@ export function PermissibleValueEditor({
 
   return (
     <div style={styles.slotEditor}>
-      <div style={styles.slotEditorHeader} onClick={() => setExpanded((v) => !v)}>
+      <button type="button" style={styles.slotEditorHeader} onClick={() => setExpanded((v) => !v)}>
         <span style={styles.slotEditorToggle}>{expanded ? '▾' : '▸'}</span>
         <span style={styles.slotEditorName}>{value.text}</span>
         {value.meaning && <span style={styles.slotEditorRange}> = {value.meaning}</span>}
-      </div>
+      </button>
 
       {expanded && (
         <div style={styles.slotEditorBody}>

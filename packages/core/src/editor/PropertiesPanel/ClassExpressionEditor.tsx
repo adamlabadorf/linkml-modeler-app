@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { SlotCondition, AnonymousClassExpression } from '../../model/index.js';
 import { inputStyle } from '../../ui/fields/TextInput.js';
 import { SlotConditionEditor } from './SlotConditionEditor.js';

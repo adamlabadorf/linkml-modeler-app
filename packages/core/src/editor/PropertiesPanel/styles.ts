@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export const styles: Record<string, React.CSSProperties> = {
   panel: {
@@ -97,6 +97,13 @@ export const styles: Record<string, React.CSSProperties> = {
     padding: '5px 12px',
     cursor: 'pointer',
     userSelect: 'none',
+    background: 'none',
+    border: 'none',
+    width: '100%',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    color: 'inherit',
+    textAlign: 'left',
   },
   slotEditorToggle: {
     color: 'var(--color-border-strong)',

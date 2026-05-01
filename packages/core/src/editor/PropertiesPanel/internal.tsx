@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { styles } from './styles.js';
 
 export function SectionHeader({ title }: { title: string }) {

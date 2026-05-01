@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ClassDefinition, SlotDefinition, LinkMLSchema } from '../../model/index.js';
 import { useAppStore } from '../../store/index.js';
 import { FieldRow, TextInput, TextArea, Checkbox, FilteredGroupedSelect } from '../../ui/fields/index.js';

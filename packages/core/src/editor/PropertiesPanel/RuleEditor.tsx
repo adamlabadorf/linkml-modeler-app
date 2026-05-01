@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { ClassRule, AnonymousClassExpression } from '../../model/index.js';
 import { FieldRow, TextInput, TextArea, Checkbox } from '../../ui/fields/index.js';
 import { inputStyle } from '../../ui/fields/TextInput.js';
@@ -27,14 +27,14 @@ export function RuleEditor({
 
   return (
     <div style={styles.slotEditor}>
-      <div style={styles.slotEditorHeader} onClick={() => setExpanded(x => !x)}>
+      <button type="button" style={styles.slotEditorHeader} onClick={() => setExpanded(x => !x)}>
         <span style={styles.slotEditorToggle}>{expanded ? '▾' : '▸'}</span>
         <span style={{ ...styles.slotEditorName, flex: 1 }} title={label}>{label}</span>
         <div style={styles.slotEditorBadges}>
           {rule.deactivated && <span style={styles.slotBadge}>off</span>}
           {rule.bidirectional && <span style={styles.slotBadge}>bidir</span>}
         </div>
-      </div>
+      </button>
       {expanded && (
         <div style={styles.slotEditorBody}>
           <FieldRow label="Title">

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAppStore } from '../../store/index.js';
 import { FieldRow } from '../../ui/fields/index.js';
 import { EmptyPanel } from './EmptyPanel.js';

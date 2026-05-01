@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAppStore } from '../../store/index.js';
 import { X } from '../../ui/icons/index.js';
 import { EmptyPanel } from './EmptyPanel.js';

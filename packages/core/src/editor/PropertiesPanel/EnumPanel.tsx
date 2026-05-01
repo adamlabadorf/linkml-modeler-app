@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { EnumDefinition } from '../../model/index.js';
 import { useAppStore } from '../../store/index.js';
 import { FieldRow, TextInput, TextArea } from '../../ui/fields/index.js';
