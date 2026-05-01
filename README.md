@@ -31,6 +31,23 @@
 - **Multi-schema support** — work with schemas that import other schemas; imported entities shown as read-only ghost nodes
 - **Dark & light themes** — system-aware with manual toggle
 
+## Feature Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Web app | Supported | Primary v1.0 target |
+| Visual ERD canvas | Supported | Core workflow |
+| YAML preview/export | Supported | Unknown fields preserved; large schemas may have round-trip limits |
+| Structural validation | Supported | Meta-model checks: naming conventions, is_a/mixin/range existence, inheritance cycles, and schema metadata. No instance-data validation. |
+| Git local operations | Beta | Works via browser OPFS; behaviour may vary across browsers |
+| Git remote operations | Beta | Requires a configured CORS proxy (`VITE_GIT_CORS_PROXY`); credentials are session-only |
+| Multi-schema imports | Beta | Imported entities shown as read-only ghost nodes |
+| Electron desktop | Experimental | Preserved for community interest; not part of the v1.0 supported surface |
+
+**Legend:** _Supported_ — stable and tested for v1.0. _Beta_ — functional but with known limitations or environment requirements. _Experimental_ — available but unsupported; may change or be removed.
+
+---
+
 ## Screenshots
 
 <table>
