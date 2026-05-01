@@ -1,6 +1,6 @@
 {
   "name": "@linkml-editor/web",
-  "version": "0.4.3",
+  "version": "1.0.0-rc.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

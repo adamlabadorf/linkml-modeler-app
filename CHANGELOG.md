@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.0.0-rc.1] - 2026-05-01
+
+Release candidate for v1.0 — first public OSS launch. Web build is the primary distribution; Electron desktop is descoped from v1.0 and remains as a future-enhancement track.
+
+### Added
+
+- **OSS hygiene**: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue templates (bug, feature, config), and pull request template (PTS-109)
+- **CI**: All GitHub Actions `uses:` references pinned to commit SHAs (PTS-105)
+- **QA**: Coverage thresholds now enforced with realistic floors; broken per-glob config repaired (PTS-110)
+
+### Changed
+
+- **Core build**: `pnpm build` excludes `@linkml-editor/electron` by default; Electron build is opt-in via `pnpm build:all` or `package:electron` scripts
+- **CI**: `electron-build.yml` is now `workflow_dispatch` only — no Electron artifacts ship from tag pushes (PTS-105)
+- **Docs**: README hero, Quick Start, and feature narrative are web-first; Electron documented as an "Experimental" desktop track (PTS-109)
+- **Security**: OAuth tokens kept in-memory only (no `localStorage` persistence); default CORS proxy removed — opt-in via `VITE_GIT_CORS_PROXY` (PTS-108)
+
+### Fixed
+
+- **Build**: 13 TypeScript `TS6133` unused-import errors in Properties panel and YAML fixture generators resolved (PTS-107)
+- **Live demo**: `/app/` GitHub Pages route now returns 200 — `deploy-docs.yml` builds `core` before `web` so the web bundle has its workspace dependency present at deploy time (PTS-105)
+- **Accessibility**: Slot, rule, and permissible-value collapsibles in the Properties panel are now native `<button>` elements with full keyboard activation (PTS-107)
+- **Round-trip**: `TypeDefinition.base` and `repr` are preserved through YAML load/save (PTS-106)
+- **Round-trip**: Schema-level slot `is_a` and `mixins` are preserved through YAML load/save (PTS-106)
+- **Validation**: Schema-level slot `range` references are now checked against the class/type/enum namespace (PTS-106)
+
+### Deferred to v1.1+
+
+- Code signing / notarization for desktop installers (Tier 3 #14) — moot for v1.0 since no installers ship; reopens if Electron is re-scoped
+- Electron 30 → 38+ runtime CVE upgrade (Tier 3 #15) — moot for v1.0 since `electron-build.yml` is dormant; reopens if Electron is re-scoped
+- Electron IPC path validation (Tier 2 #11) and Electron CloudPlatform auto-sync keytar / `_onAuth` fix (Tier 2 #12) — Electron-only; tracked with the future-enhancement Electron track
+
 ## [0.4.3] - 2026-04-08
 
 ### Fixed

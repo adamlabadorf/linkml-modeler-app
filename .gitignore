@@ -8,6 +8,11 @@ out/
 release/
 *.tsbuildinfo
 
+# Test artifacts
+coverage/
+test-results/
+playwright-report/
+
 # Claude Code local state
 .claude/
 .agents/
