@@ -66,7 +66,7 @@ test('focus mode: dimmed nodes have opacity 0.3 and pointer-events none', async 
   await page.evaluate(() => window.__lme_e2e__.setSelection(['Alpha']));
 
   // ── 3. Click "Focus Selection" toolbar button ──────────────────────────────
-  const focusBtn = page.locator('#lme-focus-toolbar').getByText('⬡ Focus Selection');
+  const focusBtn = page.locator('#lme-focus-toolbar').getByText('Focus Selection');
   await expect(focusBtn).toBeVisible({ timeout: 5_000 });
   await expect(focusBtn).toBeEnabled({ timeout: 3_000 });
   await focusBtn.click();
@@ -95,7 +95,7 @@ test('focus mode: dimmed nodes have opacity 0.3 and pointer-events none', async 
   expect(Number(alphaOpacity)).toBeCloseTo(1, 1);
 
   // ── 7. Exit focus mode ────────────────────────────────────────────────────
-  await page.locator('#lme-focus-toolbar').getByText('✕ Exit Focus').click();
+  await page.locator('#lme-focus-toolbar').getByText('Exit Focus').click();
 
   // After exit all nodes should be interactive again.
   await expect(betaNode).not.toHaveCSS('pointer-events', 'none');
