@@ -14,7 +14,7 @@
     "@isomorphic-git/lightning-fs": "^4.6.2",
     "@linkml-editor/core": "workspace:*",
     "buffer": "^6.0.3",
-    "isomorphic-git": "^1.37.4",
+    "isomorphic-git": "^1.37.6",
     "lucide-react": "^0.487.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
