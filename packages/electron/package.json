@@ -27,6 +27,7 @@
     "isomorphic-git": "^1.27.0"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^1.6.0",
     "electron": "^30.0.0",
     "electron-builder": "^25.1.8",
     "typescript": "^5.4.0",
