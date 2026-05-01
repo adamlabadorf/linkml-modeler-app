@@ -653,6 +653,18 @@ app.whenReady().then(async () => {
   // operations targeting the default projects path succeed without a prior dialog.
   allowedRoots.add(app.getPath('documents'));
 
+  // Also seed any user-configured projects directory from the persisted settings,
+  // so that users who chose a custom directory outside Documents are not blocked.
+  try {
+    const { promises: fsSync } = await import('fs');
+    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    const raw = await fsSync.readFile(settingsPath, 'utf8');
+    const settings = JSON.parse(raw) as Record<string, string>;
+    if (typeof settings['projects-dir'] === 'string' && settings['projects-dir']) {
+      allowedRoots.add(path.resolve(settings['projects-dir']));
+    }
+  } catch { /* settings file absent or malformed — fine */ }
+
   registerIpcHandlers();
   await createWindow();
 
