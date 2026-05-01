@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm -r --filter '!@linkml-editor/electron' build",
     "build:core": "pnpm --filter @linkml-editor/core build",
     "build:web": "pnpm run build:core && pnpm --filter @linkml-editor/web build:electron",
     "build:electron": "pnpm --filter @linkml-editor/electron build",

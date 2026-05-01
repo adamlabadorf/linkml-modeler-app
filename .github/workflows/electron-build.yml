@@ -1,11 +1,9 @@
 name: Electron Build & Release
 
+# Electron is descoped from v1.0. This workflow is manual-only.
+# For experimental Electron builds, trigger via workflow_dispatch.
+# Re-enable push triggers (or use electron-v* tag pattern) when Electron is re-scoped.
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 permissions:
