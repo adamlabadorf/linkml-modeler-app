@@ -16,7 +16,7 @@
 
 ```bash
 git clone <repo-url>
-cd linkml-visual-editor
+cd linkml-modeler-app
 pnpm install
 ```
 

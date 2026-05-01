@@ -75,20 +75,6 @@ pnpm dev
 
 Opens at [http://localhost:5173](http://localhost:5173). Hot module replacement is enabled.
 
-### Run the Electron desktop app (development)
-
-In one terminal, start the web dev server:
-
-```bash
-pnpm dev
-```
-
-In a second terminal, build the Electron main process and launch it:
-
-```bash
-pnpm --filter @linkml-editor/electron build && npx electron packages/electron/dist/main.js
-```
-
 ### Build for production
 
 ```bash
@@ -96,7 +82,6 @@ pnpm build
 ```
 
 - **Web output:** `packages/web/dist/` — serve these static files from any web server.
-- **Electron output:** `packages/electron/dist/main.js` — run with `npx electron packages/electron/dist/main.js`.
 
 ---
 
@@ -142,6 +127,30 @@ Styling uses CSS custom properties for theming; no CSS framework is bundled.
 | `pnpm test` | Run all tests |
 | `pnpm lint` | Lint TypeScript/TSX source files |
 | `pnpm format` | Format source files with Prettier |
+
+---
+
+## Experimental: desktop build
+
+`packages/electron/` contains an Electron main-process wrapper. It is preserved for community interest but is **not part of the v1.0 supported surface**. The web app is the primary deployment target for v1.0.
+
+To run the desktop build in development (unsupported):
+
+```bash
+# Terminal 1
+pnpm dev
+
+# Terminal 2
+pnpm --filter @linkml-editor/electron build && npx electron packages/electron/dist/main.js
+```
+
+A native desktop release is planned for a future version.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, development workflow, and PR conventions.
 
 ---
 

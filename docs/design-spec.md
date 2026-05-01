@@ -1,7 +1,7 @@
 # LinkML Visual Schema Editor — High-Level Design Specification
 
 **Version:** 1.0-draft  
-**Status:** For implementation by coding agents  
+**Status:** v1.0  
 **Scope:** v1.0 feature set
 
 ---

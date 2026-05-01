@@ -6,7 +6,7 @@ A graphical tool for creating and editing [LinkML](https://linkml.io/) schemas w
 
 ## Getting Started
 
-Open the app in your browser (`pnpm dev` → [http://localhost:5173](http://localhost:5173)) or launch the Electron desktop build. A demo schema loads automatically so you can explore before creating your own.
+Open the app in your browser at [http://localhost:5173](http://localhost:5173) (run `pnpm dev`) or use the [live demo](https://adamlabadorf.github.io/linkml-modeler-app/app/). A demo schema loads automatically so you can explore before creating your own.
 
 ---
 

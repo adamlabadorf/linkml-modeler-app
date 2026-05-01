@@ -15,8 +15,8 @@
 ## Setup
 
 ```bash
-git clone <repo-url>
-cd linkml-visual-editor
+git clone https://github.com/adamlabadorf/linkml-modeler-app.git
+cd linkml-modeler-app
 pnpm install
 ```
 
@@ -32,9 +32,11 @@ pnpm dev
 
 Starts the Vite dev server at [http://localhost:5173](http://localhost:5173) with hot module replacement.
 
-### Electron desktop app
+### Experimental: desktop (Electron) app
 
-The Electron main process loads the renderer from `http://localhost:5173` in dev mode. You need both the web dev server and the compiled main process running simultaneously.
+> **Note:** The Electron desktop build is experimental and is not part of the v1.0 supported surface. The web app is the primary development target.
+
+To run the desktop build in development, you need both the web dev server and the compiled main process running simultaneously.
 
 **Terminal 1 — web renderer:**
 ```bash
@@ -43,17 +45,10 @@ pnpm dev
 
 **Terminal 2 — Electron main process:**
 ```bash
-# Build core first (needed by the web renderer)
 pnpm --filter @linkml-editor/core build
-
-# Compile the Electron main process (TypeScript → CommonJS)
 pnpm --filter @linkml-editor/electron build
-
-# Launch Electron pointing at the compiled entry point
 NODE_ENV=development npx electron packages/electron/dist/main.js
 ```
-
-After making changes to the Electron main process source (`packages/electron/src/`), re-run the `build` + `electron` commands in Terminal 2. The renderer hot-reloads automatically via the dev server.
 
 ---
 
@@ -136,17 +131,16 @@ location /linkml-editor/ {
 }
 ```
 
-### Running the Electron production build
+### Experimental: Electron production build
+
+> **Note:** Not part of v1.0 supported surface.
 
 ```bash
-# Ensure the web build is present first
 pnpm build
-
-# Launch the production Electron app
 npx electron packages/electron/dist/main.js
 ```
 
-In production mode (`NODE_ENV=production`), Electron loads `packages/web/dist/index.html` directly from disk instead of hitting the dev server.
+In production mode, Electron loads `packages/web/dist/index.html` from disk.
 
 ---
 
@@ -185,7 +179,7 @@ ESLint is configured with `@typescript-eslint` + `eslint-plugin-react`. Prettier
 ## Repository Structure
 
 ```
-linkml-visual-editor/
+linkml-modeler-app/
 ├── packages/
 │   ├── core/              # Shared React renderer (platform-agnostic)
 │   │   └── src/

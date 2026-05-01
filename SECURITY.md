@@ -1,9 +1,17 @@
 # Security Policy
 
+## Supported Versions
+
+| Version | Supported |
+|---------|-----------|
+| v1.0.x (web app) | Yes |
+| Electron desktop build | No — experimental, not part of v1.0 supported surface |
+
 ## Scope
 
+**v1.0 ships as a web app.** The desktop (Electron) build is included in the repository for community interest but is experimental and is not part of the v1.0 supported surface. Security disclosures for the Electron build are not in v1.0 scope and will be addressed in a future release.
+
 This document covers the web platform security model for LinkML Visual Schema Editor.
-Electron-specific security is out of scope for v1.0 and will be addressed separately.
 
 ---
 
@@ -91,8 +99,14 @@ When no proxy is configured, users see:
 
 ## Reporting a Vulnerability
 
-Please open a [GitHub issue](https://github.com/adamlabadorf/linkml-modeler-app/issues)
-marked with the `security` label. For sensitive reports, email the maintainer
-directly (see repository contact information).
+**Please do not file public GitHub issues for security vulnerabilities.**
 
-Do not publish exploit details publicly until a fix is released.
+For sensitive reports, email the maintainer directly at **labadorf@bu.edu** with:
+
+- A description of the vulnerability and its potential impact
+- Steps to reproduce (proof-of-concept if available)
+- The version or commit SHA where the issue was observed
+
+You can expect an acknowledgement within 3 business days. We will work with you on a coordinated disclosure timeline before any public announcement.
+
+For non-sensitive reports (e.g., documentation gaps, low-severity hardening suggestions), opening a [GitHub issue](https://github.com/adamlabadorf/linkml-modeler-app/issues) with the `security` label is fine.

@@ -32,9 +32,12 @@ features:
   - icon: 🗂️
     title: Multi-schema Support
     details: Work with multiple imported schemas simultaneously. Cross-schema references are validated and displayed as ghost nodes.
+  - icon: 🔒
+    title: Schema Validation
+    details: Validates your schema against the LinkML meta-model in real time, surfacing errors and warnings before you export.
   - icon: 🖥️
-    title: Cross-platform
-    details: Runs as a web app in any modern browser, or as an Electron desktop application for a native experience on Mac, Windows, and Linux.
+    title: Web-first
+    details: Runs in any modern browser — no installation required. Access your schemas from any device with a stable URL.
   - icon: 🔍
     title: Focus Mode
     details: Zoom in on selected entities and their relationships. Reduce visual clutter when working with large, complex schemas.
