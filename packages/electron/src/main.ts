@@ -9,6 +9,7 @@
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { app, BrowserWindow, dialog, ipcMain, net, protocol, shell } from 'electron';
+import { isAllowedExternalUrl, isPathWithinAllowedRoots } from './security.js';
 
 // Use app.isPackaged (reliable in both dev and packaged builds) rather than
 // NODE_ENV, which is not set automatically in packaged Electron apps.
@@ -51,6 +52,12 @@ const MIME_TYPES: Record<string, string> = {
   '.webp': 'image/webp',
 };
 
+// ── Allowed roots tracking ────────────────────────────────────────────────────
+// Populated from dialog returns and successful gitClone destinations.
+// Seeded at startup with app.getPath('documents') so that clone operations
+// to the default projects directory work without requiring a prior dialog pick.
+const allowedRoots = new Set<string>();
+
 // ── Window ────────────────────────────────────────────────────────────────────
 
 async function createWindow(): Promise<void> {
@@ -63,6 +70,7 @@ async function createWindow(): Promise<void> {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      devTools: isDev,
     },
   });
 
@@ -110,11 +118,15 @@ async function createWindow(): Promise<void> {
   win.webContents.on('console-message', (_e, level, message, line, sourceId) => {
     console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
   });
-  // Open DevTools in packaged builds only when explicitly requested
-  // (isDev already opens them above)
 
+  // Apply URL allowlist in the window-open handler as well as the IPC handler,
+  // since window.open() bypasses the shell:openExternal IPC channel.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    if (isAllowedExternalUrl(url)) {
+      shell.openExternal(url);
+    } else {
+      console.warn('[security] blocked window.open for disallowed URL:', url);
+    }
     return { action: 'deny' };
   });
 }
@@ -140,6 +152,13 @@ async function getHttp() {
 // In-memory credential fallback (process lifetime)
 const credentialCache = new Map<string, { username: string; password: string }>();
 
+function guardPath(filePath: string, context: string): void {
+  if (!isPathWithinAllowedRoots(filePath, allowedRoots)) {
+    console.error(`[security] ${context}: blocked access to path outside allowed roots:`, filePath);
+    throw new Error(`Access denied: path is outside the allowed project directories`);
+  }
+}
+
 function registerIpcHandlers(): void {
   // ── File System ──────────────────────────────────────────────────────────────
 
@@ -152,9 +171,12 @@ function registerIpcHandlers(): void {
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
+    const filePath = result.filePaths[0];
+    // Register the parent directory as an allowed root for subsequent read/write calls
+    allowedRoots.add(path.dirname(filePath));
     const fs = await getFs();
-    const content = await fs.readFile(result.filePaths[0], 'utf8');
-    return { path: result.filePaths[0], content };
+    const content = await fs.readFile(filePath, 'utf8');
+    return { path: filePath, content };
   });
 
   ipcMain.handle('platform:saveFile', async (_event, options: { suggestedName?: string; accept?: string[] }, content: string) => {
@@ -165,9 +187,11 @@ function registerIpcHandlers(): void {
         : [{ name: 'YAML', extensions: ['yaml', 'yml'] }],
     });
     if (result.canceled || !result.filePath) return null;
+    const filePath = result.filePath;
+    allowedRoots.add(path.dirname(filePath));
     const fs = await getFs();
-    await fs.writeFile(result.filePath, content, 'utf8');
-    return result.filePath;
+    await fs.writeFile(filePath, content, 'utf8');
+    return filePath;
   });
 
   ipcMain.handle('platform:openDirectory', async () => {
@@ -176,15 +200,19 @@ function registerIpcHandlers(): void {
       properties: ['openDirectory', 'createDirectory'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
-    return result.filePaths[0];
+    const dirPath = result.filePaths[0];
+    allowedRoots.add(dirPath);
+    return dirPath;
   });
 
   ipcMain.handle('platform:readFile', async (_event, filePath: string) => {
+    guardPath(filePath, 'readFile');
     const fs = await getFs();
     return fs.readFile(filePath, 'utf8');
   });
 
   ipcMain.handle('platform:writeFile', async (_event, filePath: string, content: string) => {
+    guardPath(filePath, 'writeFile');
     const fs = await getFs();
     const { mkdir } = await import('fs/promises');
     const pathModule = await import('path');
@@ -193,6 +221,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:listDirectory', async (_event, dirPath: string) => {
+    guardPath(dirPath, 'listDirectory');
     const fs = await getFs();
     const pathModule = await import('path');
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
@@ -206,6 +235,7 @@ function registerIpcHandlers(): void {
   // ── Git ──────────────────────────────────────────────────────────────────────
 
   ipcMain.handle('platform:gitAvailable', async (_event, repoPath: string) => {
+    guardPath(repoPath, 'gitAvailable');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -217,6 +247,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitCreateRepo', async (_event, dirPath: string) => {
+    guardPath(dirPath, 'gitCreateRepo');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -228,6 +259,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitReadConfig', async (_event, repoPath: string) => {
+    guardPath(repoPath, 'gitReadConfig');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -244,6 +276,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitSetRemote', async (_event, repoPath: string, url: string) => {
+    guardPath(repoPath, 'gitSetRemote');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -259,6 +292,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitStatus', async (_event, repoPath: string) => {
+    guardPath(repoPath, 'gitStatus');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -291,6 +325,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitStage', async (_event, repoPath: string, paths: string[]) => {
+    guardPath(repoPath, 'gitStage');
     const fs = await getFs();
     const git = await getGit();
     const g = git as {
@@ -305,6 +340,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitUnstage', async (_event, repoPath: string, paths: string[]) => {
+    guardPath(repoPath, 'gitUnstage');
     const fs = await getFs();
     const git = await getGit();
     const g = git as {
@@ -322,6 +358,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitCommit', async (_event, repoPath: string, message: string, author?: { name: string; email: string }) => {
+    guardPath(repoPath, 'gitCommit');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -351,6 +388,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitPush', async (_event, repoPath: string) => {
+    guardPath(repoPath, 'gitPush');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -394,6 +432,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitPull', async (_event, repoPath: string) => {
+    guardPath(repoPath, 'gitPull');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -437,6 +476,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitLog', async (_event, repoPath: string, limit: number) => {
+    guardPath(repoPath, 'gitLog');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -460,6 +500,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('platform:gitCheckout', async (_event, repoPath: string, paths: string[]) => {
+    guardPath(repoPath, 'gitCheckout');
     const fs = await getFs();
     const git = await getGit();
     const g = git as {
@@ -469,9 +510,12 @@ function registerIpcHandlers(): void {
       try {
         await g.checkout({ fs: { promises: fs }, dir: repoPath, filepaths: [p], force: true });
       } catch {
-        // File not in HEAD (untracked) — delete it
+        // File not in HEAD (untracked) — delete it, but validate the resolved path first
         try {
-          await fs.unlink(`${repoPath}/${p}`);
+          const resolvedFile = path.resolve(repoPath, p);
+          if (isPathWithinAllowedRoots(resolvedFile, new Set([repoPath]))) {
+            await fs.unlink(resolvedFile);
+          }
         } catch {
           // ignore
         }
@@ -550,10 +594,15 @@ function registerIpcHandlers(): void {
   // ── Shell ────────────────────────────────────────────────────────────────────
 
   ipcMain.handle('shell:openExternal', async (_event, url: string) => {
+    if (!isAllowedExternalUrl(url)) {
+      console.warn('[security] blocked shell:openExternal for disallowed URL:', url);
+      return;
+    }
     await shell.openExternal(url);
   });
 
   ipcMain.handle('platform:gitClone', async (_event, url: string, destPath: string, options?: { branch?: string; credentials?: { username: string; password: string } }) => {
+    guardPath(destPath, 'gitClone');
     try {
       const fs = await getFs();
       const git = await getGit();
@@ -587,6 +636,9 @@ function registerIpcHandlers(): void {
 
       await g.clone(cloneOpts);
 
+      // Register the cloned directory as an allowed root for subsequent operations
+      allowedRoots.add(path.resolve(destPath));
+
       return { ok: true, destPath };
     } catch (e: unknown) {
       return { ok: false, destPath, error: e instanceof Error ? e.message : String(e) };
@@ -597,6 +649,10 @@ function registerIpcHandlers(): void {
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(async () => {
+  // Seed the allowed roots with the system Documents directory so that clone
+  // operations targeting the default projects path succeed without a prior dialog.
+  allowedRoots.add(app.getPath('documents'));
+
   registerIpcHandlers();
   await createWindow();
 
