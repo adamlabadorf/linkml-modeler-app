@@ -17,7 +17,7 @@ export default defineConfig({
       thresholds: {
         // Global floor for files not in per-glob rules (canvas/auth/ui/platform); raise in v1.1/v1.2
         functions: 30,
-        // Per-module floors enforced by Vitest 1.x per-glob threshold syntax
+        // Per-module floors enforced by Vitest per-glob threshold syntax
         'src/io/**': { lines: 90, branches: 85 },
         'src/model/**': { lines: 90, branches: 85 },
         'src/store/**': { lines: 80, branches: 75 },
