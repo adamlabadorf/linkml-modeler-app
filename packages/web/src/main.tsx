@@ -53,6 +53,7 @@ import {
   ImportSchemaDialog,
   NewSchemaDialog,
   createNewProject,
+  loadDemoSchemaFromUrl,
   openProjectFromDirectory,
   emptyCanvasLayout,
   type SchemaFile,
@@ -413,6 +414,12 @@ function App() {
     useAppStore.getState().setGitAvailable(false);
   }, [isDirty, closeProject]);
 
+  const handleLoadDemo = React.useCallback(async () => {
+    const demoUrl = `${import.meta.env.BASE_URL}monty-python.yaml`;
+    const project = await loadDemoSchemaFromUrl(demoUrl, 'Monty Python');
+    setProject(project);
+  }, [setProject]);
+
   // ── Ctrl+S / Cmd+S keyboard shortcut ───────────────────────────────────────
   React.useEffect(() => {
     function handleSaveShortcut(e: KeyboardEvent) {
@@ -430,7 +437,10 @@ function App() {
     return (
       <div style={styles.app}>
         <DemoBanner />
-        <SplashPage demoUrl={IS_GITHUB_PAGES ? undefined : DEMO_URL} />
+        <SplashPage
+          demoUrl={IS_GITHUB_PAGES ? undefined : DEMO_URL}
+          onLoadDemo={IS_GITHUB_PAGES ? handleLoadDemo : undefined}
+        />
         <SignInPrompt />
         {cloneDialogOpen && (
           <CloneDialog onClose={() => setCloneDialogOpen(false)} />

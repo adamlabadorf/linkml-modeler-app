@@ -79,6 +79,36 @@ export async function openProjectFromDirectory(
 }
 
 /**
+ * Fetch a LinkML schema from a URL and wrap it in an in-memory Project.
+ * The project has no rootPath, so it behaves like a new unsaved project.
+ */
+export async function loadDemoSchemaFromUrl(url: string, name: string): Promise<Project> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch demo schema (${response.status} ${response.statusText})`);
+  }
+  const content = await response.text();
+  const schema = parseYaml(content);
+
+  const schemaFile: SchemaFile = {
+    id: crypto.randomUUID(),
+    filePath: `${name}.yaml`,
+    schema,
+    isDirty: false,
+    canvasLayout: emptyCanvasLayout(),
+  };
+
+  return {
+    id: crypto.randomUUID(),
+    name,
+    rootPath: '',
+    schemas: [schemaFile],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
  * Create a new empty project with a single blank schema.
  */
 export function createNewProject(name: string, rootPath: string = ''): Project {

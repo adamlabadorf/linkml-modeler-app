@@ -7,7 +7,7 @@ import { usePlatform } from '../platform/PlatformContext.js';
 import { getRecentProjects, removeRecentProject } from '../project/recentProjects.js';
 import { openProjectFromDirectory, createNewProject } from '../project/projectLoader.js';
 import type { RecentProject } from '../model/index.js';
-import { BookOpen, FilePlus, Folder, FolderOpen, Github, GitBranch, Link2, Monitor, Moon, Sun, X } from '../ui/icons/index.js';
+import { BookOpen, FilePlus, Folder, FolderOpen, Github, GitBranch, Link2, Monitor, Moon, PlayCircle, Sun, X } from '../ui/icons/index.js';
 import { Button } from '../ui/Button.js';
 import { useTheme, type Theme } from '../ui/useTheme.js';
 import { version } from '../../package.json';
@@ -30,7 +30,7 @@ const THEME_LABEL: Record<Theme, string> = {
   system: 'System',
 };
 
-export function SplashPage({ demoUrl }: { demoUrl?: string }) {
+export function SplashPage({ demoUrl, onLoadDemo }: { demoUrl?: string; onLoadDemo?: () => Promise<void> }) {
   const platform = usePlatform();
   const setProject = useAppStore((s) => s.setProject);
   const setGitAvailable = useAppStore((s) => s.setGitAvailable);
@@ -74,6 +74,20 @@ export function SplashPage({ demoUrl }: { demoUrl?: string }) {
       });
     }
     setIsLoading(false);
+  };
+
+  const handleLoadDemo = async () => {
+    if (!onLoadDemo) return;
+    setIsLoading(true);
+    try {
+      await onLoadDemo();
+    } catch (err) {
+      pushToast({
+        message: `Failed to load demo: ${err instanceof Error ? err.message : String(err)}`,
+        severity: 'error',
+      });
+      setIsLoading(false);
+    }
   };
 
   const handleOpenRecent = async (recent: RecentProject) => {
@@ -151,6 +165,11 @@ export function SplashPage({ demoUrl }: { demoUrl?: string }) {
               <Button variant="primary" size="lg" icon={<Link2 size={18} />} onClick={() => setCloneDialogOpen(true)}>
                 Clone from URL
               </Button>
+              {onLoadDemo && (
+                <Button variant="secondary" size="lg" icon={<PlayCircle size={18} />} onClick={handleLoadDemo}>
+                  Try Demo Schema
+                </Button>
+              )}
             </div>
 
             <div className="splash-footer-links">

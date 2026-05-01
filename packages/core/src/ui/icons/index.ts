@@ -12,6 +12,7 @@ export {
   Link2,
   Monitor,
   Moon,
+  PlayCircle,
   Plus,
   Sun,
   X,
