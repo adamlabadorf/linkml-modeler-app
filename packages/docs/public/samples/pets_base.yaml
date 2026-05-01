@@ -1,0 +1,46 @@
+id: https://example.org/pets-base
+name: pets_base
+description: |-
+  Base types for the pet registry — multi-schema import sample (part 1 of 2).
+  Open this file together with pets.yaml in the same folder.
+  The editor will resolve the import and show Animal as a read-only ghost node
+  inside the pets.yaml canvas.
+prefixes:
+  pets: https://example.org/pets/
+  linkml: https://w3id.org/linkml/
+default_prefix: pets
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+
+  Animal:
+    description: Abstract base class for all animals
+    attributes:
+      id:
+        identifier: true
+        description: Unique identifier for this animal
+        range: string
+      name:
+        required: true
+        description: Common name of the animal
+        range: string
+      species:
+        required: true
+        description: Biological species (e.g. Canis lupus familiaris)
+        range: string
+
+enums:
+
+  HealthStatus:
+    description: Current health assessment of an animal
+    permissible_values:
+      healthy:
+        description: No known health concerns
+      sick:
+        description: Currently unwell and under treatment
+      recovering:
+        description: Healing after illness or surgery
+      unknown:
+        description: Health status has not been assessed

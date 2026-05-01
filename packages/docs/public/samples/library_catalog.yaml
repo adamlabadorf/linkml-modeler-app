@@ -1,0 +1,167 @@
+id: https://example.org/library-catalog
+name: library_catalog
+description: |-
+  A realistic library catalog schema — advanced sample.
+  Demonstrates named slots with slot_uri, external prefix mappings,
+  subsets, pattern constraints, minimum/maximum value bounds,
+  and conditional validation rules (preconditions/postconditions).
+license: https://creativecommons.org/publicdomain/zero/1.0/
+prefixes:
+  library: https://example.org/library-catalog/
+  linkml: https://w3id.org/linkml/
+  schema: http://schema.org/
+  dcterms: http://purl.org/dc/terms/
+default_prefix: library
+default_range: string
+imports:
+  - linkml:types
+
+subsets:
+
+  core:
+    description: Fields required for basic catalog operations
+
+  extended:
+    description: Fields for detailed or specialized cataloging
+
+classes:
+
+  Book:
+    description: A book held in the library collection
+    class_uri: schema:Book
+    slots:
+      - isbn
+      - title
+      - publication_year
+      - language
+    attributes:
+      subtitle:
+        description: Optional subtitle or series designation
+        range: string
+      edition:
+        description: Edition number (e.g. 1st, 2nd, revised)
+        range: string
+      page_count:
+        description: Total number of pages
+        range: integer
+        minimum_value: 1
+      status:
+        description: Current circulation status
+        range: ItemStatus
+        required: true
+      authors:
+        description: One or more authors of this book
+        range: Author
+        multivalued: true
+        required: true
+      subjects:
+        description: Subject headings from the library classification system
+        range: string
+        multivalued: true
+        in_subset:
+          - extended
+    rules:
+      - preconditions:
+          slot_conditions:
+            status:
+              equals_string: checked_out
+        postconditions:
+          slot_conditions:
+            page_count:
+              minimum_value: 1
+    in_subset:
+      - core
+
+  Author:
+    description: A person or organization who authored one or more works
+    class_uri: schema:Person
+    slots:
+      - name
+    attributes:
+      birth_year:
+        description: Year of birth (for persons; leave blank for organizations)
+        range: integer
+        minimum_value: 1000
+        maximum_value: 2100
+      nationality:
+        description: Author's nationality or country of origin
+        range: string
+    in_subset:
+      - core
+
+  Borrower:
+    description: A registered library patron
+    slots:
+      - name
+    attributes:
+      card_number:
+        identifier: true
+        description: Unique library card number
+        range: string
+      email:
+        description: Contact email address
+        range: string
+        pattern: "^[\\w.+-]+@[\\w-]+\\.[\\w.-]+$"
+      active:
+        description: Whether the patron account is currently active
+        range: boolean
+      loans_outstanding:
+        description: Number of currently outstanding loans
+        range: integer
+        minimum_value: 0
+        maximum_value: 50
+
+slots:
+
+  isbn:
+    identifier: true
+    slot_uri: schema:isbn
+    range: string
+    pattern: "^(97[89])?\\d{9}[\\dX]$"
+    description: International Standard Book Number (ISBN-10 or ISBN-13)
+    in_subset:
+      - core
+
+  title:
+    required: true
+    slot_uri: dcterms:title
+    range: string
+    description: The title of the work
+    in_subset:
+      - core
+
+  name:
+    required: true
+    slot_uri: schema:name
+    range: string
+    description: Human-readable display name
+
+  publication_year:
+    slot_uri: schema:datePublished
+    range: integer
+    minimum_value: 1400
+    maximum_value: 2100
+    description: Year the work was first published
+
+  language:
+    slot_uri: dcterms:language
+    range: string
+    description: BCP-47 language tag (e.g. "en", "fr", "de")
+
+enums:
+
+  ItemStatus:
+    description: Circulation status of a library item
+    permissible_values:
+      available:
+        description: On shelf and ready to borrow
+      checked_out:
+        description: Currently borrowed by a patron
+      reserved:
+        description: On hold for a specific patron
+      processing:
+        description: Being cataloged, repaired, or bound
+      lost:
+        description: Reported lost
+      withdrawn:
+        description: Permanently removed from the collection

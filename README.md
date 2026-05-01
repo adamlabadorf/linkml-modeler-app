@@ -24,8 +24,8 @@
 
 - **Visual ERD canvas** — drag, connect, and arrange LinkML classes and enums without touching YAML
 - **Properties panel** — edit slot definitions, ranges, and constraints in a structured side panel
-- **Real-time YAML** — live YAML preview with round-trip fidelity; unknown fields are preserved
-- **Schema validation** — instant error and warning reporting against the LinkML meta-model
+- **Real-time YAML** — live YAML preview with best-effort semantic round-trip preservation; recognized LinkML fields and unknown extras are preserved; formatting details (comments, blank lines, quoting style, YAML anchors, key ordering) are not
+- **Schema validation** — structural checks including naming conventions (PascalCase classes/enums, snake_case slots), existence checks for is_a/mixin/range references, and inheritance cycle detection
 - **Focus mode** — zero in on selected nodes and their direct relationships
 - **Git integration** — clone, commit, push, and pull directly from the editor (browser OPFS or Electron fs)
 - **Multi-schema support** — work with schemas that import other schemas; imported entities shown as read-only ghost nodes

@@ -34,7 +34,7 @@ features:
     details: Work with multiple imported schemas simultaneously. Cross-schema references are validated and displayed as ghost nodes.
   - icon: 🔒
     title: Schema Validation
-    details: Validates your schema against the LinkML meta-model in real time, surfacing errors and warnings before you export.
+    details: Structural checks including naming conventions, existence checks for is_a/mixin/range references, and inheritance cycle detection — errors and warnings surfaced before you export.
   - icon: 🖥️
     title: Web-first
     details: Runs in any modern browser — no installation required. Access your schemas from any device with a stable URL.

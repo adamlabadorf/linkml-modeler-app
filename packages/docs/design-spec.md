@@ -46,7 +46,7 @@ The tool is delivered as:
 | Canvas / diagram engine | **ReactFlow v11+** | Best-in-class React ERD/graph library; large community; custom node types; performant for 100s of nodes |
 | State management | **Zustand** | Lightweight, no boilerplate, works well with ReactFlow's store pattern |
 | YAML parsing/serialization | **js-yaml** | De facto standard; handles LinkML's YAML dialect |
-| Schema validation | **linkml-runtime** (WASM build) or custom JSON Schema validation against `https://w3id.org/linkml/meta.schema.json` | Validates that emitted YAML conforms to the LinkML metamodel |
+| Schema validation | Custom structural validator | Structural and naming checks: PascalCase/snake_case conventions, is_a/mixin/range reference existence, inheritance cycle detection. No metamodel JSON Schema validation. |
 | UI component library | **shadcn/ui** (Radix + Tailwind) | Unstyled accessible primitives; good fit for tool-style UIs |
 | File I/O (web) | **File System Access API** with fallback to `<input type="file">` download | Native file dialogs in modern browsers |
 | File I/O (Electron) | **Electron `dialog`** + Node `fs` | Full filesystem access |
@@ -252,7 +252,7 @@ The `ProjectSlice` is the single source of truth for schema content. The `Canvas
 ### 5.2 YAML Round-Trip
 
 ```
-Load flow:   disk file → js-yaml parse → validate against metamodel → LinkMLSchema object → canvas nodes/edges
+Load flow:   disk file → js-yaml parse → structural validation → LinkMLSchema object → canvas nodes/edges
 Save flow:   LinkMLSchema object → YAML serializer → validate → write to disk
 ```
 
@@ -417,7 +417,7 @@ Sections:
 ### 7.2 Open Existing Project
 1. User clicks "Open Project" → selects directory
 2. App scans for `.yaml` files, parses each with js-yaml
-3. Validates each against LinkML metamodel; reports errors non-blocking (file opens with warning badge)
+3. Runs structural validation on each; reports errors non-blocking (file opens with warning badge)
 4. Loads `.layout.json` sidecars if present; otherwise runs auto-layout (dagre or elk)
 5. Renders canvas; opens most recently used schema file
 
@@ -481,7 +481,7 @@ Sections:
 
 ## 8. Slot Editor — Property Tiers
 
-The slot property editor in the Properties panel is organized into two tiers to avoid overwhelming users while preserving full round-trip fidelity.
+The slot property editor in the Properties panel is organized into two tiers to avoid overwhelming users. Recognized fields are fully editable; unknown slot properties are carried opaquely in `extras` to preserve them through the round-trip.
 
 ### Tier 1: Common Properties (always visible)
 
@@ -525,8 +525,8 @@ All properties stored in `extras` are shown in an expandable "Advanced (raw)" se
 - Circular inheritance: detected and flagged (error)
 - Missing required schema metadata (`id`, `name`, `default_prefix`): warning
 
-### 9.2 Schema-Level Validation
-On save, the serialized YAML is validated against the LinkML metamodel JSON Schema (`https://w3id.org/linkml/meta.schema.json`). Errors are shown in a Validation panel with:
+### 9.2 Validation Panel
+Errors and warnings from structural validation are shown in a Validation panel with:
 - Severity (error / warning)
 - Location (class name, slot name)
 - Message

@@ -1,0 +1,63 @@
+id: https://example.org/bookstore
+name: bookstore
+description: |-
+  A simple bookstore catalog schema — beginner sample.
+  Demonstrates classes, attributes, identifier slots, enumerations,
+  and cross-class ranges.
+prefixes:
+  bookstore: https://example.org/bookstore/
+  linkml: https://w3id.org/linkml/
+default_prefix: bookstore
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+
+  Book:
+    description: A book held in the catalog
+    attributes:
+      isbn:
+        identifier: true
+        description: International Standard Book Number
+        range: string
+      title:
+        required: true
+        description: Title of the book
+        range: string
+      year_published:
+        description: Year the book was first published
+        range: integer
+      genre:
+        description: Literary genre
+        range: Genre
+      author:
+        description: Primary author of this book
+        range: Author
+
+  Author:
+    description: A person who wrote one or more books
+    attributes:
+      name:
+        required: true
+        description: Full name of the author
+        range: string
+      bio:
+        description: Short biographical note
+        range: string
+
+enums:
+
+  Genre:
+    description: Broad literary genre categories
+    permissible_values:
+      fiction:
+        description: Works of imaginative narrative
+      non_fiction:
+        description: Works based on real events and facts
+      mystery:
+        description: Stories centered on solving a crime or puzzle
+      science_fiction:
+        description: Speculative fiction exploring science and technology
+      biography:
+        description: Account of a real person's life

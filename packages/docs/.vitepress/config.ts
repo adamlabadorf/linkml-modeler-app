@@ -10,6 +10,7 @@ export default defineConfig({
     logo: '/logo.svg',
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Quickstart', link: '/quickstart' },
       { text: 'User Guide', link: '/user-guide' },
       { text: 'Development', link: '/development' },
       { text: 'Design Spec', link: '/design-spec' },
@@ -19,6 +20,7 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Introduction', link: '/' },
+          { text: 'Quickstart Tutorial', link: '/quickstart' },
           { text: 'User Guide', link: '/user-guide' },
         ],
       },

@@ -1,0 +1,64 @@
+id: https://example.org/pets
+name: pets
+description: |-
+  Pet registry schema — multi-schema import sample (part 2 of 2).
+  Imports pets_base.yaml for the Animal base class and HealthStatus enum.
+
+  To use: place both pets.yaml and pets_base.yaml in the same folder, then
+  use "Open Local Folder" in the app. The import is resolved automatically
+  and Animal appears as a read-only node on the canvas.
+prefixes:
+  pets: https://example.org/pets/
+  linkml: https://w3id.org/linkml/
+default_prefix: pets
+default_range: string
+imports:
+  - linkml:types
+  - pets_base
+
+classes:
+
+  Pet:
+    is_a: Animal
+    description: A domesticated animal registered with an owner
+    attributes:
+      owner_name:
+        description: Full name of the pet's registered owner
+        range: string
+      microchip_id:
+        description: ISO 11784/11785 microchip identifier, if implanted
+        range: string
+      health_status:
+        description: Current health status from the last vet assessment
+        range: HealthStatus
+
+  Veterinarian:
+    description: A licensed veterinary professional
+    attributes:
+      license_number:
+        identifier: true
+        description: Official veterinary license number
+        range: string
+      name:
+        required: true
+        description: Full name of the veterinarian
+        range: string
+      clinic:
+        description: Name of the clinic or practice
+        range: string
+
+  VetVisit:
+    description: A recorded visit to the veterinarian
+    attributes:
+      visit_date:
+        description: Date of the visit
+        range: date
+      pet:
+        description: The pet that was seen
+        range: Pet
+      vet:
+        description: The veterinarian who conducted the visit
+        range: Veterinarian
+      notes:
+        description: Clinical notes from the visit
+        range: string
