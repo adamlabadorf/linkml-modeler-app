@@ -35,7 +35,7 @@ Opens at [http://localhost:5173](http://localhost:5173).
 ### Build
 
 ```bash
-pnpm build          # All packages (core → web → electron)
+pnpm build          # Core + web packages (Electron excluded; use build:all for desktop)
 ```
 
 ### Test

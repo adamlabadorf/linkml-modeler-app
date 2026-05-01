@@ -123,7 +123,7 @@ Styling uses CSS custom properties for theming; no CSS framework is bundled.
 | Command | Description |
 |---|---|
 | `pnpm dev` | Start web dev server (localhost:5173) |
-| `pnpm build` | Build all packages for production |
+| `pnpm build` | Build core + web for production (use `build:all` for desktop) |
 | `pnpm test` | Run all tests |
 | `pnpm lint` | Lint TypeScript/TSX source files |
 | `pnpm format` | Format source files with Prettier |

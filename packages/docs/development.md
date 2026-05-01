@@ -58,11 +58,12 @@ NODE_ENV=development npx electron packages/electron/dist/main.js
 pnpm build
 ```
 
-Runs `build` in all packages in dependency order:
+Builds core and web packages only — Electron is excluded:
 
 1. `@linkml-editor/core` — TypeScript compilation + Vite library build → `packages/core/dist/`
 2. `@linkml-editor/web` — TypeScript check + Vite static build → `packages/web/dist/`
-3. `@linkml-editor/electron` — TypeScript compilation → `packages/electron/dist/`
+
+To include the Electron main process in the build, use `pnpm build:all` instead.
 
 ### Serving the web build
 
@@ -136,7 +137,8 @@ location /linkml-editor/ {
 > **Note:** Not part of v1.0 supported surface.
 
 ```bash
-pnpm build
+# Build core, web, and the Electron main process together
+pnpm build:all
 npx electron packages/electron/dist/main.js
 ```
 

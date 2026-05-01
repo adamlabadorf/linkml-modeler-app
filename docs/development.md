@@ -63,11 +63,12 @@ After making changes to the Electron main process source (`packages/electron/src
 pnpm build
 ```
 
-Runs `build` in all packages in dependency order:
+Builds core and web packages only — Electron is excluded:
 
 1. `@linkml-editor/core` — TypeScript compilation + Vite library build → `packages/core/dist/`
 2. `@linkml-editor/web` — TypeScript check + Vite static build → `packages/web/dist/`
-3. `@linkml-editor/electron` — TypeScript compilation → `packages/electron/dist/`
+
+To include the Electron main process in the build, use `pnpm build:all` instead.
 
 ### Serving the web build
 
@@ -81,8 +82,8 @@ The `packages/web/dist/` directory is a self-contained static site — deploy it
 ### Running the Electron production build
 
 ```bash
-# Ensure the web build is present first
-pnpm build
+# Build core, web, and the Electron main process together
+pnpm build:all
 
 # Launch the production Electron app
 npx electron packages/electron/dist/main.js

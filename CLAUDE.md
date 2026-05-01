@@ -11,7 +11,7 @@ LinkML Visual Schema Editor — a cross-platform (web + Electron) graphical tool
 ```bash
 # Development
 pnpm dev                  # Web dev server (localhost:5173)
-pnpm build                # Build all packages in dependency order (core → web → electron)
+pnpm build                # Build core + web packages (Electron excluded; use build:all for desktop)
 pnpm test                 # Run all Vitest tests
 pnpm lint                 # ESLint across all packages
 pnpm format               # Prettier formatting
