@@ -46,8 +46,8 @@ function makeMockLocal() {
     gitStage: vi.fn(async () => {}),
     gitUnstage: vi.fn(async () => {}),
     gitCommit: vi.fn(async () => 'abc1234'),
-    gitPush: vi.fn<Parameters<PlatformAPI['gitPush']>, ReturnType<PlatformAPI['gitPush']>>(async () => ({ ok: true })),
-    gitPull: vi.fn<Parameters<PlatformAPI['gitPull']>, ReturnType<PlatformAPI['gitPull']>>(async () => ({ ok: true })),
+    gitPush: vi.fn(async () => ({ ok: true })),
+    gitPull: vi.fn(async () => ({ ok: true })),
     gitLog: vi.fn(async () => []),
     gitCheckout: vi.fn(async () => {}),
     gitClone: vi.fn(async (_url: string, destPath: string) => ({ ok: true, destPath })),
@@ -364,7 +364,7 @@ describe('CloudPlatform', () => {
       '/repo',
       expect.any(Function),
     );
-    const onAuth = local.gitPush.mock.calls[0][1];
+    const onAuth = local.gitPush.mock.calls[0][1] as Parameters<PlatformAPI['gitPush']>[1];
     if (onAuth) {
       const creds = await onAuth('https://github.com/owner/repo');
       expect(creds).toEqual({ username: 'x-token', password: 'tok123' });

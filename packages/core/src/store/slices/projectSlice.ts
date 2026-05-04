@@ -118,14 +118,18 @@ export const createProjectSlice: StateCreator<ProjectSlice, [], [], ProjectSlice
     const firstSchemaId = project.schemas[0]?.id ?? null;
     set({ activeProject: project, activeSchemaId: firstSchemaId });
 
-    // Track in recent projects list
-    addRecentProject({
-      id: project.id,
-      name: project.name,
-      rootPath: project.rootPath,
-      lastOpened: new Date().toISOString(),
-      source: project.gitConfig?.enabled ? 'git' : 'local',
-    });
+    // Only track projects that have a persisted location — demo/new projects
+    // with an empty rootPath can never be re-opened and would just produce
+    // "No LinkML schemas found" errors if listed in Recent Projects.
+    if (project.rootPath) {
+      addRecentProject({
+        id: project.id,
+        name: project.name,
+        rootPath: project.rootPath,
+        lastOpened: new Date().toISOString(),
+        source: project.gitConfig?.enabled ? 'git' : 'local',
+      });
+    }
   },
 
   closeProject() {
