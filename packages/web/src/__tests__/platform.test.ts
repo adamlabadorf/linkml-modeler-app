@@ -4,7 +4,7 @@
  * Tests run in jsdom so FSAA is unavailable; we validate the fallback paths
  * and basic platform contract.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ── LightningFS mock ──────────────────────────────────────────────────────────
 // isomorphic-git and LightningFS use IndexedDB / OPFS internally.
@@ -249,7 +249,7 @@ describe('WebPlatform.openDirectory (FSAA import)', () => {
   });
 
   afterEach(() => {
-    const w = window as Record<string, unknown>;
+    const w = window as unknown as Record<string, unknown>;
     delete w['showDirectoryPicker'];
     delete w['showOpenFilePicker'];
     delete w['showSaveFilePicker'];

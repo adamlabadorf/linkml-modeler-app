@@ -204,7 +204,8 @@ export class WebPlatform implements PlatformAPI {
         await (pfs as unknown as { mkdir: (p: string, opts: { recursive: boolean }) => Promise<void> })
           .mkdir(opfsPath, { recursive: true }).catch(() => {});
 
-        for await (const [name, handle] of dirHandle.entries()) {
+        const iterableDir = dirHandle as FileSystemDirectoryHandle & { entries(): AsyncIterable<[string, FileSystemHandle]> };
+        for await (const [name, handle] of iterableDir.entries()) {
           if (handle.kind !== 'file') continue;
           if (!/\.(ya?ml)$/i.test(name)) continue;
           try {

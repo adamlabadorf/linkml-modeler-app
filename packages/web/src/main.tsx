@@ -1,6 +1,6 @@
 // isomorphic-git requires Buffer to be available as a global in the browser.
 import { Buffer } from 'buffer';
-globalThis.Buffer = Buffer;
+(globalThis as unknown as { Buffer: typeof Buffer }).Buffer = Buffer;
 
 import '@linkml-editor/core/ui/tokens.css';
 import '@linkml-editor/core/ui/globals.css';
