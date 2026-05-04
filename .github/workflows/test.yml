@@ -47,8 +47,29 @@ jobs:
       - name: Test with coverage
         run: pnpm test --coverage
 
-      - name: Install Playwright browsers
-        run: pnpm --filter @linkml-editor/web exec playwright install --with-deps chromium
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          echo "version=$(node -p "require('./packages/web/node_modules/@playwright/test/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}-chromium
+
+      - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @linkml-editor/web exec playwright install chromium
+
+      - name: Install Playwright system dependencies
+        run: |
+          for attempt in 1 2 3; do
+            pnpm --filter @linkml-editor/web exec playwright install-deps chromium && break
+            echo "Attempt $attempt failed, retrying in 15s..."
+            sleep 15
+          done
 
       - name: Run E2E tests
         run: pnpm --filter @linkml-editor/web test:e2e
